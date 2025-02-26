@@ -1,33 +1,81 @@
 // src/lib/shopify.ts
-// This is just a starting point - you'll need to add your Shopify API credentials
+import Client from 'shopify-buy';
 
-interface ShopifyProduct {
-  id: string
-  title: string
-  handle: string
-  description: string
-  price: string
-  images: { src: string }[]
-  variants: any[]
-  // Add more fields as needed
-}
+// Create a Shopify client
+const client = Client.buildClient({
+  domain: process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN!,
+  storefrontAccessToken: process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN!,
+});
 
-export async function getAllProducts(): Promise<ShopifyProduct[]> {
-  // In a real implementation, you would fetch from Shopify API
-  // For now, we'll return mock data
-  return []
-}
-
-export async function getProductById(
-  id: string
-): Promise<ShopifyProduct | null> {
-  // In a real implementation, you would fetch from Shopify API
-  return null
-}
-
-export async function createCheckout(variantId: string, quantity: number) {
-  // Create a checkout with Shopify API
-  return {
-    webUrl: "https://checkout.shopify.com/...",
+export async function getAllProducts() {
+  try {
+    const products = await client.product.fetchAll();
+    return JSON.parse(JSON.stringify(products));
+  } catch (error) {
+    console.error("Error fetching all products:", error);
+    return [];
   }
 }
+
+export async function getProductByHandle(handle: string) {
+  try {
+    const product = await client.product.fetchByHandle(handle);
+    return JSON.parse(JSON.stringify(product));
+  } catch (error) {
+    console.error(`Error fetching product with handle ${handle}:`, error);
+    return null;
+  }
+}
+
+// Checkout functions
+export async function createCheckout() {
+  try {
+    const checkout = await client.checkout.create();
+    return checkout;
+  } catch (error) {
+    console.error("Error creating checkout:", error);
+    throw error;
+  }
+}
+
+export async function fetchCheckout(checkoutId: string) {
+  try {
+    const checkout = await client.checkout.fetch(checkoutId);
+    return checkout;
+  } catch (error) {
+    console.error("Error fetching checkout:", error);
+    throw error;
+  }
+}
+
+export async function addItemToCheckout(checkoutId: string, lineItemsToAdd: any[]) {
+  try {
+    const checkout = await client.checkout.addLineItems(checkoutId, lineItemsToAdd);
+    return checkout;
+  } catch (error) {
+    console.error("Error adding item to checkout:", error);
+    throw error;
+  }
+}
+
+export async function updateCheckoutItem(checkoutId: string, lineItemsToUpdate: any[]) {
+  try {
+    const checkout = await client.checkout.updateLineItems(checkoutId, lineItemsToUpdate);
+    return checkout;
+  } catch (error) {
+    console.error("Error updating checkout item:", error);
+    throw error;
+  }
+}
+
+export async function removeCheckoutItem(checkoutId: string, lineItemIdsToRemove: string[]) {
+  try {
+    const checkout = await client.checkout.removeLineItems(checkoutId, lineItemIdsToRemove);
+    return checkout;
+  } catch (error) {
+    console.error("Error removing checkout item:", error);
+    throw error;
+  }
+}
+
+export default client;

@@ -1,43 +1,59 @@
-// src/components/products/ProductCard.tsx
-import React from "react"
-import Link from "next/link"
+// src/components/products/ProductGrid.tsx
+'use client';
 
-interface ProductCardProps {
-  id: string
-  title: string
-  price: number
-  videoUrl: string
-  category: string
+import React, { useState } from 'react';
+import ProductCard from './ProductCard';
+import ProductFilter from './ProductFilter';
+
+interface ProductGridProps {
+  initialProducts: any[]; // We'd type this properly with Shopify types
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({
-  id,
-  title,
-  price,
-  videoUrl,
-  category,
-}) => {
+type ProductCategory =
+  | 'STANDARD SERIES'
+  | 'TECHNICAL SERIES'
+  | 'LABORATORY EQUIPMENT SERIES'
+  | 'COLLABORATIVE PROTOCOL SERIES'
+  | 'FIELD STUDY SERIES'
+  | 'ALL';
+
+// Helper to map Shopify product types to our categories
+const mapProductTypeToCategory = (productType: string): ProductCategory => {
+  const typeMap: Record<string, ProductCategory> = {
+    'Standard Series': 'STANDARD SERIES',
+    'Technical Series': 'TECHNICAL SERIES',
+    'Laboratory Equipment': 'LABORATORY EQUIPMENT SERIES',
+    'Collaborative Protocol': 'COLLABORATIVE PROTOCOL SERIES',
+    'Field Study': 'FIELD STUDY SERIES',
+  };
+
+  return typeMap[productType] || 'STANDARD SERIES';
+};
+
+const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
+  const [filteredCategory, setFilteredCategory] = useState<ProductCategory>('ALL');
+
+  const filteredProducts = filteredCategory === 'ALL'
+    ? initialProducts
+    : initialProducts.filter(product =>
+        mapProductTypeToCategory(product.productType) === filteredCategory
+      );
+
   return (
-    <Link href={`/product/${id}`} className="group">
-      <div className="relative aspect-square overflow-hidden bg-laboratory-white mb-2">
-        <video
-          className="w-full h-full object-cover"
-          src={videoUrl}
-          autoPlay
-          muted
-          loop
-          playsInline
-        />
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-8 p-6">
+      <div className="md:col-span-1">
+        <ProductFilter onFilterChange={setFilteredCategory} />
       </div>
-      <div className="flex justify-between items-start">
-        <div>
-          <h3 className="text-sm text-laboratory-black/70">{category}</h3>
-          <h2 className="text-laboratory-black">{title}</h2>
-        </div>
-        <p className="text-laboratory-black">${price}</p>
+      <div className="md:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {filteredProducts.map((product) => (
+          <ProductCard
+            key={product.id}
+            product={product}
+          />
+        ))}
       </div>
-    </Link>
-  )
-}
+    </div>
+  );
+};
 
-export default ProductCard
+export default ProductGrid;

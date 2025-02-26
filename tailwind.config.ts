@@ -12,6 +12,17 @@ module.exports = {
         'laboratory-white': '#FCFFFC',
         'laboratory-black': '#0A0908',
       },
+      fontFamily: {
+        sans: ['"Devanagari Sangam MN"', 'sans-serif'],
+      },
+      letterSpacing: {
+        wide: '0.25em', // 25% letter spacing
+      },
+      fontSize: {
+        'regular': '12px',
+        'medium': '16px',
+        'title': '24px',
+      }
     },
   },
   plugins: [],

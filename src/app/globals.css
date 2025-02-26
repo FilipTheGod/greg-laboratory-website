@@ -3,10 +3,29 @@
 @tailwind components;
 @tailwind utilities;
 
-html,
-body {
-  @apply bg-laboratory-white text-laboratory-black;
-  font-family: 'Helvetica Neue', Arial, sans-serif;
+@layer base {
+  html,
+  body {
+    @apply bg-laboratory-white text-laboratory-black;
+    font-family: 'Devanagari Sangam MN', sans-serif;
+    letter-spacing: 0.25em; /* 25% letter spacing */
+  }
+
+  /* Typography scale */
+  .text-regular {
+    font-size: 12px;
+    font-weight: 400;
+  }
+
+  .text-medium {
+    font-size: 16px;
+    font-weight: 400;
+  }
+
+  .text-title {
+    font-size: 24px;
+    font-weight: 700;
+  }
 }
 
 button {
