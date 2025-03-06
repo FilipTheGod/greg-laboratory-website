@@ -46,7 +46,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     0
   );
 
-  // Initialize checkout
   useEffect(() => {
     const initializeCheckout = async () => {
       // Check if we already have a checkout ID in localStorage
@@ -117,7 +116,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initializeCheckout();
   }, []);
-
   // Update localStorage when cart items change
   useEffect(() => {
     if (cartItems.length > 0) {
@@ -239,22 +237,22 @@ export const useCart = () => {
   return context;
 };
 
-
-return (
-  <CartContext.Provider
-    value={{
-      isCartOpen,
-      cartItems,
-      cartCount,
-      cartTotal,
-      checkoutUrl,
-      toggleCart,
-      addToCart,
-      updateQuantity,
-      removeFromCart,
-    }}
-  >
-    {children}
-  </CartContext.Provider>
-);
+  // Expose cart methods and state
+  return (
+    <CartContext.Provider
+      value={{
+        isCartOpen,
+        cartItems,
+        cartCount,
+        cartTotal,
+        checkoutUrl,
+        toggleCart,
+        addToCart,
+        updateQuantity,
+        removeFromCart,
+      }}
+    >
+      {children}
+    </CartContext.Provider>
+  );
 };

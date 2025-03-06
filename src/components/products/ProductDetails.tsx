@@ -37,11 +37,6 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
   const { addToCart } = useCart();
 
-const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
-  const [selectedSize, setSelectedSize] = useState('');
-  const [selectedColor, setSelectedColor] = useState('');
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
   // Extract available sizes from variants
   const availableSizes = Array.from(
     new Set(product.variants.map((variant: any) => variant.title.split(' / ')[0]))
@@ -102,7 +97,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       }
     });
   };
-  
+
   // Product attributes (this would come from your product metafields/tags)
   const productAttributes = [
     { name: 'Water Repellent', icon: <WaterRepellentIcon /> },
