@@ -3,11 +3,11 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react"
 import {
-  createCart,
-  fetchCart,
-  addItemToCart,
-  updateCartItem,
-  removeCartItem,
+  createCheckout,
+  fetchCheckout,
+  addItemToCheckout,
+  updateCheckoutItem,
+  removeCheckoutItem,
 } from "@/lib/shopify"
 
 export interface CartItem {
@@ -29,6 +29,7 @@ interface CartContextType {
   cartCount: number
   cartTotal: number
   checkoutUrl: string
+  isLoading: boolean
   toggleCart: () => void
   addToCart: (item: CartItem) => void
   updateQuantity: (id: string, quantity: number) => void
@@ -42,7 +43,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [cartItems, setCartItems] = useState<CartItem[]>([])
-  const [cartId, setCartId] = useState("")
+  const [checkoutId, setCheckoutId] = useState("")
   const [checkoutUrl, setCheckoutUrl] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
@@ -52,65 +53,81 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     0
   )
 
-  // Initialize cart
+  // Initialize checkout
   useEffect(() => {
-    const initializeCart = async () => {
-      // Check if we already have a cart ID in localStorage
-      const existingCartId = localStorage.getItem("cartId")
+    const initializeCheckout = async () => {
+      setIsLoading(true)
+      // Check if we already have a checkout ID in localStorage
+      const existingCheckoutId = localStorage.getItem("checkoutId")
       const existingCartItems = localStorage.getItem("cartItems")
 
-      if (existingCartId) {
+      if (existingCheckoutId) {
         try {
-          // Fetch the existing cart to make sure it's still valid
-          const cart = await fetchCart(existingCartId)
+          // Fetch the existing checkout to make sure it's still valid
+          const checkout = await fetchCheckout(existingCheckoutId)
 
-          setCartId(existingCartId)
-          // The webUrl will be the checkout URL
-          setCheckoutUrl(cart.webUrl || "")
+          // If checkout is completed, create a new one
+          if (checkout.completedAt) {
+            const newCheckout = await createCheckout()
+            setCheckoutId(newCheckout.id)
+            setCheckoutUrl(newCheckout.webUrl)
+            localStorage.setItem("checkoutId", newCheckout.id)
 
-          // Restore cart items if they exist
-          if (existingCartItems) {
-            setCartItems(JSON.parse(existingCartItems))
+            // Clear cart if checkout was completed
+            setCartItems([])
+            localStorage.removeItem("cartItems")
+          } else {
+            setCheckoutId(existingCheckoutId)
+            setCheckoutUrl(checkout.webUrl)
+
+            // Restore cart items if they exist
+            if (existingCartItems) {
+              setCartItems(JSON.parse(existingCartItems))
+            }
           }
         } catch (error) {
-          console.error("Error fetching existing cart:", error)
-          // If there's an error (e.g., cart expired), create a new one
-          const newCart = await createCart()
-          setCartId(newCart.id)
-          setCheckoutUrl(newCart.webUrl || "")
-          localStorage.setItem("cartId", newCart.id)
+          console.error("Error fetching existing checkout:", error)
+          // If there's an error (e.g., checkout expired), create a new one
+          const newCheckout = await createCheckout()
+          setCheckoutId(newCheckout.id)
+          setCheckoutUrl(newCheckout.webUrl)
+          localStorage.setItem("checkoutId", newCheckout.id)
         }
       } else {
-        // No existing cart, create a new one
+        // No existing checkout, create a new one
         try {
-          const cart = await createCart()
-          setCartId(cart.id)
-          setCheckoutUrl(cart.webUrl || "")
-          localStorage.setItem("cartId", cart.id)
+          const checkout = await createCheckout()
+          setCheckoutId(checkout.id)
+          setCheckoutUrl(checkout.webUrl)
+          localStorage.setItem("checkoutId", checkout.id)
 
           // Restore cart items if they exist
           if (existingCartItems) {
             const items = JSON.parse(existingCartItems) as CartItem[]
             setCartItems(items)
 
-            // Add items to the new cart
+            // Add items to the new checkout
             if (items.length > 0) {
               const lineItems = items.map((item) => ({
                 variantId: item.variant.id,
                 quantity: item.quantity,
               }))
 
-              const updatedCart = await addItemToCart(cart.id, lineItems)
-              setCheckoutUrl(updatedCart.webUrl || "")
+              const updatedCheckout = await addItemToCheckout(
+                checkout.id,
+                lineItems
+              )
+              setCheckoutUrl(updatedCheckout.webUrl)
             }
           }
         } catch (error) {
-          console.error("Error initializing cart:", error)
+          console.error("Error initializing checkout:", error)
         }
       }
+      setIsLoading(false)
     }
 
-    initializeCart()
+    initializeCheckout()
   }, [])
 
   // Update localStorage when cart items change
@@ -147,16 +164,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
 
     setCartItems(updatedCartItems)
 
-    // Update Shopify cart
+    // Update Shopify checkout
     try {
-      await addItemToCart(cartId, [
+      await addItemToCheckout(checkoutId, [
         {
           variantId: newItem.variant.id,
           quantity: newItem.quantity,
         },
       ])
     } catch (error) {
-      console.error("Error adding item to cart:", error)
+      console.error("Error adding item to checkout:", error)
     } finally {
       setIsLoading(false)
       setIsCartOpen(true) // Open cart when item is added
@@ -173,9 +190,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
 
     setCartItems(updatedCartItems)
 
-    // Update Shopify cart
+    // Update Shopify checkout
     try {
-      await updateCartItem(cartId, [
+      await updateCheckoutItem(checkoutId, [
         {
           id,
           quantity,
@@ -195,11 +212,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     const updatedCartItems = cartItems.filter((item) => item.variant.id !== id)
     setCartItems(updatedCartItems)
 
-    // Update Shopify cart
+    // If cart is empty after removal, clear localStorage
+    if (updatedCartItems.length === 0) {
+      localStorage.removeItem("cartItems")
+    }
+
+    // Update Shopify checkout
     try {
-      await removeCartItem(cartId, [id])
+      await removeCheckoutItem(checkoutId, [id])
     } catch (error) {
-      console.error("Error removing item from cart:", error)
+      console.error("Error removing item from checkout:", error)
     } finally {
       setIsLoading(false)
     }
@@ -213,6 +235,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         cartCount,
         cartTotal,
         checkoutUrl,
+        isLoading,
         toggleCart,
         addToCart,
         updateQuantity,

@@ -69,94 +69,80 @@ export async function getProductByHandle(
   }
 }
 
-// Cart functions using the new Cart API
-export async function createCart() {
-  try {
-    const cart = await client.cart.create()
-    return cart
-  } catch (error) {
-    console.error("Error creating cart:", error)
-    throw error
-  }
-}
-
-export async function fetchCart(cartId: string) {
-  try {
-    const cart = await client.cart.fetch(cartId)
-    return cart
-  } catch (error) {
-    console.error("Error fetching cart:", error)
-    throw error
-  }
-}
-
-export async function addItemToCart(
-  cartId: string,
-  lineItemsToAdd: LineItem[]
-) {
-  try {
-    const cart = await client.cart.addLineItems(cartId, lineItemsToAdd)
-    return cart
-  } catch (error) {
-    console.error("Error adding item to cart:", error)
-    throw error
-  }
-}
-
-export async function updateCartItem(
-  cartId: string,
-  lineItemsToUpdate: LineItemUpdate[]
-) {
-  try {
-    const cart = await client.cart.updateLineItems(cartId, lineItemsToUpdate)
-    return cart
-  } catch (error) {
-    console.error("Error updating cart item:", error)
-    throw error
-  }
-}
-
-export async function removeCartItem(
-  cartId: string,
-  lineItemIdsToRemove: string[]
-) {
-  try {
-    const cart = await client.cart.removeLineItems(cartId, lineItemIdsToRemove)
-    return cart
-  } catch (error) {
-    console.error("Error removing cart item:", error)
-    throw error
-  }
-}
-
-// For backwards compatibility (these will use the Cart API internally)
+// Checkout functions
 export async function createCheckout() {
-  return createCart()
+  try {
+    const checkout = await client.checkout.create()
+    return checkout
+  } catch (error) {
+    console.error("Error creating checkout:", error)
+    throw error
+  }
 }
 
 export async function fetchCheckout(checkoutId: string) {
-  return fetchCart(checkoutId)
+  try {
+    const checkout = await client.checkout.fetch(checkoutId)
+    return checkout
+  } catch (error) {
+    console.error("Error fetching checkout:", error)
+    throw error
+  }
 }
 
 export async function addItemToCheckout(
   checkoutId: string,
   lineItemsToAdd: LineItem[]
 ) {
-  return addItemToCart(checkoutId, lineItemsToAdd)
+  try {
+    const checkout = await client.checkout.addLineItems(
+      checkoutId,
+      lineItemsToAdd
+    )
+    return checkout
+  } catch (error) {
+    console.error("Error adding item to checkout:", error)
+    throw error
+  }
 }
 
 export async function updateCheckoutItem(
   checkoutId: string,
   lineItemsToUpdate: LineItemUpdate[]
 ) {
-  return updateCartItem(checkoutId, lineItemsToUpdate)
+  try {
+    const checkout = await client.checkout.updateLineItems(
+      checkoutId,
+      lineItemsToUpdate
+    )
+    return checkout
+  } catch (error) {
+    console.error("Error updating checkout item:", error)
+    throw error
+  }
 }
 
 export async function removeCheckoutItem(
   checkoutId: string,
   lineItemIdsToRemove: string[]
 ) {
-  return removeCartItem(checkoutId, lineItemIdsToRemove)
+  try {
+    const checkout = await client.checkout.removeLineItems(
+      checkoutId,
+      lineItemIdsToRemove
+    )
+    return checkout
+  } catch (error) {
+    console.error("Error removing checkout item:", error)
+    throw error
+  }
 }
+
+// Compatibility with Cart API names (but still uses Checkout API)
+export const createCart = createCheckout
+export const fetchCart = fetchCheckout
+export const addItemToCart = addItemToCheckout
+export const updateCartItem = updateCheckoutItem
+export const removeCartItem = removeCheckoutItem
 
 export default client

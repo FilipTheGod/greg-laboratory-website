@@ -15,6 +15,7 @@ const Cart: React.FC = () => {
     updateQuantity,
     removeFromCart,
     checkoutUrl,
+    isLoading,
   } = useCart()
 
   const handleCheckout = () => {
@@ -48,8 +49,15 @@ const Cart: React.FC = () => {
             </button>
           </div>
 
+          {isLoading && (
+            <div className="flex justify-center items-center py-4">
+              <div className="w-6 h-6 border-2 border-laboratory-black border-t-transparent rounded-full animate-spin"></div>
+              <span className="ml-2 text-regular">Loading...</span>
+            </div>
+          )}
+
           <div className="flex-grow overflow-y-auto">
-            {cartItems.length === 0 ? (
+            {!isLoading && cartItems.length === 0 ? (
               <p className="text-regular tracking-wide">Your cart is empty</p>
             ) : (
               <ul className="space-y-6">
@@ -76,6 +84,7 @@ const Cart: React.FC = () => {
                         <button
                           onClick={() => removeFromCart(item.variant.id)}
                           className="text-laboratory-black/70 text-regular tracking-wide"
+                          disabled={isLoading}
                         >
                           Remove
                         </button>
@@ -97,6 +106,7 @@ const Cart: React.FC = () => {
                               )
                             }
                             className="px-2 py-1 text-laboratory-black text-regular tracking-wide"
+                            disabled={isLoading}
                           >
                             -
                           </button>
@@ -108,6 +118,7 @@ const Cart: React.FC = () => {
                               updateQuantity(item.variant.id, item.quantity + 1)
                             }
                             className="px-2 py-1 text-laboratory-black text-regular tracking-wide"
+                            disabled={isLoading}
                           >
                             +
                           </button>
@@ -136,7 +147,7 @@ const Cart: React.FC = () => {
             <button
               className="w-full py-3 bg-laboratory-black text-laboratory-white text-medium tracking-wide disabled:opacity-50"
               onClick={handleCheckout}
-              disabled={cartItems.length === 0 || !checkoutUrl}
+              disabled={cartItems.length === 0 || !checkoutUrl || isLoading}
             >
               CHECKOUT
             </button>

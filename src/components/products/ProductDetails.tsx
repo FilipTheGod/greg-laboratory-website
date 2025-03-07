@@ -95,6 +95,23 @@ const LightweightIcon: React.FC = () => (
   </svg>
 )
 
+// Enhanced color map with more realistic colors and contrast borders
+const colorMap: Record<string, { bg: string; border: string }> = {
+  Black: { bg: "#000000", border: "#333333" },
+  White: { bg: "#FFFFFF", border: "#CCCCCC" },
+  Cream: { bg: "#FFFDD0", border: "#E6E4BC" },
+  Navy: { bg: "#000080", border: "#000066" },
+  Olive: { bg: "#808000", border: "#606000" },
+  Grey: { bg: "#808080", border: "#666666" },
+  Khaki: { bg: "#C3B091", border: "#B0A080" },
+  Tan: { bg: "#D2B48C", border: "#BEA27E" },
+  Brown: { bg: "#A52A2A", border: "#8B2323" },
+  Natural: { bg: "#F5F5DC", border: "#E1E1CB" },
+  Green: { bg: "#008000", border: "#006600" },
+  Blue: { bg: "#0000FF", border: "#0000CC" },
+  Red: { bg: "#FF0000", border: "#CC0000" },
+}
+
 interface ProductDetailsProps {
   product: ShopifyProduct
 }
@@ -105,11 +122,16 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [showingSizeGuide, setShowingSizeGuide] = useState(false)
 
-  const { addToCart } = useCart()
+  const { addToCart, isLoading } = useCart()
 
   // Extract available sizes from variants
   const availableSizes = Array.from(
-    new Set(product.variants.map((variant) => variant.title.split(" / ")[0]))
+    new Set(
+      product.variants.map((variant) => {
+        const parts = variant.title.split(" / ")
+        return parts[0]
+      })
+    )
   )
 
   // Extract available colors from variants
@@ -124,22 +146,18 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     )
   )
 
-  // Get color codes for visualization
-  const getColorCode = (colorName: string): string => {
-    const colorMap: Record<string, string> = {
-      Black: "#000000",
-      White: "#FFFFFF",
-      Cream: "#FFFDD0",
-      Navy: "#000080",
-      Olive: "#808000",
-      Grey: "#808080",
-      Khaki: "#C3B091",
-      Tan: "#D2B48C",
-      Brown: "#A52A2A",
-      Natural: "#F5F5DC",
+  // Get color styling for visualization
+  const getColorStyle = (
+    colorName: string
+  ): { backgroundColor: string; borderColor: string } => {
+    const colorInfo = colorMap[colorName] || {
+      bg: "#CCCCCC",
+      border: "#AAAAAA",
     }
-
-    return colorMap[colorName] || "#CCCCCC"
+    return {
+      backgroundColor: colorInfo.bg,
+      borderColor: colorInfo.border,
+    }
   }
 
   // Handle add to cart
@@ -215,6 +233,14 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   }
 
   const productAttributes = getProductAttributes()
+
+  // Check if a specific variant combination is available
+  const isVariantAvailable = (size: string, color: string) => {
+    return product.variants.some(
+      (variant) =>
+        variant.title === `${size} / ${color}` && variant.available !== false
+    )
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6">
@@ -336,36 +362,63 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           </div>
         </div>
 
-        {/* Color Selection */}
+        {/* Color Selection with enhanced colored circles */}
         <div>
           <h2 className="text-medium tracking-wide mb-3">COLOR</h2>
           <div className="flex flex-wrap gap-3">
-            {availableColors.map((color) => (
-              <button
-                key={color}
-                className={`w-8 h-8 rounded-full border ${
-                  selectedColor === color
-                    ? "border-laboratory-black ring-2 ring-laboratory-black/30 ring-offset-2"
-                    : "border-laboratory-black/30"
-                }`}
-                style={{ backgroundColor: getColorCode(color as string) }}
-                onClick={() => setSelectedColor(color as string)}
-                aria-label={`Color: ${color}`}
-              />
-            ))}
+            {availableColors.map((color) => {
+              const colorStyle = getColorStyle(color as string)
+              return (
+                <button
+                  key={color}
+                  className={`w-10 h-10 rounded-full relative ${
+                    selectedColor === color
+                      ? "ring-2 ring-laboratory-black ring-offset-2"
+                      : ""
+                  }`}
+                  style={{
+                    backgroundColor: colorStyle.backgroundColor,
+                    borderColor: colorStyle.borderColor,
+                    border: "1px solid",
+                  }}
+                  onClick={() => setSelectedColor(color as string)}
+                  aria-label={`Color: ${color}`}
+                  disabled={
+                    selectedSize &&
+                    !isVariantAvailable(selectedSize, color as string)
+                  }
+                >
+                  {selectedSize &&
+                    !isVariantAvailable(selectedSize, color as string) && (
+                      <div className="absolute inset-0 bg-laboratory-black opacity-50 rounded-full flex items-center justify-center">
+                        <div className="w-8 h-0.5 bg-white transform rotate-45"></div>
+                        <div className="w-8 h-0.5 bg-white transform -rotate-45 absolute"></div>
+                      </div>
+                    )}
+                </button>
+              )
+            })}
           </div>
           {selectedColor && (
             <p className="mt-2 text-regular tracking-wide">{selectedColor}</p>
           )}
         </div>
 
-        {/* Add to Cart Button */}
+        {/* Add to Cart Button with loading state */}
         <motion.button
-          className="w-full py-3 bg-laboratory-black text-laboratory-white text-medium tracking-wide"
+          className="w-full py-3 bg-laboratory-black text-laboratory-white text-medium tracking-wide disabled:opacity-50 relative"
           onClick={handleAddToCart}
           whileTap={{ scale: 0.95 }}
+          disabled={!selectedSize || !selectedColor || isLoading}
         >
-          ADD TO CART
+          {isLoading ? (
+            <span className="flex items-center justify-center">
+              <span className="w-4 h-4 border-2 border-laboratory-white border-t-transparent rounded-full animate-spin mr-2"></span>
+              ADDING...
+            </span>
+          ) : (
+            "ADD TO CART"
+          )}
         </motion.button>
 
         {/* Product Description */}
@@ -377,7 +430,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           />
         </div>
 
-        {/* Product Attributes */}
+        {/* Product Attributes/Features with SVG Icons */}
         <div className="mt-8 pt-8 border-t border-laboratory-black/10">
           <h2 className="text-medium tracking-wide mb-4">PRODUCT FEATURES</h2>
           <div className="grid grid-cols-2 gap-4">
