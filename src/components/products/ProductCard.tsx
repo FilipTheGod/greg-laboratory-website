@@ -12,10 +12,32 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const price = parseFloat(product.variants[0].price).toFixed(2)
   const category = product.productType
 
+  // Check if the first media item is a video
+  const hasVideo =
+    product.media &&
+    product.media.length > 0 &&
+    product.media[0].mediaContentType === "VIDEO"
+
+  // Get video URL if available
+  const videoUrl = hasVideo ? product.media[0].sources[0].url : null
+
   return (
     <Link href={`/product/${product.handle}`} className="group">
       <div className="relative aspect-square overflow-hidden bg-laboratory-white mb-2">
-        {product.images && product.images.length > 0 ? (
+        {hasVideo ? (
+          // Video display
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500"
+          >
+            <source src={videoUrl} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        ) : product.images && product.images.length > 0 ? (
+          // Image fallback
           <Image
             src={product.images[0].src}
             alt={product.title}
