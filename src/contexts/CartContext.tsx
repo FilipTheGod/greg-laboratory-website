@@ -36,7 +36,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [checkoutId, setCheckoutId] = useState('');
   const [checkoutUrl, setCheckoutUrl] = useState('');
-  // We're keeping isLoading for future use, so eslint will be ignored for this line
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLoading, setIsLoading] = useState(false);
 
@@ -199,12 +198,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem('cartItems');
     }
 
-    // Update Shopify checkout (set quantity to 0 to remove)
+    // Update Shopify checkout
     try {
-      await updateCheckoutItem(checkoutId, [{
-        id,
-        quantity: 0,
-      }]);
+      // Using the imported removeCheckoutItem function
+      await removeCheckoutItem(checkoutId, [id]);
     } catch (error) {
       console.error('Error removing item from checkout:', error);
     } finally {

@@ -4,9 +4,10 @@
 import React, { useState } from 'react';
 import ProductCard from './ProductCard';
 import ProductFilter from './ProductFilter';
+import { ShopifyProduct } from '@/lib/shopify';
 
 interface ProductGridProps {
-  initialProducts: any[]; // We'd type this properly with Shopify types
+  initialProducts: ShopifyProduct[];
 }
 
 type ProductCategory =

@@ -3,9 +3,9 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-// Remove motion if not used
-// import { motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useCart } from '@/contexts/CartContext';
+import { ShopifyProduct } from '@/lib/shopify';
 
 // SVG Components for product attributes
 const WaterRepellentIcon: React.FC = () => (
@@ -27,25 +27,18 @@ const StretchIcon: React.FC = () => (
   </svg>
 );
 
-interface ShopifyVariant {
-  id: string;
-  title: string;
-  price: string;
-}
+const DurableIcon: React.FC = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
 
-interface ShopifyImage {
-  src: string;
-}
-
-interface ShopifyProduct {
-  id: string;
-  title: string;
-  handle: string;
-  productType: string;
-  descriptionHtml: string;
-  variants: ShopifyVariant[];
-  images: ShopifyImage[];
-}
+const LightweightIcon: React.FC = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 4V2M4 12H2M6.31 6.31L4.8 4.8M17.69 6.31L19.2 4.8M12 20V22M20 12H22M17.69 17.69L19.2 19.2M6.31 17.69L4.8 19.2M12 17C14.7614 17 17 14.7614 17 12C17 9.23858 14.7614 7 12 7C9.23858 7 7 9.23858 7 12C7 14.7614 9.23858 17 12 17Z" stroke="currentColor" strokeWidth="1.5" />
+  </svg>
+);
 
 interface ProductDetailsProps {
   product: ShopifyProduct;
@@ -55,6 +48,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showingSizeGuide, setShowingSizeGuide] = useState(false);
 
   const { addToCart } = useCart();
 
@@ -63,7 +57,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     new Set(
       product.variants.map((variant) => variant.title.split(' / ')[0])
     )
-  ) as string[];
+  );
 
   // Extract available colors from variants
   const availableColors = Array.from(
@@ -73,19 +67,21 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
         return parts.length > 1 ? parts[1] : null;
       }).filter(Boolean)
     )
-  ) as string[];
+  );
 
-  // Get color codes (assuming you've added metafields or tags with color codes)
+  // Get color codes for visualization
   const getColorCode = (colorName: string): string => {
-    // This is a placeholder - you would need to implement a way to get actual color codes
-    // from your Shopify data (metafields, product tags, etc.)
     const colorMap: Record<string, string> = {
       'Black': '#000000',
       'White': '#FFFFFF',
       'Cream': '#FFFDD0',
       'Navy': '#000080',
       'Olive': '#808000',
-      // Add more color mappings as needed
+      'Grey': '#808080',
+      'Khaki': '#C3B091',
+      'Tan': '#D2B48C',
+      'Brown': '#A52A2A',
+      'Natural': '#F5F5DC',
     };
 
     return colorMap[colorName] || '#CCCCCC';
@@ -123,12 +119,36 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     });
   };
 
-  // Product attributes (this would come from your product metafields/tags)
-  const productAttributes = [
-    { name: 'Water Repellent', icon: <WaterRepellentIcon /> },
-    { name: 'Breathable', icon: <BreathableIcon /> },
-    { name: '2-Way Stretch', icon: <StretchIcon /> },
-  ];
+  // Define the product attributes based on the series or product type
+  const getProductAttributes = () => {
+    const baseAttributes = [
+      { name: 'Water Repellent', icon: <WaterRepellentIcon />,
+        description: 'Resists moisture and light rain' },
+      { name: 'Breathable', icon: <BreathableIcon />,
+        description: 'Allows air circulation for comfort' },
+      { name: '2-Way Stretch', icon: <StretchIcon />,
+        description: 'Flexible movement in multiple directions' },
+    ];
+
+    // Add additional attributes based on product type
+    if (product.productType === 'Technical Series') {
+      baseAttributes.push(
+        { name: 'Durable', icon: <DurableIcon />,
+          description: 'Built for extended wear and use' }
+      );
+    }
+
+    if (product.productType === 'Field Study Series') {
+      baseAttributes.push(
+        { name: 'Lightweight', icon: <LightweightIcon />,
+          description: 'Minimal weight for comfortable wear' }
+      );
+    }
+
+    return baseAttributes;
+  };
+
+  const productAttributes = getProductAttributes();
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6">
@@ -146,28 +166,30 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           )}
         </div>
 
-        <div className="grid grid-cols-4 gap-2">
-          {product.images && product.images.map((image, index) => (
-            <button
-              key={index}
-              className={`relative aspect-square overflow-hidden border ${
-                index === currentImageIndex ? 'border-laboratory-black' : 'border-transparent'
-              }`}
-              onClick={() => setCurrentImageIndex(index)}
-            >
-              <Image
-                src={image.src}
-                alt={`${product.title} - thumbnail ${index + 1}`}
-                fill
-                className="object-cover"
-              />
-            </button>
-          ))}
-        </div>
+        {product.images && product.images.length > 1 && (
+          <div className="grid grid-cols-4 gap-2">
+            {product.images.map((image, index) => (
+              <button
+                key={index}
+                className={`relative aspect-square overflow-hidden border ${
+                  index === currentImageIndex ? 'border-laboratory-black' : 'border-transparent'
+                }`}
+                onClick={() => setCurrentImageIndex(index)}
+              >
+                <Image
+                  src={image.src}
+                  alt={`${product.title} - thumbnail ${index + 1}`}
+                  fill
+                  className="object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Product Info - Right Side */}
-      <div className="sticky top-24 self-start space-y-8">
+      <div className="sticky top-24 self-start space-y-8 max-h-screen overflow-y-auto pr-4">
         <div>
           <h3 className="text-laboratory-black/70 text-medium tracking-wide uppercase mb-1">
             {product.productType}
@@ -182,7 +204,53 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
         {/* Size Selection */}
         <div>
-          <h2 className="text-medium tracking-wide mb-3">SIZE</h2>
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-medium tracking-wide">SIZE</h2>
+            <button
+              className="text-regular tracking-wide underline"
+              onClick={() => setShowingSizeGuide(!showingSizeGuide)}
+            >
+              Size Guide
+            </button>
+          </div>
+
+          {showingSizeGuide && (
+            <div className="mb-4 p-4 border border-laboratory-black/10">
+              <h3 className="text-medium tracking-wide mb-2">Size Guide</h3>
+              <table className="w-full text-regular">
+                <thead>
+                  <tr className="border-b border-laboratory-black/10">
+                    <th className="text-left py-2">Size</th>
+                    <th className="text-left py-2">Chest (in)</th>
+                    <th className="text-left py-2">Waist (in)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b border-laboratory-black/5">
+                    <td className="py-2">S</td>
+                    <td className="py-2">38-40</td>
+                    <td className="py-2">30-32</td>
+                  </tr>
+                  <tr className="border-b border-laboratory-black/5">
+                    <td className="py-2">M</td>
+                    <td className="py-2">40-42</td>
+                    <td className="py-2">32-34</td>
+                  </tr>
+                  <tr className="border-b border-laboratory-black/5">
+                    <td className="py-2">L</td>
+                    <td className="py-2">42-44</td>
+                    <td className="py-2">34-36</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2">XL</td>
+                    <td className="py-2">44-46</td>
+                    <td className="py-2">36-38</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+
           <div className="flex flex-wrap gap-2">
             {availableSizes.map((size) => (
               <button
@@ -212,8 +280,8 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                     ? 'border-laboratory-black ring-2 ring-laboratory-black/30 ring-offset-2'
                     : 'border-laboratory-black/30'
                 }`}
-                style={{ backgroundColor: getColorCode(color) }}
-                onClick={() => setSelectedColor(color)}
+                style={{ backgroundColor: getColorCode(color as string) }}
+                onClick={() => setSelectedColor(color as string)}
                 aria-label={`Color: ${color}`}
               />
             ))}
@@ -226,41 +294,13 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
         </div>
 
         {/* Add to Cart Button */}
-        <button
+        <motion.button
           className="w-full py-3 bg-laboratory-black text-laboratory-white text-medium tracking-wide"
           onClick={handleAddToCart}
+          whileTap={{ scale: 0.95 }}
         >
           ADD TO CART
-        </button>
-
-        {/* Product Description */}
-        <div className="border-t border-laboratory-black/10 pt-6 space-y-6">
-          <div>
-            <h2 className="text-medium tracking-wide mb-3">DESCRIPTION</h2>
-            <div
-              className="text-regular tracking-wide"
-              dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
-            />
-          </div>
-
-          {/* Product Attributes */}
-          <div>
-            <h2 className="text-medium tracking-wide mb-3">DETAILS</h2>
-            <div className="flex flex-wrap gap-6">
-              {productAttributes.map((attr, index) => (
-                <div key={index} className="flex flex-col items-center">
-                  <div className="p-3 border border-laboratory-black/10 rounded-full mb-2">
-                    {attr.icon}
-                  </div>
-                  <span className="text-regular tracking-wide">{attr.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+        </motion.button>
         </div>
-      </div>
-    </div>
-  );
-};
-
-export default ProductDetails;
+        </div>
+  )}

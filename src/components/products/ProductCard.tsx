@@ -2,9 +2,10 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { ShopifyProduct } from '@/lib/shopify';
 
 interface ProductCardProps {
-  product: any; // We'd type this properly with Shopify types
+  product: ShopifyProduct;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {

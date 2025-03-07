@@ -12,13 +12,38 @@ interface LineItemUpdate {
   quantity: number;
 }
 
+// Define Shopify product types
+export interface ShopifyVariant {
+  id: string;
+  title: string;
+  price: string;
+  available?: boolean;
+  image?: string;
+}
+
+export interface ShopifyImage {
+  src: string;
+  alt?: string;
+}
+
+export interface ShopifyProduct {
+  id: string;
+  title: string;
+  handle: string;
+  productType: string;
+  descriptionHtml: string;
+  variants: ShopifyVariant[];
+  images: ShopifyImage[];
+}
+
 // Create a Shopify client
 const client = Client.buildClient({
   domain: process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN!,
   storefrontAccessToken: process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN!,
+  apiVersion: '2024-01' // Adding the required apiVersion
 });
 
-export async function getAllProducts() {
+export async function getAllProducts(): Promise<ShopifyProduct[]> {
   try {
     const products = await client.product.fetchAll();
     return JSON.parse(JSON.stringify(products));
@@ -28,7 +53,7 @@ export async function getAllProducts() {
   }
 }
 
-export async function getProductByHandle(handle: string) {
+export async function getProductByHandle(handle: string): Promise<ShopifyProduct | null> {
   try {
     const product = await client.product.fetchByHandle(handle);
     return JSON.parse(JSON.stringify(product));
