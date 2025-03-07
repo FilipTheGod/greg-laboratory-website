@@ -1,14 +1,22 @@
 // src/app/product/[handle]/page.tsx
-import { getProductByHandle } from '@/lib/shopify';
-import ProductDetails from '@/components/products/ProductDetails';
-import { notFound } from 'next/navigation';
+import { getProductByHandle } from "@/lib/shopify"
+import ProductDetails from "@/components/products/ProductDetails"
+import { notFound } from "next/navigation"
 
-export default async function ProductPage({ params }: { params: { handle: string } }) {
-  const product = await getProductByHandle(params.handle);
-
-  if (!product) {
-    notFound();
+export default async function ProductPage({
+  params,
+}: {
+  params: { handle: string }
+}) {
+  if (!params.handle) {
+    notFound()
   }
 
-  return <ProductDetails product={product} />;
+  const product = await getProductByHandle(params.handle)
+
+  if (!product) {
+    notFound()
+  }
+
+  return <ProductDetails product={product} />
 }
