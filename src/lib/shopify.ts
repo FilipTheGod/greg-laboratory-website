@@ -51,7 +51,18 @@ export interface ShopifyProduct {
   variants: ShopifyProductVariant[]
   media?: ShopifyMedia[]
   metafields?: {
-    features?: ShopifyMetafield
+    custom?: {
+      features?: {
+        value: {
+          waterRepellent: boolean
+          breathable: boolean
+          stretch: boolean
+          durable: boolean
+          lightweight: boolean
+          easycare: boolean
+        }
+      }
+    }
   }
 }
 

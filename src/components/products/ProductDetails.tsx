@@ -148,35 +148,35 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
   const { addToCart, isLoading } = useCart()
 
-  // Extract available sizes and colors from variants
-  const availableSizes = Array.from(
-    new Set(
-      product.variants.map((variant) => {
-        const parts = variant.title.split(" / ")
-        return parts[0]
-      })
-    )
-  ).sort()
-
-  const availableColors = Array.from(
-    new Set(
-      product.variants
-        .map((variant) => {
-          const parts = variant.title.split(" / ")
-          return parts.length > 1 ? parts[1] : null
-        })
-        .filter(Boolean)
-    )
+ // Extract available sizes and colors from variants
+const availableSizes = Array.from(
+  new Set(
+    product.variants.map((variant) => {
+      const parts = variant.title.split(" / ");
+      return parts[0];
+    })
   )
+).sort();
 
-  // Check if the product has video media
-  const hasVideo =
-    product.media &&
-    product.media.length > 0 &&
-    product.media[0].mediaContentType === "VIDEO"
+const availableColors = Array.from(
+  new Set(
+    product.variants
+      .map((variant) => {
+        const parts = variant.title.split(" / ");
+        return parts.length > 1 ? parts[1] : null;
+      })
+      .filter(Boolean)
+    )
+);
 
-  // Get video URL if available
-  const videoUrl = hasVideo && product.media?.[0]?.sources?.[0]?.url
+// Check if the product has video media
+const hasVideo =
+  product.media &&
+  product.media.length > 0 &&
+  product.media[0]?.mediaContentType === "VIDEO";
+
+// Get video URL if available
+const videoUrl = hasVideo && product.media?.[0]?.sources?.[0]?.url;
 
   // Get color styling for visualization
   const getColorStyle = (
@@ -234,18 +234,18 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
   // Define the product attributes based on metafields or fall back to product type
   const getProductAttributes = () => {
-    const attributes = []
+    const attributes = [];
 
-    // First check if metafields exist
-    if (product.metafields?.features) {
-      const features = product.metafields.features
+    // First check if metafields exist (with the updated path)
+    if (product.metafields?.custom?.features?.value) {
+      const features = product.metafields.custom.features.value;
 
       if (features.waterRepellent) {
         attributes.push({
           name: "Water Repellent",
           icon: <WaterRepellentIcon />,
           description: "Resists moisture and light rain",
-        })
+        });
       }
 
       if (features.breathable) {
@@ -601,11 +601,15 @@ export default ProductDetails)}
                   </div>
                 </div>
               ))}
-</div>
+            </div>
         </div>
-      </div>
-    </div>
   )
 }
+  </div>
+  </div>
+  )}
+
+
+
 
 export default ProductDetails
