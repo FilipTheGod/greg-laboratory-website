@@ -95,6 +95,29 @@ const LightweightIcon: React.FC = () => (
   </svg>
 )
 
+const EasyCareIcon: React.FC = () => (
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M8 16L12 12M12 12L16 8M12 12L8 8M12 12L16 16"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+    />
+  </svg>
+)
+
 // Enhanced color map with more realistic colors and contrast borders
 const colorMap: Record<string, { bg: string; border: string }> = {
   Black: { bg: "#000000", border: "#333333" },
@@ -110,6 +133,7 @@ const colorMap: Record<string, { bg: string; border: string }> = {
   Green: { bg: "#008000", border: "#006600" },
   Blue: { bg: "#0000FF", border: "#0000CC" },
   Red: { bg: "#FF0000", border: "#CC0000" },
+  Pink: { bg: "#FFC0CB", border: "#E6B6C1" },
 }
 
 interface ProductDetailsProps {
@@ -124,7 +148,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
   const { addToCart, isLoading } = useCart()
 
-  // Extract available sizes from variants
+  // Extract available sizes and colors from variants
   const availableSizes = Array.from(
     new Set(
       product.variants.map((variant) => {
@@ -132,9 +156,8 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
         return parts[0]
       })
     )
-  )
+  ).sort()
 
-  // Extract available colors from variants
   const availableColors = Array.from(
     new Set(
       product.variants
@@ -145,6 +168,15 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
         .filter(Boolean)
     )
   )
+
+  // Check if the product has video media
+  const hasVideo =
+    product.media &&
+    product.media.length > 0 &&
+    product.media[0].mediaContentType === "VIDEO"
+
+  // Get video URL if available
+  const videoUrl = hasVideo && product.media?.[0]?.sources?.[0]?.url
 
   // Get color styling for visualization
   const getColorStyle = (
@@ -162,15 +194,23 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
   // Handle add to cart
   const handleAddToCart = () => {
-    if (!selectedSize || !selectedColor) {
-      alert("Please select both a size and color")
+    if (!selectedSize || (availableColors.length > 0 && !selectedColor)) {
+      alert("Please select all required options")
       return
     }
 
     // Find the correct variant ID based on size and color
-    const variant = product.variants.find(
-      (v) => v.title === `${selectedSize} / ${selectedColor}`
-    )
+    let variant
+
+    if (availableColors.length > 0) {
+      // If we have colors available, find by size and color
+      variant = product.variants.find(
+        (v) => v.title === `${selectedSize} / ${selectedColor}`
+      )
+    } else {
+      // If we only have sizes
+      variant = product.variants.find((v) => v.title === selectedSize)
+    }
 
     if (!variant) {
       alert("Selected combination is not available")
@@ -192,44 +232,99 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     })
   }
 
-  // Define the product attributes based on the series or product type
+  // Define the product attributes based on metafields or fall back to product type
   const getProductAttributes = () => {
-    const baseAttributes = [
-      {
+    const attributes = []
+
+    // First check if metafields exist
+    if (product.metafields?.features) {
+      const features = product.metafields.features
+
+      if (features.waterRepellent) {
+        attributes.push({
+          name: "Water Repellent",
+          icon: <WaterRepellentIcon />,
+          description: "Resists moisture and light rain",
+        })
+      }
+
+      if (features.breathable) {
+        attributes.push({
+          name: "Breathable",
+          icon: <BreathableIcon />,
+          description: "Allows air circulation for comfort",
+        })
+      }
+
+      if (features.stretch) {
+        attributes.push({
+          name: "2-Way Stretch",
+          icon: <StretchIcon />,
+          description: "Flexible movement in multiple directions",
+        })
+      }
+
+      if (features.durable) {
+        attributes.push({
+          name: "Durable",
+          icon: <DurableIcon />,
+          description: "Built for extended wear and use",
+        })
+      }
+
+      if (features.lightweight) {
+        attributes.push({
+          name: "Lightweight",
+          icon: <LightweightIcon />,
+          description: "Minimal weight for comfortable wear",
+        })
+      }
+
+      if (features.easycare) {
+        attributes.push({
+          name: "Easy Care",
+          icon: <EasyCareIcon />,
+          description: "Simple to maintain and clean",
+        })
+      }
+    } else {
+      // Fall back to adding attributes based on product type
+      attributes.push({
         name: "Water Repellent",
         icon: <WaterRepellentIcon />,
         description: "Resists moisture and light rain",
-      },
-      {
+      })
+
+      attributes.push({
         name: "Breathable",
         icon: <BreathableIcon />,
         description: "Allows air circulation for comfort",
-      },
-      {
+      })
+
+      attributes.push({
         name: "2-Way Stretch",
         icon: <StretchIcon />,
         description: "Flexible movement in multiple directions",
-      },
-    ]
-
-    // Add additional attributes based on product type
-    if (product.productType === "Technical Series") {
-      baseAttributes.push({
-        name: "Durable",
-        icon: <DurableIcon />,
-        description: "Built for extended wear and use",
       })
+
+      if (product.productType === "Technical Series") {
+        attributes.push({
+          name: "Durable",
+          icon: <DurableIcon />,
+          description: "Built for extended wear and use",
+        })
+      }
+
+      if (product.productType === "Field Study Series") {
+        attributes.push({
+          name: "Lightweight",
+          icon: <LightweightIcon />,
+          description: "Minimal weight for comfortable wear",
+        })
+      }
     }
 
-    if (product.productType === "Field Study Series") {
-      baseAttributes.push({
-        name: "Lightweight",
-        icon: <LightweightIcon />,
-        description: "Minimal weight for comfortable wear",
-      })
-    }
-
-    return baseAttributes
+    return attributes
   }
 
   const productAttributes = getProductAttributes()
@@ -247,28 +342,80 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       {/* Product Images - Left Side */}
       <div className="space-y-4">
         <div className="relative aspect-square overflow-hidden bg-laboratory-white">
-          {product.images && product.images.length > 0 && (
+          {currentImageIndex === 0 && hasVideo && videoUrl ? (
+            // Show video if it's the first media item and currently selected
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+              controls
+            >
+              <source src={videoUrl} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          ) : product.images && product.images.length > 0 ? (
+            // Show image based on current index, accounting for video offset
             <Image
-              src={product.images[currentImageIndex].src}
+              src={product.images[hasVideo ? currentImageIndex - 1 : currentImageIndex].src}
               alt={`${product.title} - view ${currentImageIndex + 1}`}
               fill
               className="object-cover"
               priority
             />
-          )}
+          ) : (
+            // Fallback for no media
+            <div className="w-full h-full flex items-center justify-center bg-laboratory-black/5">
+              <span className="text-laboratory-black/30 text-medium tracking-wide">
+                No Media Available
+              </span>
+            </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default ProductDetails)}
         </div>
 
-        {product.images && product.images.length > 1 && (
-          <div className="grid grid-cols-4 gap-2">
-            {product.images.map((image, index) => (
+        {/* Media thumbnails */}
+        <div className="grid grid-cols-5 gap-2">
+          {/* Video thumbnail (if available) */}
+          {hasVideo && (
+            <button
+              className={`relative aspect-square overflow-hidden border ${
+                currentImageIndex === 0 ? "border-laboratory-black" : "border-transparent"
+              }`}
+              onClick={() => setCurrentImageIndex(0)}
+            >
+              {product.media?.[0]?.previewImage?.src ? (
+                <Image
+                  src={product.media[0].previewImage.src}
+                  alt="Video thumbnail"
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-laboratory-black/10">
+                  <span className="text-laboratory-white text-xs">VIDEO</span>
+                </div>
+              )}
+            </button>
+          )}
+
+          {/* Image thumbnails */}
+          {product.images && product.images.length > 0 &&
+            product.images.map((image, index) => (
               <button
-                key={index}
+                key={image.src}
                 className={`relative aspect-square overflow-hidden border ${
-                  index === currentImageIndex
+                  currentImageIndex === (hasVideo ? index + 1 : index)
                     ? "border-laboratory-black"
                     : "border-transparent"
                 }`}
-                onClick={() => setCurrentImageIndex(index)}
+                onClick={() => setCurrentImageIndex(hasVideo ? index + 1 : index)}
               >
                 <Image
                   src={image.src}
@@ -277,9 +424,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                   className="object-cover"
                 />
               </button>
-            ))}
-          </div>
-        )}
+            ))
+          }
+        </div>
       </div>
 
       {/* Product Info - Right Side */}
@@ -363,53 +510,59 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
         </div>
 
         {/* Color Selection with enhanced colored circles */}
-        <div>
-          <h2 className="text-medium tracking-wide mb-3">COLOR</h2>
-          <div className="flex flex-wrap gap-3">
-            {availableColors.map((color) => {
-              const colorStyle = getColorStyle(color as string)
-              return (
-                <button
-                  key={color}
-                  className={`w-10 h-10 rounded-full relative ${
-                    selectedColor === color
-                      ? "ring-2 ring-laboratory-black ring-offset-2"
-                      : ""
-                  }`}
-                  style={{
-                    backgroundColor: colorStyle.backgroundColor,
-                    borderColor: colorStyle.borderColor,
-                    border: "1px solid",
-                  }}
-                  onClick={() => setSelectedColor(color as string)}
-                  aria-label={`Color: ${color}`}
-                  disabled={
-                    selectedSize &&
-                    !isVariantAvailable(selectedSize, color as string)
-                  }
-                >
-                  {selectedSize &&
-                    !isVariantAvailable(selectedSize, color as string) && (
-                      <div className="absolute inset-0 bg-laboratory-black opacity-50 rounded-full flex items-center justify-center">
-                        <div className="w-8 h-0.5 bg-white transform rotate-45"></div>
-                        <div className="w-8 h-0.5 bg-white transform -rotate-45 absolute"></div>
-                      </div>
-                    )}
-                </button>
-              )
-            })}
+        {availableColors.length > 0 && (
+          <div>
+            <h2 className="text-medium tracking-wide mb-3">COLOR</h2>
+            <div className="flex flex-wrap gap-3">
+              {availableColors.map((color) => {
+                const colorStyle = getColorStyle(color as string)
+                return (
+                  <button
+                    key={color}
+                    className={`w-10 h-10 rounded-full relative ${
+                      selectedColor === color
+                        ? "ring-2 ring-laboratory-black ring-offset-2"
+                        : ""
+                    }`}
+                    style={{
+                      backgroundColor: colorStyle.backgroundColor,
+                      borderColor: colorStyle.borderColor,
+                      border: "1px solid",
+                    }}
+                    onClick={() => setSelectedColor(color as string)}
+                    aria-label={`Color: ${color}`}
+                    disabled={
+                      selectedSize &&
+                      !isVariantAvailable(selectedSize, color as string)
+                    }
+                  >
+                    {selectedSize &&
+                      !isVariantAvailable(selectedSize, color as string) && (
+                        <div className="absolute inset-0 bg-laboratory-black opacity-50 rounded-full flex items-center justify-center">
+                          <div className="w-8 h-0.5 bg-white transform rotate-45"></div>
+                          <div className="w-8 h-0.5 bg-white transform -rotate-45 absolute"></div>
+                        </div>
+                      )}
+                  </button>
+                )
+              })}
+            </div>
+            {selectedColor && (
+              <p className="mt-2 text-regular tracking-wide">{selectedColor}</p>
+            )}
           </div>
-          {selectedColor && (
-            <p className="mt-2 text-regular tracking-wide">{selectedColor}</p>
-          )}
-        </div>
+        )}
 
         {/* Add to Cart Button with loading state */}
         <motion.button
           className="w-full py-3 bg-laboratory-black text-laboratory-white text-medium tracking-wide disabled:opacity-50 relative"
           onClick={handleAddToCart}
           whileTap={{ scale: 0.95 }}
-          disabled={!selectedSize || !selectedColor || isLoading}
+          disabled={
+            !selectedSize ||
+            (availableColors.length > 0 && !selectedColor) ||
+            isLoading
+          }
         >
           {isLoading ? (
             <span className="flex items-center justify-center">
@@ -431,27 +584,26 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
         </div>
 
         {/* Product Attributes/Features with SVG Icons */}
-        <div className="mt-8 pt-8 border-t border-laboratory-black/10">
-          <h2 className="text-medium tracking-wide mb-4">PRODUCT FEATURES</h2>
-          <div className="grid grid-cols-2 gap-4">
-            {productAttributes.map((attr, index) => (
-              <div key={index} className="flex items-start space-x-3">
-                <div className="text-laboratory-black">{attr.icon}</div>
-                <div>
-                  <h3 className="text-regular tracking-wide font-medium">
-                    {attr.name}
-                  </h3>
-                  <p className="text-regular tracking-wide text-laboratory-black/70">
-                    {attr.description}
-                  </p>
+        {productAttributes.length > 0 && (
+          <div className="mt-8 pt-8 border-t border-laboratory-black/10">
+            <h2 className="text-medium tracking-wide mb-4">PRODUCT FEATURES</h2>
+            <div className="grid grid-cols-2 gap-4">
+              {productAttributes.map((attr, index) => (
+                <div key={index} className="flex items-start space-x-3">
+                  <div className="text-laboratory-black">{attr.icon}</div>
+                  <div>
+                    <h3 className="text-regular tracking-wide font-medium">
+                      {attr.name}
+                    </h3>
+                    <p className="text-regular tracking-wide text-laboratory-black/70">
+                      {attr.description}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
         </div>
-      </div>
-    </div>
   )
-}
+
 
 export default ProductDetails
