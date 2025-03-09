@@ -213,7 +213,11 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           ) : product.images && product.images.length > 0 ? (
             // Show image based on current index, accounting for video offset
             <Image
-              src={product.images[hasVideo ? currentImageIndex - 1 : currentImageIndex].src}
+              src={
+                product.images[
+                  hasVideo ? currentImageIndex - 1 : currentImageIndex
+                ].src
+              }
               alt={`${product.title} - view ${currentImageIndex + 1}`}
               fill
               className="object-cover"
@@ -235,7 +239,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           {hasVideo && (
             <button
               className={`relative aspect-square overflow-hidden border ${
-                currentImageIndex === 0 ? "border-laboratory-black" : "border-transparent"
+                currentImageIndex === 0
+                  ? "border-laboratory-black"
+                  : "border-transparent"
               }`}
               onClick={() => setCurrentImageIndex(0)}
             >
@@ -255,7 +261,8 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           )}
 
           {/* Image thumbnails */}
-          {product.images && product.images.length > 0 &&
+          {product.images &&
+            product.images.length > 0 &&
             product.images.map((image, index) => (
               <button
                 key={image.src}
@@ -264,7 +271,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                     ? "border-laboratory-black"
                     : "border-transparent"
                 }`}
-                onClick={() => setCurrentImageIndex(hasVideo ? index + 1 : index)}
+                onClick={() =>
+                  setCurrentImageIndex(hasVideo ? index + 1 : index)
+                }
               >
                 <Image
                   src={image.src}
@@ -273,8 +282,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                   className="object-cover"
                 />
               </button>
-            ))
-          }
+            ))}
         </div>
       </div>
 
@@ -380,9 +388,12 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                     }}
                     onClick={() => setSelectedColor(color as string)}
                     aria-label={`Color: ${color}`}
+                    // In src/components/products/ProductDetails.tsx
+                    // Find this line:
                     disabled={
-                      selectedSize &&
-                      !isVariantAvailable(selectedSize, color as string)
+                      !selectedSize ||
+                      (availableColors.length > 0 && !selectedColor) ||
+                      isLoading
                     }
                   >
                     {selectedSize &&

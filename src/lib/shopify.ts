@@ -74,35 +74,40 @@ const client = Client.buildClient({
   apiVersion: "2023-07", // Or your preferred API version, e.g., '2023-10'
 })
 
-// Fetch all products
+// In src/lib/shopify.ts
 export async function getAllProducts(): Promise<ShopifyProduct[]> {
   try {
     const products = await client.product.fetchAll()
-    return products as unknown as ShopifyProduct[]
+    // Convert Shopify response to plain objects
+    return JSON.parse(JSON.stringify(products)) as ShopifyProduct[]
   } catch (error) {
     console.error("Error fetching all products:", error)
     return []
   }
 }
 
-// Fetch a product by handle
 export async function getProductByHandle(
   handle: string
 ): Promise<ShopifyProduct | null> {
   try {
     const product = await client.product.fetchByHandle(handle)
-    return product as unknown as ShopifyProduct
+    // Convert Shopify response to plain object
+    return JSON.parse(JSON.stringify(product)) as ShopifyProduct
   } catch (error) {
     console.error(`Error fetching product by handle ${handle}:`, error)
     return null
   }
 }
 
+// In src/lib/shopify.ts
 // Create a new checkout
 export async function createCheckout() {
   try {
+    // Use the newer API approach
     const checkout = await client.checkout.create()
-    return checkout
+
+    // Convert to plain object
+    return JSON.parse(JSON.stringify(checkout))
   } catch (error) {
     console.error("Error creating checkout:", error)
     throw error
