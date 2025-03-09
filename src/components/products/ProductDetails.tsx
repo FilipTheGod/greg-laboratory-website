@@ -7,8 +7,8 @@ import { motion } from "framer-motion"
 import { useCart } from "@/contexts/CartContext"
 import { ShopifyProduct } from "@/lib/shopify"
 
-// SVG Components for product attributes
-const WaterRepellentIcon: React.FC = () => (
+// SVG Component for product attributes (simplified for now)
+const ProductFeatureIcon: React.FC = () => (
   <svg
     width="24"
     height="24"
@@ -19,99 +19,6 @@ const WaterRepellentIcon: React.FC = () => (
     <path d="M12 2L5 12H19L12 2Z" stroke="currentColor" strokeWidth="1.5" />
     <path
       d="M7 16C7 18.7614 9.23858 21 12 21C14.7614 21 17 18.7614 17 16"
-      stroke="currentColor"
-      strokeWidth="1.5"
-    />
-  </svg>
-)
-
-const BreathableIcon: React.FC = () => (
-  <svg
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M12 2V6M12 22V18M4 12H2M6.31 6.31L4.8 4.8M17.69 6.31L19.2 4.8M6.31 17.69L4.8 19.2M17.69 17.69L19.2 19.2M22 12H20M12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20Z"
-      stroke="currentColor"
-      strokeWidth="1.5"
-    />
-  </svg>
-)
-
-const StretchIcon: React.FC = () => (
-  <svg
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M4 9H20M4 15H20M9 4V20M15 4V20"
-      stroke="currentColor"
-      strokeWidth="1.5"
-    />
-  </svg>
-)
-
-const DurableIcon: React.FC = () => (
-  <svg
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
-      stroke="currentColor"
-      strokeWidth="1.5"
-    />
-    <path
-      d="M12 6V12L16 14"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-    />
-  </svg>
-)
-
-const LightweightIcon: React.FC = () => (
-  <svg
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M12 4V2M4 12H2M6.31 6.31L4.8 4.8M17.69 6.31L19.2 4.8M12 20V22M20 12H22M17.69 17.69L19.2 19.2M6.31 17.69L4.8 19.2M12 17C14.7614 17 17 14.7614 17 12C17 9.23858 14.7614 7 12 7C9.23858 7 7 9.23858 7 12C7 14.7614 9.23858 17 12 17Z"
-      stroke="currentColor"
-      strokeWidth="1.5"
-    />
-  </svg>
-)
-
-const EasyCareIcon: React.FC = () => (
-  <svg
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M8 16L12 12M12 12L16 8M12 12L8 8M12 12L16 16"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
       stroke="currentColor"
       strokeWidth="1.5"
     />
@@ -148,35 +55,35 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
   const { addToCart, isLoading } = useCart()
 
- // Extract available sizes and colors from variants
-const availableSizes = Array.from(
-  new Set(
-    product.variants.map((variant) => {
-      const parts = variant.title.split(" / ");
-      return parts[0];
-    })
-  )
-).sort();
-
-const availableColors = Array.from(
-  new Set(
-    product.variants
-      .map((variant) => {
-        const parts = variant.title.split(" / ");
-        return parts.length > 1 ? parts[1] : null;
+  // Extract available sizes and colors from variants
+  const availableSizes = Array.from(
+    new Set(
+      product.variants.map((variant) => {
+        const parts = variant.title.split(" / ")
+        return parts[0]
       })
-      .filter(Boolean)
     )
-);
+  ).sort()
 
-// Check if the product has video media
-const hasVideo =
-  product.media &&
-  product.media.length > 0 &&
-  product.media[0]?.mediaContentType === "VIDEO";
+  const availableColors = Array.from(
+    new Set(
+      product.variants
+        .map((variant) => {
+          const parts = variant.title.split(" / ")
+          return parts.length > 1 ? parts[1] : null
+        })
+        .filter(Boolean)
+    )
+  )
 
-// Get video URL if available
-const videoUrl = hasVideo && product.media?.[0]?.sources?.[0]?.url;
+  // Check if the product has video media
+  const hasVideo =
+    product.media &&
+    product.media.length > 0 &&
+    product.media[0].mediaContentType === "VIDEO"
+
+  // Get video URL if available
+  const videoUrl = hasVideo && product.media?.[0]?.sources?.[0]?.url
 
   // Get color styling for visualization
   const getColorStyle = (
@@ -234,94 +141,42 @@ const videoUrl = hasVideo && product.media?.[0]?.sources?.[0]?.url;
 
   // Define the product attributes based on metafields or fall back to product type
   const getProductAttributes = () => {
-    const attributes = [];
+    const attributes = []
 
-    // First check if metafields exist (with the updated path)
-    if (product.metafields?.custom?.features?.value) {
-      const features = product.metafields.custom.features.value;
+    // We'll just use a simplified approach for now with one icon
+    // We can expand this once you have created all the SVG icons
+    attributes.push({
+      name: "Water Repellent",
+      icon: <ProductFeatureIcon />,
+      description: "Resists moisture and light rain",
+    })
 
-      if (features.waterRepellent) {
-        attributes.push({
-          name: "Water Repellent",
-          icon: <WaterRepellentIcon />,
-          description: "Resists moisture and light rain",
-        });
-      }
+    attributes.push({
+      name: "Breathable",
+      icon: <ProductFeatureIcon />,
+      description: "Allows air circulation for comfort",
+    })
 
-      if (features.breathable) {
-        attributes.push({
-          name: "Breathable",
-          icon: <BreathableIcon />,
-          description: "Allows air circulation for comfort",
-        })
-      }
+    attributes.push({
+      name: "2-Way Stretch",
+      icon: <ProductFeatureIcon />,
+      description: "Flexible movement in multiple directions",
+    })
 
-      if (features.stretch) {
-        attributes.push({
-          name: "2-Way Stretch",
-          icon: <StretchIcon />,
-          description: "Flexible movement in multiple directions",
-        })
-      }
-
-      if (features.durable) {
-        attributes.push({
-          name: "Durable",
-          icon: <DurableIcon />,
-          description: "Built for extended wear and use",
-        })
-      }
-
-      if (features.lightweight) {
-        attributes.push({
-          name: "Lightweight",
-          icon: <LightweightIcon />,
-          description: "Minimal weight for comfortable wear",
-        })
-      }
-
-      if (features.easycare) {
-        attributes.push({
-          name: "Easy Care",
-          icon: <EasyCareIcon />,
-          description: "Simple to maintain and clean",
-        })
-      }
-    } else {
-      // Fall back to adding attributes based on product type
+    if (product.productType === "Technical Series") {
       attributes.push({
-        name: "Water Repellent",
-        icon: <WaterRepellentIcon />,
-        description: "Resists moisture and light rain",
+        name: "Durable",
+        icon: <ProductFeatureIcon />,
+        description: "Built for extended wear and use",
       })
+    }
 
+    if (product.productType === "Field Study Series") {
       attributes.push({
-        name: "Breathable",
-        icon: <BreathableIcon />,
-        description: "Allows air circulation for comfort",
+        name: "Lightweight",
+        icon: <ProductFeatureIcon />,
+        description: "Minimal weight for comfortable wear",
       })
-
-      attributes.push({
-        name: "2-Way Stretch",
-        icon: <StretchIcon />,
-        description: "Flexible movement in multiple directions",
-      })
-
-      if (product.productType === "Technical Series") {
-        attributes.push({
-          name: "Durable",
-          icon: <DurableIcon />,
-          description: "Built for extended wear and use",
-        })
-      }
-
-      if (product.productType === "Field Study Series") {
-        attributes.push({
-          name: "Lightweight",
-          icon: <LightweightIcon />,
-          description: "Minimal weight for comfortable wear",
-        })
-      }
     }
 
     return attributes
@@ -371,13 +226,7 @@ const videoUrl = hasVideo && product.media?.[0]?.sources?.[0]?.url;
                 No Media Available
               </span>
             </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-export default ProductDetails)}
+          )}
         </div>
 
         {/* Media thumbnails */}
@@ -602,14 +451,11 @@ export default ProductDetails)}
                 </div>
               ))}
             </div>
-        </div>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
-  </div>
-  </div>
-  )}
-
-
-
 
 export default ProductDetails
