@@ -60,6 +60,7 @@ const client = Client.buildClient({
   domain: process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || "",
   storefrontAccessToken:
     process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN || "",
+  apiVersion: "2023-07", // Or your preferred API version, e.g., '2023-10'
 })
 
 // Fetch all products
@@ -109,7 +110,15 @@ export async function fetchCheckout(checkoutId: string) {
 }
 
 // Add items to a checkout
-export async function addItemToCheckout(checkoutId: string, lineItems: any[]) {
+export interface LineItem {
+  variantId: string
+  quantity: number
+}
+
+export async function addItemToCheckout(
+  checkoutId: string,
+  lineItems: LineItem[]
+) {
   try {
     const checkout = await client.checkout.addLineItems(checkoutId, lineItems)
     return checkout
@@ -120,7 +129,14 @@ export async function addItemToCheckout(checkoutId: string, lineItems: any[]) {
 }
 
 // Update items in a checkout
-export async function updateCheckoutItem(checkoutId: string, lineItems: any[]) {
+export interface LineItemUpdate {
+  id: string
+  quantity: number
+}
+export async function updateCheckoutItem(
+  checkoutId: string,
+  lineItems: LineItemUpdate[]
+) {
   try {
     const checkout = await client.checkout.updateLineItems(
       checkoutId,

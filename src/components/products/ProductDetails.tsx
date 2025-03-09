@@ -601,9 +601,11 @@ export default ProductDetails)}
                   </div>
                 </div>
               ))}
-            </div>
+</div>
         </div>
+      </div>
+    </div>
   )
-
+}
 
 export default ProductDetails
