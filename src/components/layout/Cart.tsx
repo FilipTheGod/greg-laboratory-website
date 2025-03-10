@@ -5,6 +5,7 @@ import React from "react"
 import { motion } from "framer-motion"
 import { useCart } from "@/contexts/CartContext"
 import Image from "next/image"
+import { formatPrice, getPriceValue } from "@/utils/price"
 
 const Cart: React.FC = () => {
   const {
@@ -93,7 +94,7 @@ const Cart: React.FC = () => {
                         {item.variant.title}
                       </p>
                       <p className="text-regular tracking-wide">
-                        ${parseFloat(item.variant.price).toFixed(2)}
+                        ${formatPrice(item.variant.price)}
                       </p>
 
                       <div className="mt-2 flex justify-between items-center">
@@ -126,7 +127,7 @@ const Cart: React.FC = () => {
                         <span className="text-regular tracking-wide">
                           $
                           {(
-                            parseFloat(item.variant.price) * item.quantity
+                            getPriceValue(item.variant.price) * item.quantity
                           ).toFixed(2)}
                         </span>
                       </div>

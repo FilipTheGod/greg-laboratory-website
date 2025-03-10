@@ -11,39 +11,24 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   // Debug product card rendering
   console.log(`Rendering ProductCard for: ${product.title}`)
-  console.log("Product data:", {
-    id: product.id,
-    handle: product.handle,
-    title: product.title,
-    variants: product.variants?.length || 0,
-    images: product.images?.length || 0,
-    hasMedia: !!product.media,
-    mediaItems: product.media?.length || 0,
-  })
 
-  if (product.variants && product.variants[0]) {
-    console.log("First variant price:", {
-      raw: product.variants[0].price,
-      asString: String(product.variants[0].price),
-      asNumber: Number(product.variants[0].price),
-      parseFloat: parseFloat(product.variants[0].price),
-      isNaN: isNaN(parseFloat(product.variants[0].price)),
-    })
-  }
-
-  // Ensure price is a valid number before using toFixed
+  // Extract price from the nested structure
   let price = "0.00"
-  if (product.variants && product.variants[0] && product.variants[0].price) {
-    const priceValue = parseFloat(String(product.variants[0].price))
-
-    if (!isNaN(priceValue)) {
-      price = priceValue.toFixed(2)
-    } else {
-      console.error(
-        `Invalid price format for ${product.title}:`,
-        product.variants[0].price
-      )
+  try {
+    if (product.variants && product.variants[0] && product.variants[0].price) {
+      // Handle both string and object formats for price
+      if (typeof product.variants[0].price === "string") {
+        price = parseFloat(product.variants[0].price).toFixed(2)
+      } else if (
+        typeof product.variants[0].price === "object" &&
+        product.variants[0].price.amount
+      ) {
+        // Extract amount from the price object
+        price = parseFloat(product.variants[0].price.amount).toFixed(2)
+      }
     }
+  } catch (err) {
+    console.error(`Error parsing price for ${product.title}:`, err)
   }
 
   const category = product.productType
@@ -56,13 +41,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   // Get video URL if available
   const videoUrl = hasVideo && product.media?.[0]?.sources?.[0]?.url
-
-  if (hasVideo) {
-    console.log("Product has video:", {
-      mediaType: product.media?.[0]?.mediaContentType,
-      videoUrl: videoUrl,
-    })
-  }
 
   return (
     <Link href={`/product/${product.handle}`} className="group">

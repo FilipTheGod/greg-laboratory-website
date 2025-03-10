@@ -296,7 +296,13 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             {product.title}
           </h1>
           <p className="text-medium tracking-wide mb-6">
-            ${parseFloat(product.variants[0].price).toFixed(2)}
+            $
+            {typeof product.variants[0].price === "string"
+              ? parseFloat(product.variants[0].price).toFixed(2)
+              : typeof product.variants[0].price === "object" &&
+                product.variants[0].price.amount
+              ? parseFloat(product.variants[0].price.amount).toFixed(2)
+              : "0.00"}
           </p>
         </div>
 
@@ -388,12 +394,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                     }}
                     onClick={() => setSelectedColor(color as string)}
                     aria-label={`Color: ${color}`}
-                    // In src/components/products/ProductDetails.tsx
-                    // Find this line:
                     disabled={
-                      !selectedSize ||
-                      (availableColors.length > 0 && !selectedColor) ||
-                      isLoading
+                      selectedSize &&
+                      !isVariantAvailable(selectedSize, color as string)
                     }
                   >
                     {selectedSize &&

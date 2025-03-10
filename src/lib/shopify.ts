@@ -1,24 +1,37 @@
 // src/lib/shopify.ts
 import Client from "shopify-buy"
 
-// Define types for Shopify product data
+// src/lib/shopify-types.ts
+export interface MoneyV2 {
+  amount: string
+  currencyCode: string
+}
+
 export interface ShopifyImage {
   id: string
   src: string
   altText?: string
+  width?: number
+  height?: number
 }
 
 export interface ShopifyProductVariant {
   id: string
   title: string
-  price: string
+  price:
+    | string
+    | {
+        amount: string
+        currencyCode: string
+        type?: any
+      }
   available?: boolean
 }
 
 export interface ShopifyMediaSource {
   url: string
-  format: string
-  mimeType: string
+  format?: string
+  mimeType?: string
 }
 
 export interface ShopifyMediaPreviewImage {
@@ -66,14 +79,50 @@ export interface ShopifyProduct {
   }
 }
 
+// Helper function to extract price amount regardless of format
+export function extractPriceAmount(
+  priceValue: string | { amount: string; currencyCode: string; type?: any }
+): string {
+  if (typeof priceValue === "string") {
+    return priceValue
+  } else if (
+    typeof priceValue === "object" &&
+    priceValue &&
+    priceValue.amount
+  ) {
+    return priceValue.amount
+  }
+  return "0.00"
+}
+
 // Debug function to log objects
 const debugLog = (label: string, obj: any) => {
   console.log(`DEBUG ${label}:`, JSON.stringify(obj, null, 2))
 }
 
-// Helper function to convert Shopify objects to plain objects
+// Use this in your convertToPlainObject function to normalize price data
 const convertToPlainObject = <T>(obj: any): T => {
   const plainObj = JSON.parse(JSON.stringify(obj))
+
+  // Normalize price data if needed
+  if (plainObj && Array.isArray(plainObj)) {
+    plainObj.forEach((item) => {
+      if (item.variants && Array.isArray(item.variants)) {
+        item.variants.forEach((variant: any) => {
+          // If price is a complex object, extract just the amount
+          if (
+            variant.price &&
+            typeof variant.price === "object" &&
+            "amount" in variant.price
+          ) {
+            // Keep the original structure but also add a priceAmount for easier access
+            variant.priceAmount = variant.price.amount
+          }
+        })
+      }
+    })
+  }
+
   debugLog("After conversion", plainObj)
   return plainObj as T
 }

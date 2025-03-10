@@ -2,6 +2,7 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect } from "react"
+import { getPriceValue } from "@/utils/price"
 import {
   createCheckout,
   fetchCheckout,
@@ -49,7 +50,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0)
   const cartTotal = cartItems.reduce(
-    (total, item) => total + parseFloat(item.variant.price) * item.quantity,
+    (total, item) => total + getPriceValue(item.variant.price) * item.quantity,
     0
   )
 
