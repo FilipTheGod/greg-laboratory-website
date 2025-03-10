@@ -8,15 +8,29 @@ export default async function ProductPage({
 }: {
   params: { handle: string }
 }) {
+  // Add console log for debugging
+  console.log("Product page params:", params)
+
   if (!params.handle) {
+    console.log("No handle provided")
     notFound()
   }
 
-  const product = await getProductByHandle(params.handle)
+  try {
+    const product = await getProductByHandle(params.handle)
 
-  if (!product) {
+    console.log(
+      "Retrieved product:",
+      product ? `${product.title} (found)` : "null (not found)"
+    )
+
+    if (!product) {
+      notFound()
+    }
+
+    return <ProductDetails product={product} />
+  } catch (error) {
+    console.error("Error fetching product:", error)
     notFound()
   }
-
-  return <ProductDetails product={product} />
 }
