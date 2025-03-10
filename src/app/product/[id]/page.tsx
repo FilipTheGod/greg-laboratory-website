@@ -1,4 +1,4 @@
-// src/app/product/[handle]/page.tsx
+// src/app/product/[id]/page.tsx
 import { getProductByHandle } from "@/lib/shopify"
 import ProductDetails from "@/components/products/ProductDetails"
 import { notFound } from "next/navigation"
@@ -6,18 +6,19 @@ import { notFound } from "next/navigation"
 export default async function ProductPage({
   params,
 }: {
-  params: { handle: string }
+  params: { id: string }
 }) {
   // Add console log for debugging
   console.log("Product page params:", params)
 
-  if (!params.handle) {
-    console.log("No handle provided")
+  if (!params.id) {
+    console.log("No ID provided")
     notFound()
   }
 
   try {
-    const product = await getProductByHandle(params.handle)
+    // Use params.id instead of params.handle
+    const product = await getProductByHandle(params.id)
 
     console.log(
       "Retrieved product:",

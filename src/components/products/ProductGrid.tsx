@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react"
 import ProductCard from "./ProductCard"
 import ProductFilter from "./ProductFilter"
 import { ShopifyProduct } from "@/lib/shopify"
+import { debugProduct } from "@/utils/debug" // Import the debug utility
 
 interface ProductGridProps {
   initialProducts: ShopifyProduct[]
@@ -20,15 +21,32 @@ type ProductCategory =
 
 // Helper to map Shopify product types to our categories
 const mapProductTypeToCategory = (productType: string): ProductCategory => {
+  // Normalize the product type by converting to uppercase and replacing spaces
+  const normalizedType = productType.toUpperCase().replace(/\s+/g, " ").trim()
+
+  // Map of normalized types to categories
   const typeMap: Record<string, ProductCategory> = {
-    "Standard Series": "STANDARD SERIES",
-    "Technical Series": "TECHNICAL SERIES",
-    "Laboratory Equipment": "LABORATORY EQUIPMENT SERIES",
-    "Collaborative Protocol": "COLLABORATIVE PROTOCOL SERIES",
-    "Field Study": "FIELD STUDY SERIES",
+    "STANDARD SERIES": "STANDARD SERIES",
+    "TECHNICAL SERIES": "TECHNICAL SERIES",
+    "LABORATORY EQUIPMENT": "LABORATORY EQUIPMENT SERIES",
+    "LABORATORY EQUIPMENT SERIES": "LABORATORY EQUIPMENT SERIES",
+    "COLLABORATIVE PROTOCOL": "COLLABORATIVE PROTOCOL SERIES",
+    "COLLABORATIVE PROTOCOL SERIES": "COLLABORATIVE PROTOCOL SERIES",
+    "FIELD STUDY": "FIELD STUDY SERIES",
+    "FIELD SERIES": "FIELD STUDY SERIES",
+    "FIELD STUDY SERIES": "FIELD STUDY SERIES",
   }
 
-  return typeMap[productType] || "STANDARD SERIES"
+  return typeMap[normalizedType] || "STANDARD SERIES"
+}
+
+// Helper to check if a product has video media
+const hasVideoMedia = (product: ShopifyProduct): boolean => {
+  return !!(
+    product.media &&
+    product.media.length > 0 &&
+    product.media.some((media) => media.mediaContentType === "VIDEO")
+  )
 }
 
 const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
@@ -37,8 +55,9 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
   const [filteredCategory, setFilteredCategory] =
     useState<ProductCategory>("ALL")
   const [products, setProducts] = useState<ShopifyProduct[]>(initialProducts)
+  const [videoProductsCount, setVideoProductsCount] = useState(0)
 
-  // Effect to handle any potential issues with initialProducts
+  // Effect to handle any potential issues with initialProducts and identify video products
   useEffect(() => {
     if (!Array.isArray(initialProducts)) {
       console.error("initialProducts is not an array:", initialProducts)
@@ -66,23 +85,60 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
         initialProducts.length - validProducts.length
       } invalid products`
     )
-    setProducts(validProducts)
+
+    // Debug each product's media
+    validProducts.forEach((product) => {
+      debugProduct(product, "ProductGrid Initial")
+    })
+
+    // Count products with video
+    const productsWithVideo = validProducts.filter(hasVideoMedia)
+    setVideoProductsCount(productsWithVideo.length)
+    console.log(`Found ${productsWithVideo.length} products with video media`)
+
+    // Prioritize products with video by sorting them first
+    const sortedProducts = [...validProducts].sort((a, b) => {
+      const aHasVideo = hasVideoMedia(a)
+      const bHasVideo = hasVideoMedia(b)
+
+      if (aHasVideo && !bHasVideo) return -1
+      if (!aHasVideo && bHasVideo) return 1
+      return 0
+    })
+
+    setProducts(sortedProducts)
   }, [initialProducts])
 
-  const filteredProducts =
-    filteredCategory === "ALL"
-      ? products
-      : products.filter(
-          (product) =>
-            mapProductTypeToCategory(product.productType) === filteredCategory
-        )
+  // Filter products based on category
+  const filteredProducts = React.useMemo(() => {
+    const filtered =
+      filteredCategory === "ALL"
+        ? products
+        : products.filter(
+            (product) =>
+              mapProductTypeToCategory(product.productType) === filteredCategory
+          )
 
-  console.log(`Displaying ${filteredProducts.length} products after filtering`)
+    console.log(
+      `Displaying ${filtered.length} products after filtering (category: ${filteredCategory})`
+    )
+    return filtered
+  }, [products, filteredCategory])
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-8 p-6">
       <div className="md:col-span-1">
         <ProductFilter onFilterChange={setFilteredCategory} />
+
+        {/* Video products debug info */}
+        {process.env.NODE_ENV === "development" && (
+          <div className="mt-8 p-4 bg-gray-100 text-sm">
+            <p className="font-medium mb-2">Development Info:</p>
+            <p>Products with video: {videoProductsCount}</p>
+            <p>Current filter: {filteredCategory}</p>
+            <p>Showing: {filteredProducts.length} products</p>
+          </div>
+        )}
       </div>
 
       <div className="md:col-span-3">

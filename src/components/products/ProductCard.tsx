@@ -1,16 +1,16 @@
 // src/components/products/ProductCard.tsx
-import React from "react"
+import React, { useEffect, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { ShopifyProduct } from "@/lib/shopify"
+import { formatPrice } from "@/utils/price" // Assuming you've created this
 
 interface ProductCardProps {
   product: ShopifyProduct
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  // Debug product card rendering
-  console.log(`Rendering ProductCard for: ${product.title}`)
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   // Extract price from the nested structure
   let price = "0.00"
@@ -42,12 +42,30 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   // Get video URL if available
   const videoUrl = hasVideo && product.media?.[0]?.sources?.[0]?.url
 
+  // Log media information for debugging
+  console.log(`Product ${product.title} media info:`, {
+    hasMedia: !!product.media,
+    mediaCount: product.media?.length || 0,
+    hasVideo,
+    videoUrl,
+    firstMediaType: product.media?.[0]?.mediaContentType,
+  })
+
+  // Initialize video element after component mounts
+  useEffect(() => {
+    if (videoRef.current && videoUrl) {
+      // Force reload the video element to ensure it plays
+      videoRef.current.load()
+    }
+  }, [videoUrl])
+
   return (
     <Link href={`/product/${product.handle}`} className="group">
       <div className="relative aspect-square overflow-hidden bg-laboratory-white mb-2">
         {hasVideo && videoUrl ? (
-          // Video display (prioritized)
+          // Video display with explicit controls for debugging
           <video
+            ref={videoRef}
             autoPlay
             loop
             muted
@@ -64,6 +82,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             alt={product.title}
             fill
             className="object-cover transition-transform group-hover:scale-105 duration-500"
+            priority={true}
           />
         ) : (
           // Fallback for products without images
@@ -84,7 +103,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </h2>
         </div>
         <p className="text-laboratory-black text-medium tracking-wide">
-          ${price}
+          ${formatPrice(price)}
         </p>
       </div>
     </Link>

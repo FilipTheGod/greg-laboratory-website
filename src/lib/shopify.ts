@@ -1,7 +1,6 @@
 // src/lib/shopify.ts
 import Client from "shopify-buy"
 
-// src/lib/shopify-types.ts
 export interface MoneyV2 {
   amount: string
   currencyCode: string
@@ -30,19 +29,23 @@ export interface ShopifyProductVariant {
 
 export interface ShopifyMediaSource {
   url: string
-  format?: string
-  mimeType?: string
+  format: string
+  mimeType: string
 }
 
 export interface ShopifyMediaPreviewImage {
   src: string
+  width?: number
+  height?: number
+  altText?: string
 }
 
 export interface ShopifyMedia {
   id: string
-  mediaContentType: string // VIDEO, IMAGE, etc.
+  mediaContentType: "VIDEO" | "IMAGE" | "EXTERNAL_VIDEO" | "MODEL_3D"
   previewImage?: ShopifyMediaPreviewImage
   sources?: ShopifyMediaSource[]
+  alt?: string
 }
 
 export interface ShopifyMetafield {
@@ -95,27 +98,64 @@ export function extractPriceAmount(
   return "0.00"
 }
 
-// Debug function to log objects
 const debugLog = (label: string, obj: any) => {
-  console.log(`DEBUG ${label}:`, JSON.stringify(obj, null, 2))
-}
+  // Only log in development
+  if (process.env.NODE_ENV === "development") {
+    console.log(`DEBUG ${label}:`, JSON.stringify(obj, null, 2))
 
-// Use this in your convertToPlainObject function to normalize price data
+    // Add specific debugging for media objects
+    if (obj && Array.isArray(obj)) {
+      obj.forEach((item) => {
+        if (item.media && Array.isArray(item.media) && item.media.length > 0) {
+          console.log(`DEBUG MEDIA for ${item.title}:`, {
+            mediaCount: item.media.length,
+            mediaTypes: item.media.map((m) => m.mediaContentType),
+            hasVideoMedia: item.media.some(
+              (m) => m.mediaContentType === "VIDEO"
+            ),
+            firstMediaType: item.media[0]?.mediaContentType,
+            firstMediaHasSources: !!item.media[0]?.sources,
+            firstMediaSourcesCount: item.media[0]?.sources?.length,
+          })
+        }
+      })
+    }
+  }
+}
 const convertToPlainObject = <T>(obj: any): T => {
   const plainObj = JSON.parse(JSON.stringify(obj))
 
-  // Normalize price data if needed
+  // Process and enhance media data
   if (plainObj && Array.isArray(plainObj)) {
     plainObj.forEach((item) => {
+      // Process media data
+      if (item.media && Array.isArray(item.media)) {
+        // Flag products with video content for easier filtering
+        item.hasVideoMedia = item.media.some(
+          (m) => m.mediaContentType === "VIDEO"
+        )
+
+        // Ensure media sources are correctly structured
+        item.media.forEach((mediaItem: any) => {
+          if (
+            mediaItem.mediaContentType === "VIDEO" &&
+            (!mediaItem.sources || mediaItem.sources.length === 0)
+          ) {
+            console.warn(
+              `Video media without sources found for product: ${item.title}`
+            )
+          }
+        })
+      }
+
+      // Process variants/prices
       if (item.variants && Array.isArray(item.variants)) {
         item.variants.forEach((variant: any) => {
-          // If price is a complex object, extract just the amount
           if (
             variant.price &&
             typeof variant.price === "object" &&
             "amount" in variant.price
           ) {
-            // Keep the original structure but also add a priceAmount for easier access
             variant.priceAmount = variant.price.amount
           }
         })
@@ -125,6 +165,30 @@ const convertToPlainObject = <T>(obj: any): T => {
 
   debugLog("After conversion", plainObj)
   return plainObj as T
+}
+
+export function inspectProductMedia(product: ShopifyProduct): void {
+  if (!product) {
+    console.log("No product provided for media inspection")
+    return
+  }
+
+  console.log(`Media inspection for ${product.title}:`, {
+    hasMedia: !!product.media,
+    mediaCount: product.media?.length || 0,
+    mediaTypes: product.media?.map((m) => m.mediaContentType) || [],
+    hasVideoMedia:
+      product.media?.some((m) => m.mediaContentType === "VIDEO") || false,
+    firstMediaDetails: product.media?.[0]
+      ? {
+          type: product.media[0].mediaContentType,
+          hasSources: !!product.media[0].sources,
+          sourcesCount: product.media[0].sources?.length || 0,
+          firstSourceUrl: product.media[0].sources?.[0]?.url || "No URL",
+          hasPreviewImage: !!product.media[0].previewImage,
+        }
+      : "No media",
+  })
 }
 
 // Initialize the client
@@ -142,34 +206,44 @@ console.log("Shopify client configuration:", {
   apiVersion: "2023-07",
 })
 
-// Fetch all products
 export async function getAllProducts(): Promise<ShopifyProduct[]> {
   try {
     console.log("Fetching all products...")
     const products = await client.product.fetchAll()
     console.log(`Fetched ${products.length} products`)
 
-    // Check the first product for debugging
+    // Enhanced debugging for media
     if (products.length > 0) {
-      const firstProduct = products[0]
-      console.log("First product example:", {
-        id: firstProduct.id,
-        title: firstProduct.title,
-        variants: firstProduct.variants.length,
-        hasMedia: !!firstProduct.media,
-        mediaLength: firstProduct.media ? firstProduct.media.length : 0,
-      })
+      const productsWithVideo = products.filter(
+        (p) =>
+          p.media &&
+          p.media.length > 0 &&
+          p.media.some((m) => m.mediaContentType === "VIDEO")
+      )
 
-      // Check price formatting
-      const firstVariant = firstProduct.variants[0]
-      console.log("First variant price:", {
-        rawPrice: firstVariant.price,
-        asNumber: parseFloat(firstVariant.price),
-        formatted: parseFloat(firstVariant.price).toFixed(2),
-      })
+      console.log(
+        `Found ${productsWithVideo.length} products with video content`
+      )
+
+      if (productsWithVideo.length > 0) {
+        const firstVideoProduct = productsWithVideo[0]
+        const videoMedia = firstVideoProduct.media.find(
+          (m) => m.mediaContentType === "VIDEO"
+        )
+
+        console.log("First video product details:", {
+          title: firstVideoProduct.title,
+          videoMediaId: videoMedia?.id,
+          videoSources: videoMedia?.sources?.map((s) => ({
+            url: s.url,
+            format: s.format,
+          })),
+          hasPreviewImage: !!videoMedia?.previewImage,
+        })
+      }
     }
 
-    // Convert Shopify response to plain objects to avoid serialization errors
+    // Convert Shopify response to plain objects
     return convertToPlainObject<ShopifyProduct[]>(products)
   } catch (error) {
     console.error("Error fetching all products:", error)
@@ -183,6 +257,15 @@ export async function getProductByHandle(
 ): Promise<ShopifyProduct | null> {
   try {
     console.log(`Fetching product with handle: ${handle}`)
+
+    // Add more detailed logging
+    console.log(
+      `Client initialized with domain: ${
+        process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || "(not set)"
+      }`
+    )
+    console.log(`Using API version: ${client.config.apiVersion}`)
+
     const product = await client.product.fetchByHandle(handle)
 
     if (!product) {
@@ -191,18 +274,34 @@ export async function getProductByHandle(
     }
 
     console.log(`Found product: ${product.title}`)
+
+    // Log more detailed information
     console.log("Product details:", {
       id: product.id,
       title: product.title,
-      variants: product.variants.length,
+      variants: product.variants?.length || 0,
       hasMedia: !!product.media,
       mediaLength: product.media ? product.media.length : 0,
+      hasVideoMedia:
+        product.media &&
+        product.media.some((m) => m.mediaContentType === "VIDEO"),
+      mediaTypes: product.media
+        ? product.media.map((m) => m.mediaContentType)
+        : [],
     })
 
     // Convert Shopify response to plain object
     return convertToPlainObject<ShopifyProduct>(product)
   } catch (error) {
     console.error(`Error fetching product by handle ${handle}:`, error)
+    // Log more details about the error
+    if (error instanceof Error) {
+      console.error("Error details:", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      })
+    }
     return null
   }
 }
