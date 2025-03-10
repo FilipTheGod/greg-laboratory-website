@@ -8,12 +8,19 @@ interface VideoDebugProps {
   title: string
 }
 
+interface VideoMetadata {
+  headers?: Record<string, string>
+  duration?: number
+  videoWidth?: number
+  videoHeight?: number
+}
+
 const VideoDebug: React.FC<VideoDebugProps> = ({ videoUrl, title }) => {
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading"
   )
   const [errorMessage, setErrorMessage] = useState<string>("")
-  const [metadata, setMetadata] = useState<{ [key: string]: any }>({})
+  const [metadata, setMetadata] = useState<VideoMetadata>({})
   const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
@@ -39,7 +46,7 @@ const VideoDebug: React.FC<VideoDebugProps> = ({ videoUrl, title }) => {
         }
 
         // Collect headers for debugging
-        const headers: { [key: string]: string } = {}
+        const headers: Record<string, string> = {}
         response.headers.forEach((value, key) => {
           headers[key] = value
         })
@@ -66,12 +73,21 @@ const VideoDebug: React.FC<VideoDebugProps> = ({ videoUrl, title }) => {
   // Handle video events
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
-      setMetadata({
-        ...metadata,
-        duration: videoRef.current.duration,
-        videoWidth: videoRef.current.videoWidth,
-        videoHeight: videoRef.current.videoHeight,
-      })
+      const newMetadata = { ...metadata }
+
+      if (videoRef.current.duration) {
+        newMetadata.duration = videoRef.current.duration
+      }
+
+      if (videoRef.current.videoWidth) {
+        newMetadata.videoWidth = videoRef.current.videoWidth
+      }
+
+      if (videoRef.current.videoHeight) {
+        newMetadata.videoHeight = videoRef.current.videoHeight
+      }
+
+      setMetadata(newMetadata)
     }
   }
 
@@ -141,10 +157,3 @@ const VideoDebug: React.FC<VideoDebugProps> = ({ videoUrl, title }) => {
 }
 
 export default VideoDebug
-
-// Usage in development:
-// In any component where you want to debug a video:
-//
-// {process.env.NODE_ENV === 'development' && videoUrl && (
-//   <VideoDebug videoUrl={videoUrl} title="Product Video Debug" />
-// )}

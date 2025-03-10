@@ -17,13 +17,7 @@ export interface ShopifyImage {
 export interface ShopifyProductVariant {
   id: string
   title: string
-  price:
-    | string
-    | {
-        amount: string
-        currencyCode: string
-        type?: any
-      }
+  price: string | MoneyV2
   available?: boolean
 }
 
@@ -83,9 +77,7 @@ export interface ShopifyProduct {
 }
 
 // Helper function to extract price amount regardless of format
-export function extractPriceAmount(
-  priceValue: string | { amount: string; currencyCode: string; type?: any }
-): string {
+export function extractPriceAmount(priceValue: string | MoneyV2): string {
   if (typeof priceValue === "string") {
     return priceValue
   } else if (
@@ -98,97 +90,17 @@ export function extractPriceAmount(
   return "0.00"
 }
 
-const debugLog = (label: string, obj: any) => {
-  // Only log in development
+// Simple, focused debug logging function
+const debugLog = (label: string, obj: unknown): void => {
   if (process.env.NODE_ENV === "development") {
-    console.log(`DEBUG ${label}:`, JSON.stringify(obj, null, 2))
-
-    // Add specific debugging for media objects
-    if (obj && Array.isArray(obj)) {
-      obj.forEach((item) => {
-        if (item.media && Array.isArray(item.media) && item.media.length > 0) {
-          console.log(`DEBUG MEDIA for ${item.title}:`, {
-            mediaCount: item.media.length,
-            mediaTypes: item.media.map((m) => m.mediaContentType),
-            hasVideoMedia: item.media.some(
-              (m) => m.mediaContentType === "VIDEO"
-            ),
-            firstMediaType: item.media[0]?.mediaContentType,
-            firstMediaHasSources: !!item.media[0]?.sources,
-            firstMediaSourcesCount: item.media[0]?.sources?.length,
-          })
-        }
-      })
-    }
+    console.log(`DEBUG ${label}:`, obj)
   }
 }
-const convertToPlainObject = <T>(obj: any): T => {
+
+// Convert Shopify response to properly typed objects
+const convertToPlainObject = <T>(obj: unknown): T => {
   const plainObj = JSON.parse(JSON.stringify(obj))
-
-  // Process and enhance media data
-  if (plainObj && Array.isArray(plainObj)) {
-    plainObj.forEach((item) => {
-      // Process media data
-      if (item.media && Array.isArray(item.media)) {
-        // Flag products with video content for easier filtering
-        item.hasVideoMedia = item.media.some(
-          (m) => m.mediaContentType === "VIDEO"
-        )
-
-        // Ensure media sources are correctly structured
-        item.media.forEach((mediaItem: any) => {
-          if (
-            mediaItem.mediaContentType === "VIDEO" &&
-            (!mediaItem.sources || mediaItem.sources.length === 0)
-          ) {
-            console.warn(
-              `Video media without sources found for product: ${item.title}`
-            )
-          }
-        })
-      }
-
-      // Process variants/prices
-      if (item.variants && Array.isArray(item.variants)) {
-        item.variants.forEach((variant: any) => {
-          if (
-            variant.price &&
-            typeof variant.price === "object" &&
-            "amount" in variant.price
-          ) {
-            variant.priceAmount = variant.price.amount
-          }
-        })
-      }
-    })
-  }
-
-  debugLog("After conversion", plainObj)
   return plainObj as T
-}
-
-export function inspectProductMedia(product: ShopifyProduct): void {
-  if (!product) {
-    console.log("No product provided for media inspection")
-    return
-  }
-
-  console.log(`Media inspection for ${product.title}:`, {
-    hasMedia: !!product.media,
-    mediaCount: product.media?.length || 0,
-    mediaTypes: product.media?.map((m) => m.mediaContentType) || [],
-    hasVideoMedia:
-      product.media?.some((m) => m.mediaContentType === "VIDEO") || false,
-    firstMediaDetails: product.media?.[0]
-      ? {
-          type: product.media[0].mediaContentType,
-          hasSources: !!product.media[0].sources,
-          sourcesCount: product.media[0].sources?.length || 0,
-          firstSourceUrl: product.media[0].sources?.[0]?.url || "No URL",
-          hasPreviewImage: !!product.media[0].previewImage,
-        }
-      : "No media",
-  })
 }
 
 // Initialize the client
@@ -196,13 +108,6 @@ const client = Client.buildClient({
   domain: process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || "",
   storefrontAccessToken:
     process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN || "",
-  apiVersion: "2023-07", // Or your preferred API version, e.g., '2023-10'
-})
-
-// Debug Shopify client configuration
-console.log("Shopify client configuration:", {
-  domain: process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || "(not set)",
-  tokenProvided: !!process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN,
   apiVersion: "2023-07",
 })
 
@@ -211,37 +116,6 @@ export async function getAllProducts(): Promise<ShopifyProduct[]> {
     console.log("Fetching all products...")
     const products = await client.product.fetchAll()
     console.log(`Fetched ${products.length} products`)
-
-    // Enhanced debugging for media
-    if (products.length > 0) {
-      const productsWithVideo = products.filter(
-        (p) =>
-          p.media &&
-          p.media.length > 0 &&
-          p.media.some((m) => m.mediaContentType === "VIDEO")
-      )
-
-      console.log(
-        `Found ${productsWithVideo.length} products with video content`
-      )
-
-      if (productsWithVideo.length > 0) {
-        const firstVideoProduct = productsWithVideo[0]
-        const videoMedia = firstVideoProduct.media.find(
-          (m) => m.mediaContentType === "VIDEO"
-        )
-
-        console.log("First video product details:", {
-          title: firstVideoProduct.title,
-          videoMediaId: videoMedia?.id,
-          videoSources: videoMedia?.sources?.map((s) => ({
-            url: s.url,
-            format: s.format,
-          })),
-          hasPreviewImage: !!videoMedia?.previewImage,
-        })
-      }
-    }
 
     // Convert Shopify response to plain objects
     return convertToPlainObject<ShopifyProduct[]>(products)
@@ -257,15 +131,6 @@ export async function getProductByHandle(
 ): Promise<ShopifyProduct | null> {
   try {
     console.log(`Fetching product with handle: ${handle}`)
-
-    // Add more detailed logging
-    console.log(
-      `Client initialized with domain: ${
-        process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || "(not set)"
-      }`
-    )
-    console.log(`Using API version: ${client.config.apiVersion}`)
-
     const product = await client.product.fetchByHandle(handle)
 
     if (!product) {
@@ -275,33 +140,10 @@ export async function getProductByHandle(
 
     console.log(`Found product: ${product.title}`)
 
-    // Log more detailed information
-    console.log("Product details:", {
-      id: product.id,
-      title: product.title,
-      variants: product.variants?.length || 0,
-      hasMedia: !!product.media,
-      mediaLength: product.media ? product.media.length : 0,
-      hasVideoMedia:
-        product.media &&
-        product.media.some((m) => m.mediaContentType === "VIDEO"),
-      mediaTypes: product.media
-        ? product.media.map((m) => m.mediaContentType)
-        : [],
-    })
-
     // Convert Shopify response to plain object
     return convertToPlainObject<ShopifyProduct>(product)
   } catch (error) {
     console.error(`Error fetching product by handle ${handle}:`, error)
-    // Log more details about the error
-    if (error instanceof Error) {
-      console.error("Error details:", {
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
-      })
-    }
     return null
   }
 }

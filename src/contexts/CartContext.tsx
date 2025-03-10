@@ -11,6 +11,22 @@ import {
   removeCheckoutItem,
 } from "@/lib/shopify"
 
+// Define Checkout type
+interface CheckoutItem {
+  id: string
+  variant: {
+    id: string
+  }
+  quantity: number
+}
+
+interface Checkout {
+  id: string
+  webUrl: string
+  completedAt?: string
+  lineItems?: CheckoutItem[]
+}
+
 export interface CartItem {
   id: string
   title: string
@@ -65,11 +81,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
       if (existingCheckoutId) {
         try {
           // Fetch the existing checkout to make sure it's still valid
-          const checkout = await fetchCheckout(existingCheckoutId)
+          const checkout = (await fetchCheckout(existingCheckoutId)) as Checkout
 
           // If checkout is completed, create a new one
           if (checkout.completedAt) {
-            const newCheckout = await createCheckout()
+            const newCheckout = (await createCheckout()) as Checkout
             setCheckoutId(newCheckout.id)
             setCheckoutUrl(newCheckout.webUrl)
             localStorage.setItem("checkoutId", newCheckout.id)
@@ -89,7 +105,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         } catch (error) {
           console.error("Error fetching existing checkout:", error)
           // If there's an error (e.g., checkout expired), create a new one
-          const newCheckout = await createCheckout()
+          const newCheckout = (await createCheckout()) as Checkout
           setCheckoutId(newCheckout.id)
           setCheckoutUrl(newCheckout.webUrl)
           localStorage.setItem("checkoutId", newCheckout.id)
@@ -97,7 +113,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
       } else {
         // No existing checkout, create a new one
         try {
-          const checkout = await createCheckout()
+          const checkout = (await createCheckout()) as Checkout
           setCheckoutId(checkout.id)
           setCheckoutUrl(checkout.webUrl)
           localStorage.setItem("checkoutId", checkout.id)
@@ -114,10 +130,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
                 quantity: item.quantity,
               }))
 
-              const updatedCheckout = await addItemToCheckout(
+              const updatedCheckout = (await addItemToCheckout(
                 checkout.id,
                 lineItems
-              )
+              )) as Checkout
               setCheckoutUrl(updatedCheckout.webUrl)
             }
           }

@@ -1,13 +1,14 @@
 // src/components/products/ProductDetails.tsx
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { useCart } from "@/contexts/CartContext"
-import { ShopifyProduct } from "@/lib/shopify"
+import { ShopifyProduct, ShopifyProductVariant } from "@/lib/shopify"
+import { formatPrice } from "@/utils/price"
 
-// SVG Component for product attributes (simplified for now)
+// SVG Component for product attributes
 const ProductFeatureIcon: React.FC = () => (
   <svg
     width="24"
@@ -52,6 +53,8 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [selectedColor, setSelectedColor] = useState("")
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [showingSizeGuide, setShowingSizeGuide] = useState(false)
+  const [videoLoaded, setVideoLoaded] = useState(false)
+  const [videoError, setVideoError] = useState(false)
 
   const { addToCart, isLoading } = useCart()
 
@@ -78,12 +81,13 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
   // Check if the product has video media
   const hasVideo =
-    product.media &&
-    product.media.length > 0 &&
-    product.media[0].mediaContentType === "VIDEO"
+    product.media?.some((media) => media.mediaContentType === "VIDEO") || false
 
   // Get video URL if available
-  const videoUrl = hasVideo && product.media?.[0]?.sources?.[0]?.url
+  const videoMedia = product.media?.find(
+    (media) => media.mediaContentType === "VIDEO"
+  )
+  const videoUrl = videoMedia?.sources?.[0]?.url
 
   // Get color styling for visualization
   const getColorStyle = (
@@ -99,6 +103,16 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     }
   }
 
+  // Handle video events
+  const handleVideoLoad = () => {
+    setVideoLoaded(true)
+  }
+
+  const handleVideoError = () => {
+    console.error(`Video error for product ${product.title}`)
+    setVideoError(true)
+  }
+
   // Handle add to cart
   const handleAddToCart = () => {
     if (!selectedSize || (availableColors.length > 0 && !selectedColor)) {
@@ -107,7 +121,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     }
 
     // Find the correct variant ID based on size and color
-    let variant
+    let variant: ShopifyProductVariant | undefined
 
     if (availableColors.length > 0) {
       // If we have colors available, find by size and color
@@ -124,6 +138,10 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       return
     }
 
+    // Convert price to string if needed
+    const priceString =
+      typeof variant.price === "string" ? variant.price : variant.price.amount
+
     // Add to cart via context
     addToCart({
       id: product.id,
@@ -133,7 +151,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       variant: {
         id: variant.id,
         title: variant.title,
-        price: variant.price,
+        price: priceString,
         image: product.images[0].src,
       },
     })
@@ -197,13 +215,15 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       {/* Product Images - Left Side */}
       <div className="space-y-4">
         <div className="relative aspect-square overflow-hidden bg-laboratory-white">
-          {currentImageIndex === 0 && hasVideo && videoUrl ? (
+          {currentImageIndex === 0 && hasVideo && videoUrl && !videoError ? (
             // Show video if it's the first media item and currently selected
             <video
               autoPlay
               loop
               muted
               playsInline
+              onLoadedData={handleVideoLoad}
+              onError={handleVideoError}
               className="w-full h-full object-cover"
               controls
             >
@@ -215,8 +235,10 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             <Image
               src={
                 product.images[
-                  hasVideo ? currentImageIndex - 1 : currentImageIndex
-                ].src
+                  hasVideo
+                    ? Math.max(0, currentImageIndex - 1)
+                    : currentImageIndex
+                ]?.src || ""
               }
               alt={`${product.title} - view ${currentImageIndex + 1}`}
               fill
@@ -236,7 +258,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
         {/* Media thumbnails */}
         <div className="grid grid-cols-5 gap-2">
           {/* Video thumbnail (if available) */}
-          {hasVideo && (
+          {hasVideo && videoMedia?.previewImage && (
             <button
               className={`relative aspect-square overflow-hidden border ${
                 currentImageIndex === 0
@@ -245,9 +267,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
               }`}
               onClick={() => setCurrentImageIndex(0)}
             >
-              {product.media?.[0]?.previewImage?.src ? (
+              {videoMedia.previewImage.src ? (
                 <Image
-                  src={product.media[0].previewImage.src}
+                  src={videoMedia.previewImage.src}
                   alt="Video thumbnail"
                   fill
                   className="object-cover"
@@ -296,13 +318,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             {product.title}
           </h1>
           <p className="text-medium tracking-wide mb-6">
-            $
-            {typeof product.variants[0].price === "string"
-              ? parseFloat(product.variants[0].price).toFixed(2)
-              : typeof product.variants[0].price === "object" &&
-                product.variants[0].price.amount
-              ? parseFloat(product.variants[0].price.amount).toFixed(2)
-              : "0.00"}
+            ${formatPrice(product.variants[0]?.price)}
           </p>
         </div>
 
@@ -379,6 +395,10 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             <div className="flex flex-wrap gap-3">
               {availableColors.map((color) => {
                 const colorStyle = getColorStyle(color as string)
+                const isAvailable =
+                  !selectedSize ||
+                  isVariantAvailable(selectedSize, color as string)
+
                 return (
                   <button
                     key={color}
@@ -394,18 +414,14 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                     }}
                     onClick={() => setSelectedColor(color as string)}
                     aria-label={`Color: ${color}`}
-                    disabled={
-                      selectedSize &&
-                      !isVariantAvailable(selectedSize, color as string)
-                    }
+                    disabled={!isAvailable}
                   >
-                    {selectedSize &&
-                      !isVariantAvailable(selectedSize, color as string) && (
-                        <div className="absolute inset-0 bg-laboratory-black opacity-50 rounded-full flex items-center justify-center">
-                          <div className="w-8 h-0.5 bg-white transform rotate-45"></div>
-                          <div className="w-8 h-0.5 bg-white transform -rotate-45 absolute"></div>
-                        </div>
-                      )}
+                    {!isAvailable && (
+                      <div className="absolute inset-0 bg-laboratory-black opacity-50 rounded-full flex items-center justify-center">
+                        <div className="w-8 h-0.5 bg-white transform rotate-45"></div>
+                        <div className="w-8 h-0.5 bg-white transform -rotate-45 absolute"></div>
+                      </div>
+                    )}
                   </button>
                 )
               })}

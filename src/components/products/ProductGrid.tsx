@@ -5,7 +5,6 @@ import React, { useState, useEffect } from "react"
 import ProductCard from "./ProductCard"
 import ProductFilter from "./ProductFilter"
 import { ShopifyProduct } from "@/lib/shopify"
-import { debugProduct } from "@/utils/debug" // Import the debug utility
 
 interface ProductGridProps {
   initialProducts: ShopifyProduct[]
@@ -80,17 +79,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
       return true
     })
 
-    console.log(
-      `Filtered ${
-        initialProducts.length - validProducts.length
-      } invalid products`
-    )
-
-    // Debug each product's media
-    validProducts.forEach((product) => {
-      debugProduct(product, "ProductGrid Initial")
-    })
-
     // Count products with video
     const productsWithVideo = validProducts.filter(hasVideoMedia)
     setVideoProductsCount(productsWithVideo.length)
@@ -130,7 +118,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
       <div className="md:col-span-1">
         <ProductFilter onFilterChange={setFilteredCategory} />
 
-        {/* Video products debug info */}
+        {/* Video products debug info - only in development */}
         {process.env.NODE_ENV === "development" && (
           <div className="mt-8 p-4 bg-gray-100 text-sm">
             <p className="font-medium mb-2">Development Info:</p>

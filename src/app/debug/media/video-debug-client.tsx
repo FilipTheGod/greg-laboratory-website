@@ -2,6 +2,7 @@
 "use client"
 
 import React, { useState } from "react"
+import Image from "next/image"
 import VideoDebug from "@/components/debug/VideoDebug"
 
 interface VideoSource {
@@ -82,11 +83,14 @@ export default function VideoDebugClient({
                             <h4 className="text-sm font-medium mb-1">
                               Preview Image:
                             </h4>
-                            <img
-                              src={videoSource.previewImageSrc}
-                              alt={`Preview for ${product.title}`}
-                              className="w-40 h-40 object-cover bg-gray-100"
-                            />
+                            <div className="relative w-40 h-40 bg-gray-100">
+                              <Image
+                                src={videoSource.previewImageSrc}
+                                alt={`Preview for ${product.title}`}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
                           </div>
                         )}
 
