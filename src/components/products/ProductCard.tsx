@@ -9,7 +9,12 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const price = parseFloat(product.variants[0].price).toFixed(2)
+  // Ensure price is a valid number before using toFixed
+  const price =
+    product.variants && product.variants[0] && product.variants[0].price
+      ? parseFloat(product.variants[0].price).toFixed(2)
+      : "0.00"
+
   const category = product.productType
 
   // Check if the product has video media
