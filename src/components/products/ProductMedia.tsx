@@ -3,12 +3,30 @@
 
 import React, { useState, useEffect, useRef } from "react"
 import Image from "next/image"
-import { ShopifyProduct, ShopifyMedia } from "@/lib/shopify"
+import { ShopifyProduct } from "@/lib/shopify"
 
 interface ProductMediaProps {
   product: ShopifyProduct
   priority?: boolean
   className?: string
+}
+
+// Define interface for the media edge from API
+interface MediaEdge {
+  node: {
+    id: string
+    mediaContentType: string
+    sources?: {
+      format: string
+      mimeType: string
+      url: string
+    }[]
+    preview?: {
+      image?: {
+        url: string
+      }
+    }
+  }
 }
 
 const ProductMedia: React.FC<ProductMediaProps> = ({
@@ -24,9 +42,10 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
 
   // Check if product has video media in Shopify data
   const hasMediaData = product.media && product.media.length > 0
-  const videoMedia = hasMediaData
-    ? product.media.find((media) => media.mediaContentType === "VIDEO")
-    : null
+  const videoMedia =
+    hasMediaData && product.media
+      ? product.media.find((media) => media.mediaContentType === "VIDEO")
+      : null
   const firstVideoSource = videoMedia?.sources?.[0]?.url || null
 
   useEffect(() => {
@@ -53,7 +72,7 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
 
           if (productData?.media?.edges) {
             const videoEdge = productData.media.edges.find(
-              (edge: any) => edge.node.mediaContentType === "VIDEO"
+              (edge: MediaEdge) => edge.node.mediaContentType === "VIDEO"
             )
 
             if (videoEdge?.node?.sources?.[0]?.url) {
@@ -64,8 +83,8 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
             }
           }
         }
-      } catch (error) {
-        // Handle error silently
+      } catch (_) {
+        // Handle error silently - no need to log
       } finally {
         setIsLoading(false)
       }
@@ -91,7 +110,9 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
         poster={previewImage || undefined}
         onError={handleVideoError}
       >
-        <source src={videoUrl || firstVideoSource} type="video/mp4" />
+        {(videoUrl || firstVideoSource) && (
+          <source src={videoUrl || firstVideoSource || ""} type="video/mp4" />
+        )}
         Your browser does not support the video tag.
       </video>
     )

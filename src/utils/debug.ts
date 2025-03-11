@@ -1,5 +1,6 @@
 // src/utils/debug.ts
-import { ShopifyProduct, ShopifyMedia } from "@/lib/shopify"
+import { ShopifyProduct } from "@/lib/shopify"
+// Import ShopifyMedia only if needed
 
 /**
  * Comprehensive debugging utility for product data
@@ -89,20 +90,20 @@ export function debugProduct(
 /**
  * Simple price formatter
  */
-function formatPrice(price: any): string {
+function formatPrice(price: unknown): string {
   try {
     if (typeof price === "string") {
       return parseFloat(price).toFixed(2)
     }
 
     if (typeof price === "object" && price !== null) {
-      if (price.amount) {
-        return parseFloat(price.amount).toFixed(2)
+      if ("amount" in price && price.amount) {
+        return parseFloat(String(price.amount)).toFixed(2)
       }
     }
 
     return "0.00"
-  } catch (error) {
+  } catch (_) {
     return "0.00"
   }
 }
@@ -116,8 +117,8 @@ export async function testVideoUrl(url: string): Promise<boolean> {
     return (
       response.ok && response.headers.get("content-type")?.includes("video")
     )
-  } catch (error) {
-    console.error("Error testing video URL:", error)
+  } catch (_) {
+    console.error("Error testing video URL")
     return false
   }
 }

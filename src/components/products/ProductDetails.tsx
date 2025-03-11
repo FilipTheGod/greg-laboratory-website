@@ -82,6 +82,11 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const hasVideo =
     product.media?.some((media) => media.mediaContentType === "VIDEO") || false
 
+  // Find the video media if it exists
+  const productVideoMedia = product.media?.find(
+    (media) => media.mediaContentType === "VIDEO"
+  )
+
   // Get color styling for visualization
   const getColorStyle = (
     colorName: string
@@ -227,7 +232,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
         {/* Media thumbnails */}
         <div className="grid grid-cols-5 gap-2">
           {/* Video thumbnail (if available) */}
-          {hasVideo && videoMedia?.previewImage && (
+          {hasVideo && productVideoMedia?.previewImage && (
             <button
               className={`relative aspect-square overflow-hidden border ${
                 currentImageIndex === 0
@@ -236,9 +241,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
               }`}
               onClick={() => setCurrentImageIndex(0)}
             >
-              {videoMedia.previewImage.src ? (
+              {productVideoMedia.previewImage.src ? (
                 <Image
-                  src={videoMedia.previewImage.src}
+                  src={productVideoMedia.previewImage.src}
                   alt="Video thumbnail"
                   fill
                   className="object-cover"
