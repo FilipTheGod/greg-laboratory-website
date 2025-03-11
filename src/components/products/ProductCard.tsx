@@ -11,18 +11,49 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [, setVideoLoaded] = useState(false)
+  const [videoLoaded, setVideoLoaded] = useState(false)
   const [videoError, setVideoError] = useState(false)
+  const [videoUrl, setVideoUrl] = useState<string | null>(null)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [isLoadingMedia, setIsLoadingMedia] = useState(false)
 
-  // Check if the product has video media
-  const hasVideo =
-    product.media?.some((media) => media.mediaContentType === "VIDEO") || false
+  // Fetch media from Admin API
+  useEffect(() => {
+    const fetchMedia = async () => {
+      if (!product.handle) return
 
-  // Get video URL if available
-  const videoMedia = product.media?.find(
-    (media) => media.mediaContentType === "VIDEO"
-  )
-  const videoUrl = videoMedia?.sources?.[0]?.url
+      setIsLoadingMedia(true)
+      try {
+        const response = await fetch(`/api/products/media/${product.handle}`)
+        if (response.ok) {
+          const data = await response.json()
+          console.log("Media API response:", data)
+
+          // Check if we have video media
+          const productData = data.data?.productByHandle
+          if (productData?.media?.edges) {
+            const videoEdge = productData.media.edges.find(
+              (edge: any) => edge.node.mediaContentType === "VIDEO"
+            )
+
+            if (videoEdge?.node?.sources?.[0]?.url) {
+              setVideoUrl(videoEdge.node.sources[0].url)
+              if (videoEdge.node.preview?.image?.url) {
+                setPreviewImage(videoEdge.node.preview.image.url)
+              }
+              console.log("Found video for product:", product.handle)
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching product media:", error)
+      } finally {
+        setIsLoadingMedia(false)
+      }
+    }
+
+    fetchMedia()
+  }, [product.handle])
 
   // Handle video events
   const handleVideoLoad = () => {
@@ -44,12 +75,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       // Force reload the video element to ensure it plays
       videoRef.current.load()
     }
-  }, [videoUrl, handleVideoError])
+  }, [videoUrl])
 
   return (
     <Link href={`/product/${product.handle}`} className="group">
       <div className="relative aspect-square overflow-hidden bg-laboratory-white mb-2">
-        {hasVideo && videoUrl && !videoError ? (
+        {videoUrl && !videoError ? (
           <video
             ref={videoRef}
             autoPlay
@@ -57,6 +88,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             muted
             playsInline
             className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500"
+            poster={previewImage || undefined}
           >
             <source src={videoUrl} type="video/mp4" />
             Your browser does not support the video tag.
@@ -74,6 +106,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <span className="text-laboratory-black/30 text-medium tracking-wide">
               No Image
             </span>
+          </div>
+        )}
+
+        {isLoadingMedia && (
+          <div className="absolute inset-0 flex items-center justify-center bg-laboratory-black/10">
+            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           </div>
         )}
       </div>

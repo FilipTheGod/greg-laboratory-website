@@ -55,6 +55,8 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [showingSizeGuide, setShowingSizeGuide] = useState(false)
   const [, setVideoLoaded] = useState(false)
   const [videoError, setVideoError] = useState(false)
+  const [videoUrl, setVideoUrl] = useState<string | null>(null)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
 
   const { addToCart, isLoading } = useCart()
 
@@ -209,6 +211,37 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
         variant.title === `${size} / ${color}` && variant.available !== false
     )
   }
+
+  useEffect(() => {
+    const fetchMedia = async () => {
+      try {
+        const response = await fetch(`/api/products/media/${product.handle}`)
+        if (response.ok) {
+          const data = await response.json()
+
+          // Check if we have video media
+          const productData = data.data?.productByHandle
+          if (productData?.media?.edges) {
+            const videoEdge = productData.media.edges.find(
+              (edge: any) => edge.node.mediaContentType === "VIDEO"
+            )
+
+            if (videoEdge?.node?.sources?.[0]?.url) {
+              setVideoUrl(videoEdge.node.sources[0].url)
+              if (videoEdge.node.preview?.image?.url) {
+                setPreviewImage(videoEdge.node.preview.image.url)
+              }
+              console.log("Found video for product details:", product.handle)
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching product media:", error)
+      }
+    }
+
+    fetchMedia()
+  }, [product.handle])
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6">
