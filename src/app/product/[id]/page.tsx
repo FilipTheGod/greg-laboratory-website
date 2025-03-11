@@ -3,21 +3,27 @@ import { getProductByHandle } from "@/lib/shopify"
 import ProductDetails from "@/components/products/ProductDetails"
 import { notFound } from "next/navigation"
 
-// src/app/product/[id]/page.tsx
-export default async function ProductPage({
-  params,
-}: {
-  params: { id: string }
-}) {
-  console.log("Product page params:", params)
+type Params = {
+  id: string
+}
 
-  if (!params || !params.id) {
-    console.log("No ID provided")
-    notFound()
-  }
+type Props = {
+  params: Params
+}
 
+export default async function ProductPage(props: Props) {
   try {
-    const product = await getProductByHandle(params.id)
+    // Destructure id directly to avoid accessing the property on params
+    const { id } = props.params
+
+    console.log("Product id:", id)
+
+    if (!id) {
+      console.log("No ID provided")
+      notFound()
+    }
+
+    const product = await getProductByHandle(id)
 
     console.log(
       "Retrieved product:",
