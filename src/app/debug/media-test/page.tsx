@@ -3,9 +3,52 @@
 
 import { useState } from "react"
 
+// Define types for the media data
+interface MediaSource {
+  format: string
+  mimeType: string
+  url: string
+}
+
+interface MediaPreviewImage {
+  url: string
+  altText?: string
+}
+
+interface MediaNode {
+  id: string
+  mediaContentType: string
+  sources?: MediaSource[]
+  preview?: {
+    image?: MediaPreviewImage
+  }
+  image?: {
+    url: string
+    altText?: string
+  }
+}
+
+interface MediaEdge {
+  node: MediaNode
+}
+
+interface MediaData {
+  data?: {
+    productByHandle?: {
+      id: string
+      title: string
+      handle: string
+      media?: {
+        edges: MediaEdge[]
+      }
+    }
+  }
+  errors?: any[]
+}
+
 export default function MediaTest() {
   const [handle, setHandle] = useState("")
-  const [mediaData, setMediaData] = useState(null)
+  const [mediaData, setMediaData] = useState<MediaData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -74,7 +117,7 @@ export default function MediaTest() {
                   </p>
 
                   {mediaData.data.productByHandle.media.edges.map(
-                    (edge: any, index: number) => (
+                    (edge, index) => (
                       <div key={edge.node.id} className="p-4 border rounded">
                         <p className="font-semibold mb-2">
                           Media Item #{index + 1} - Type:{" "}
@@ -84,31 +127,29 @@ export default function MediaTest() {
                         {edge.node.mediaContentType === "VIDEO" && (
                           <div>
                             <p className="mb-2">Video Sources:</p>
-                            {edge.node.sources?.map(
-                              (source: any, sourceIndex: number) => (
-                                <div key={sourceIndex} className="mb-4">
-                                  <p>
-                                    Format: {source.format}, MIME:{" "}
-                                    {source.mimeType}
-                                  </p>
-                                  <p className="mb-2 break-words">
-                                    URL: {source.url}
-                                  </p>
+                            {edge.node.sources?.map((source, sourceIndex) => (
+                              <div key={sourceIndex} className="mb-4">
+                                <p>
+                                  Format: {source.format}, MIME:{" "}
+                                  {source.mimeType}
+                                </p>
+                                <p className="mb-2 break-words">
+                                  URL: {source.url}
+                                </p>
 
-                                  <video
-                                    controls
-                                    className="w-full max-w-md bg-black"
-                                    poster={edge.node.preview?.image?.url}
-                                  >
-                                    <source
-                                      src={source.url}
-                                      type={source.mimeType}
-                                    />
-                                    Your browser does not support the video tag.
-                                  </video>
-                                </div>
-                              )
-                            )}
+                                <video
+                                  controls
+                                  className="w-full max-w-md bg-black"
+                                  poster={edge.node.preview?.image?.url}
+                                >
+                                  <source
+                                    src={source.url}
+                                    type={source.mimeType}
+                                  />
+                                  Your browser does not support the video tag.
+                                </video>
+                              </div>
+                            ))}
                           </div>
                         )}
 
@@ -116,6 +157,7 @@ export default function MediaTest() {
                           edge.node.image && (
                             <div>
                               <p className="mb-2">Image:</p>
+                              {/* Use Next.js Image component */}
                               <img
                                 src={edge.node.image.url}
                                 alt={edge.node.image.altText || "Product image"}

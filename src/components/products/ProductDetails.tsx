@@ -1,7 +1,7 @@
 // src/components/products/ProductDetails.tsx
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { useCart } from "@/contexts/CartContext"
@@ -53,10 +53,10 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [selectedColor, setSelectedColor] = useState("")
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [showingSizeGuide, setShowingSizeGuide] = useState(false)
-  const [, setVideoLoaded] = useState(false)
-  const [videoError, setVideoError] = useState(false)
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [videoLoaded, setVideoLoaded] = useState(false)
+  const [videoError, setVideoError] = useState(false)
 
   const { addToCart, isLoading } = useCart()
 
@@ -223,7 +223,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           const productData = data.data?.productByHandle
           if (productData?.media?.edges) {
             const videoEdge = productData.media.edges.find(
-              (edge: any) => edge.node.mediaContentType === "VIDEO"
+              (edge: MediaEdge) => edge.node.mediaContentType === "VIDEO"
             )
 
             if (videoEdge?.node?.sources?.[0]?.url) {
@@ -248,17 +248,18 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       {/* Product Images - Left Side */}
       <div className="space-y-4">
         <div className="relative aspect-square overflow-hidden bg-laboratory-white">
-          {currentImageIndex === 0 && hasVideo && videoUrl && !videoError ? (
+          {currentImageIndex === 0 && videoUrl && !videoError ? (
             // Show video if it's the first media item and currently selected
             <video
               autoPlay
               loop
               muted
               playsInline
-              onLoadedData={handleVideoLoad}
-              onError={handleVideoError}
+              onLoadedData={() => setVideoLoaded(true)}
+              onError={() => setVideoError(true)}
               className="w-full h-full object-cover"
               controls
+              poster={previewImage || undefined}
             >
               <source src={videoUrl} type="video/mp4" />
               Your browser does not support the video tag.

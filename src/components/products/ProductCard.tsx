@@ -5,17 +5,43 @@ import Image from "next/image"
 import { ShopifyProduct } from "@/lib/shopify"
 import { formatPrice } from "@/utils/price"
 
+// Define interfaces for API response
+interface MediaNode {
+  id: string
+  mediaContentType: string
+  sources?: {
+    format: string
+    mimeType: string
+    url: string
+  }[]
+  preview?: {
+    image?: {
+      url: string
+    }
+  }
+}
+
+interface MediaEdge {
+  node: MediaNode
+}
+
 interface ProductCardProps {
   product: ShopifyProduct
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [videoLoaded, setVideoLoaded] = useState(false)
+  // Remove videoLoaded if not used
   const [videoError, setVideoError] = useState(false)
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [isLoadingMedia, setIsLoadingMedia] = useState(false)
+
+  // Handle video error for dependency array
+  const handleVideoError = React.useCallback(() => {
+    console.error(`Video error for product ${product.title}`)
+    setVideoError(true)
+  }, [product.title])
 
   // Fetch media from Admin API
   useEffect(() => {
@@ -33,7 +59,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           const productData = data.data?.productByHandle
           if (productData?.media?.edges) {
             const videoEdge = productData.media.edges.find(
-              (edge: any) => edge.node.mediaContentType === "VIDEO"
+              (edge: MediaEdge) => edge.node.mediaContentType === "VIDEO"
             )
 
             if (videoEdge?.node?.sources?.[0]?.url) {
@@ -55,27 +81,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     fetchMedia()
   }, [product.handle])
 
-  // Handle video events
-  const handleVideoLoad = () => {
-    setVideoLoaded(true)
-  }
-
-  const handleVideoError = () => {
-    console.error(`Video error for product ${product.title}`)
-    setVideoError(true)
-  }
-
   // Initialize video element after component mounts
   useEffect(() => {
     if (videoRef.current && videoUrl) {
       // Set up event handlers for debugging
-      videoRef.current.onloadeddata = handleVideoLoad
       videoRef.current.onerror = handleVideoError
 
       // Force reload the video element to ensure it plays
       videoRef.current.load()
     }
-  }, [videoUrl])
+  }, [videoUrl, handleVideoError])
 
   return (
     <Link href={`/product/${product.handle}`} className="group">
