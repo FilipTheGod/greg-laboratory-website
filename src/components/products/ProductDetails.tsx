@@ -1,28 +1,13 @@
 // src/components/products/ProductDetails.tsx
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { useCart } from "@/contexts/CartContext"
 import { ShopifyProduct, ShopifyProductVariant } from "@/lib/shopify"
 import { formatPrice } from "@/utils/price"
-
-// Define MediaEdge type to fix the error
-interface MediaEdge {
-  node: {
-    mediaContentType: string
-    sources?: {
-      url: string
-      mimeType: string
-    }[]
-    preview?: {
-      image?: {
-        url: string
-      }
-    }
-  }
-}
+import ProductMedia from "./ProductMedia"
 
 // SVG Component for product attributes
 const ProductFeatureIcon: React.FC = () => (
@@ -69,9 +54,6 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [selectedColor, setSelectedColor] = useState("")
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [showingSizeGuide, setShowingSizeGuide] = useState(false)
-  const [videoUrl, setVideoUrl] = useState<string | null>(null)
-  const [previewImage, setPreviewImage] = useState<string | null>(null)
-  const [videoError, setVideoError] = useState(false)
 
   const { addToCart, isLoading } = useCart()
 
@@ -99,14 +81,6 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   // Check if the product has video media
   const hasVideo =
     product.media?.some((media) => media.mediaContentType === "VIDEO") || false
-
-  // Get video media if available
-  const videoMedia = product.media?.find(
-    (media) => media.mediaContentType === "VIDEO"
-  )
-
-  // Get first video source URL if available (used for display)
-  const firstVideoSourceUrl = videoMedia?.sources?.[0]?.url || null
 
   // Get color styling for visualization
   const getColorStyle = (
@@ -170,8 +144,6 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const getProductAttributes = () => {
     const attributes = []
 
-    // We'll just use a simplified approach for now with one icon
-    // We can expand this once you have created all the SVG icons
     attributes.push({
       name: "Water Repellent",
       icon: <ProductFeatureIcon />,
@@ -219,62 +191,14 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     )
   }
 
-  useEffect(() => {
-    const fetchMedia = async () => {
-      try {
-        const response = await fetch(`/api/products/media/${product.handle}`)
-        if (response.ok) {
-          const data = await response.json()
-
-          // Check if we have video media
-          const productData = data.data?.productByHandle
-          if (productData?.media?.edges) {
-            const videoEdge = productData.media.edges.find(
-              (edge: MediaEdge) => edge.node.mediaContentType === "VIDEO"
-            )
-
-            if (videoEdge?.node?.sources?.[0]?.url) {
-              setVideoUrl(videoEdge.node.sources[0].url)
-              if (videoEdge.node.preview?.image?.url) {
-                setPreviewImage(videoEdge.node.preview.image.url)
-              }
-              console.log("Found video for product details:", product.handle)
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching product media:", error)
-      }
-    }
-
-    fetchMedia()
-  }, [product.handle])
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6">
       {/* Product Images - Left Side */}
       <div className="space-y-4">
         <div className="relative aspect-square overflow-hidden bg-laboratory-white">
-          {currentImageIndex === 0 &&
-          (videoUrl || firstVideoSourceUrl) &&
-          !videoError ? (
-            // Show video if it's the first media item and currently selected
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              onError={() => setVideoError(true)}
-              className="w-full h-full object-cover"
-              controls
-              poster={previewImage || undefined}
-            >
-              <source
-                src={videoUrl || firstVideoSourceUrl || undefined}
-                type="video/mp4"
-              />
-              Your browser does not support the video tag.
-            </video>
+          {currentImageIndex === 0 && hasVideo ? (
+            // Show video if it's the first media item and a video
+            <ProductMedia product={product} priority={true} />
           ) : product.images && product.images.length > 0 ? (
             // Show image based on current index, accounting for video offset
             <Image

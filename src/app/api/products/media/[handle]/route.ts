@@ -69,10 +69,6 @@ export async function GET(
     const adminToken = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN
 
     if (!shopDomain || !adminToken) {
-      console.error("Missing Shopify credentials:", {
-        hasDomain: !!shopDomain,
-        hasToken: !!adminToken,
-      })
       return NextResponse.json(
         { error: "Server configuration error" },
         { status: 500 }

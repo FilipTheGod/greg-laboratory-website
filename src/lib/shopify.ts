@@ -90,30 +90,6 @@ export function extractPriceAmount(priceValue: string | MoneyV2): string {
   return "0.00"
 }
 
-// // Simple, focused debug logging function
-// const debugLog = (label: string, obj: unknown): void => {
-//   if (process.env.NODE_ENV === "development") {
-//     console.log(`DEBUG ${label}:`, obj)
-//   }
-// }
-
-// Add to src/lib/shopify.ts
-export async function debugProductMedia(handle: string) {
-  try {
-    console.log(`Fetching product media debug for handle: ${handle}`)
-    const product = await client.product.fetchByHandle(handle)
-
-    console.log("Raw product data:", JSON.stringify(product, null, 2))
-    console.log("Media field exists:", "media" in product)
-    console.log("Media field value:", product.media)
-
-    return product
-  } catch (error) {
-    console.error("Error in debug media:", error)
-    return null
-  }
-}
-
 // Convert Shopify response to properly typed objects
 const convertToPlainObject = <T>(obj: unknown): T => {
   const plainObj = JSON.parse(JSON.stringify(obj))
@@ -128,28 +104,10 @@ const client = Client.buildClient({
   apiVersion: "2023-07",
 })
 
-// In src/lib/shopify.ts
+// Fetch all products
 export async function getAllProducts(): Promise<ShopifyProduct[]> {
   try {
-    console.log("Fetching all products...")
-
-    // Use query instead of fetchAll to explicitly request media fields
     const products = await client.product.fetchAll(250)
-    console.log(`Fetched ${products.length} products`)
-
-    // Debugging the first product's media
-    if (products.length > 0) {
-      const firstProduct = products[0]
-      console.log("First product media:", {
-        hasMedia: !!firstProduct.media,
-        mediaCount: firstProduct.media ? firstProduct.media.length : 0,
-        mediaFields: firstProduct.media
-          ? Object.keys(firstProduct.media[0] || {})
-          : [],
-      })
-    }
-
-    // Convert Shopify response to plain objects
     return convertToPlainObject<ShopifyProduct[]>(products)
   } catch (error) {
     console.error("Error fetching all products:", error)
@@ -162,17 +120,12 @@ export async function getProductByHandle(
   handle: string
 ): Promise<ShopifyProduct | null> {
   try {
-    console.log(`Fetching product with handle: ${handle}`)
     const product = await client.product.fetchByHandle(handle)
 
     if (!product) {
-      console.log(`No product found with handle: ${handle}`)
       return null
     }
 
-    console.log(`Found product: ${product.title}`)
-
-    // Convert Shopify response to plain object
     return convertToPlainObject<ShopifyProduct>(product)
   } catch (error) {
     console.error(`Error fetching product by handle ${handle}:`, error)
@@ -183,9 +136,7 @@ export async function getProductByHandle(
 // Create a new checkout
 export async function createCheckout() {
   try {
-    console.log("Creating new checkout...")
     const checkout = await client.checkout.create()
-    console.log("Checkout created:", checkout.id)
     return convertToPlainObject(checkout)
   } catch (error) {
     console.error("Error creating checkout:", error)
@@ -196,9 +147,7 @@ export async function createCheckout() {
 // Fetch an existing checkout
 export async function fetchCheckout(checkoutId: string) {
   try {
-    console.log(`Fetching checkout: ${checkoutId}`)
     const checkout = await client.checkout.fetch(checkoutId)
-    console.log("Checkout fetched:", checkout.id)
     return convertToPlainObject(checkout)
   } catch (error) {
     console.error("Error fetching checkout:", error)
@@ -217,9 +166,7 @@ export async function addItemToCheckout(
   lineItems: LineItem[]
 ) {
   try {
-    console.log(`Adding items to checkout: ${checkoutId}`, lineItems)
     const checkout = await client.checkout.addLineItems(checkoutId, lineItems)
-    console.log("Items added to checkout")
     return convertToPlainObject(checkout)
   } catch (error) {
     console.error("Error adding items to checkout:", error)
@@ -237,12 +184,10 @@ export async function updateCheckoutItem(
   lineItems: LineItemUpdate[]
 ) {
   try {
-    console.log(`Updating items in checkout: ${checkoutId}`, lineItems)
     const checkout = await client.checkout.updateLineItems(
       checkoutId,
       lineItems
     )
-    console.log("Items updated in checkout")
     return convertToPlainObject(checkout)
   } catch (error) {
     console.error("Error updating checkout items:", error)
@@ -256,12 +201,10 @@ export async function removeCheckoutItem(
   lineItemIds: string[]
 ) {
   try {
-    console.log(`Removing items from checkout: ${checkoutId}`, lineItemIds)
     const checkout = await client.checkout.removeLineItems(
       checkoutId,
       lineItemIds
     )
-    console.log("Items removed from checkout")
     return convertToPlainObject(checkout)
   } catch (error) {
     console.error("Error removing checkout items:", error)
