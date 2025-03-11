@@ -8,6 +8,22 @@ import { useCart } from "@/contexts/CartContext"
 import { ShopifyProduct, ShopifyProductVariant } from "@/lib/shopify"
 import { formatPrice } from "@/utils/price"
 
+// Define MediaEdge type to fix the error
+interface MediaEdge {
+  node: {
+    mediaContentType: string
+    sources?: {
+      url: string
+      mimeType: string
+    }[]
+    preview?: {
+      image?: {
+        url: string
+      }
+    }
+  }
+}
+
 // SVG Component for product attributes
 const ProductFeatureIcon: React.FC = () => (
   <svg
@@ -55,7 +71,6 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [showingSizeGuide, setShowingSizeGuide] = useState(false)
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
-  const [videoLoaded, setVideoLoaded] = useState(false)
   const [videoError, setVideoError] = useState(false)
 
   const { addToCart, isLoading } = useCart()
@@ -85,11 +100,13 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const hasVideo =
     product.media?.some((media) => media.mediaContentType === "VIDEO") || false
 
-  // Get video URL if available
+  // Get video media if available
   const videoMedia = product.media?.find(
     (media) => media.mediaContentType === "VIDEO"
   )
-  const videoUrl = videoMedia?.sources?.[0]?.url
+
+  // Get first video source URL if available (used for display)
+  const firstVideoSourceUrl = videoMedia?.sources?.[0]?.url || null
 
   // Get color styling for visualization
   const getColorStyle = (
@@ -103,16 +120,6 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       backgroundColor: colorInfo.bg,
       borderColor: colorInfo.border,
     }
-  }
-
-  // Handle video events
-  const handleVideoLoad = () => {
-    setVideoLoaded(true)
-  }
-
-  const handleVideoError = () => {
-    console.error(`Video error for product ${product.title}`)
-    setVideoError(true)
   }
 
   // Handle add to cart
@@ -248,20 +255,24 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       {/* Product Images - Left Side */}
       <div className="space-y-4">
         <div className="relative aspect-square overflow-hidden bg-laboratory-white">
-          {currentImageIndex === 0 && videoUrl && !videoError ? (
+          {currentImageIndex === 0 &&
+          (videoUrl || firstVideoSourceUrl) &&
+          !videoError ? (
             // Show video if it's the first media item and currently selected
             <video
               autoPlay
               loop
               muted
               playsInline
-              onLoadedData={() => setVideoLoaded(true)}
               onError={() => setVideoError(true)}
               className="w-full h-full object-cover"
               controls
               poster={previewImage || undefined}
             >
-              <source src={videoUrl} type="video/mp4" />
+              <source
+                src={videoUrl || firstVideoSourceUrl || undefined}
+                type="video/mp4"
+              />
               Your browser does not support the video tag.
             </video>
           ) : product.images && product.images.length > 0 ? (

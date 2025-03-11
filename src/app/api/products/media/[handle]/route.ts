@@ -1,5 +1,5 @@
 // src/app/api/products/media/[handle]/route.ts
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
 // GraphQL query to get product media
 const PRODUCT_MEDIA_QUERY = `
@@ -50,10 +50,13 @@ const PRODUCT_MEDIA_QUERY = `
 `
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { handle: string } }
 ) {
-  if (!params.handle) {
+  // Make sure params.handle is a string before using it
+  const handle = params.handle
+
+  if (!handle) {
     return NextResponse.json(
       { error: "Product handle is required" },
       { status: 400 }
@@ -61,20 +64,34 @@ export async function GET(
   }
 
   try {
+    // Check if we have the required environment variables
+    const shopDomain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN
+    const adminToken = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN
+
+    if (!shopDomain || !adminToken) {
+      console.error("Missing Shopify credentials:", {
+        hasDomain: !!shopDomain,
+        hasToken: !!adminToken,
+      })
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      )
+    }
+
     // Call Shopify Admin API
     const response = await fetch(
-      `https://${process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN}/admin/api/2023-07/graphql.json`,
+      `https://${shopDomain}/admin/api/2023-07/graphql.json`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Shopify-Access-Token":
-            process.env.SHOPIFY_ADMIN_ACCESS_TOKEN || "",
+          "X-Shopify-Access-Token": adminToken,
         },
         body: JSON.stringify({
           query: PRODUCT_MEDIA_QUERY,
           variables: {
-            handle: params.handle,
+            handle: handle,
           },
         }),
       }
