@@ -11,7 +11,7 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [videoLoaded, setVideoLoaded] = useState(false)
+  const [, setVideoLoaded] = useState(false)
   const [videoError, setVideoError] = useState(false)
 
   // Check if the product has video media
@@ -44,7 +44,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       // Force reload the video element to ensure it plays
       videoRef.current.load()
     }
-  }, [videoUrl])
+  }, [videoUrl, handleVideoError])
 
   return (
     <Link href={`/product/${product.handle}`} className="group">

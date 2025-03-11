@@ -68,7 +68,7 @@ const VideoDebug: React.FC<VideoDebugProps> = ({ videoUrl, title }) => {
     }
 
     checkVideo()
-  }, [videoUrl])
+  }, [videoUrl, metadata])
 
   // Handle video events
   const handleLoadedMetadata = () => {

@@ -1,7 +1,7 @@
 // src/components/products/ProductDetails.tsx
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { useCart } from "@/contexts/CartContext"
@@ -53,7 +53,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [selectedColor, setSelectedColor] = useState("")
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [showingSizeGuide, setShowingSizeGuide] = useState(false)
-  const [videoLoaded, setVideoLoaded] = useState(false)
+  const [, setVideoLoaded] = useState(false)
   const [videoError, setVideoError] = useState(false)
 
   const { addToCart, isLoading } = useCart()

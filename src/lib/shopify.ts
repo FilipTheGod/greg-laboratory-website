@@ -90,10 +90,27 @@ export function extractPriceAmount(priceValue: string | MoneyV2): string {
   return "0.00"
 }
 
-// Simple, focused debug logging function
-const debugLog = (label: string, obj: unknown): void => {
-  if (process.env.NODE_ENV === "development") {
-    console.log(`DEBUG ${label}:`, obj)
+// // Simple, focused debug logging function
+// const debugLog = (label: string, obj: unknown): void => {
+//   if (process.env.NODE_ENV === "development") {
+//     console.log(`DEBUG ${label}:`, obj)
+//   }
+// }
+
+// Add to src/lib/shopify.ts
+export async function debugProductMedia(handle: string) {
+  try {
+    console.log(`Fetching product media debug for handle: ${handle}`)
+    const product = await client.product.fetchByHandle(handle)
+
+    console.log("Raw product data:", JSON.stringify(product, null, 2))
+    console.log("Media field exists:", "media" in product)
+    console.log("Media field value:", product.media)
+
+    return product
+  } catch (error) {
+    console.error("Error in debug media:", error)
+    return null
   }
 }
 
@@ -111,11 +128,26 @@ const client = Client.buildClient({
   apiVersion: "2023-07",
 })
 
+// In src/lib/shopify.ts
 export async function getAllProducts(): Promise<ShopifyProduct[]> {
   try {
     console.log("Fetching all products...")
-    const products = await client.product.fetchAll()
+
+    // Use query instead of fetchAll to explicitly request media fields
+    const products = await client.product.fetchAll(250)
     console.log(`Fetched ${products.length} products`)
+
+    // Debugging the first product's media
+    if (products.length > 0) {
+      const firstProduct = products[0]
+      console.log("First product media:", {
+        hasMedia: !!firstProduct.media,
+        mediaCount: firstProduct.media ? firstProduct.media.length : 0,
+        mediaFields: firstProduct.media
+          ? Object.keys(firstProduct.media[0] || {})
+          : [],
+      })
+    }
 
     // Convert Shopify response to plain objects
     return convertToPlainObject<ShopifyProduct[]>(products)
