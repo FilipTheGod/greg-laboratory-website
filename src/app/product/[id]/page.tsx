@@ -3,19 +3,17 @@ import { getProductByHandle } from "@/lib/shopify"
 import ProductDetails from "@/components/products/ProductDetails"
 import { notFound } from "next/navigation"
 
-type Params = {
-  id: string
+interface ProductPageProps {
+  params: Promise<{ id: string }> | { id: string }
 }
 
-type Props = {
-  params: Params
-}
-
-export default async function ProductPage(props: Props) {
+export default async function ProductPage(props: ProductPageProps) {
   try {
-    // Destructure id directly to avoid accessing the property on params
-    const { id } = props.params
+    // Await the params if it's a Promise
+    const params =
+      props.params instanceof Promise ? await props.params : props.params
 
+    const id = params.id
     console.log("Product id:", id)
 
     if (!id) {
