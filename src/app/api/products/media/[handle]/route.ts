@@ -54,7 +54,7 @@ export async function GET(
   { params }: { params: { handle: string } }
 ) {
   try {
-    // Make sure params.handle is a string
+    // Make sure params.handle is a string before using it
     const handle = params.handle
 
     if (!handle) {
@@ -93,28 +93,24 @@ export async function GET(
       }
     )
 
-    // Instead of throwing an error, handle the error gracefully
     if (!response.ok) {
       console.error(`API error: ${response.status} for handle ${handle}`)
       return NextResponse.json(
-        {
-          error: `Error fetching from Shopify API: ${response.status}`,
-          data: { productByHandle: null },
-        },
-        { status: 200 } // Return 200 with null data instead of 500
+        { error: `HTTP error from Shopify: ${response.status}` },
+        { status: response.status }
       )
     }
 
     const data = await response.json()
+
+    // Log for debugging but return the full response
+    if (!data.data?.productByHandle) {
+      console.error(`Product not found for handle: ${handle}`)
+    }
+
     return NextResponse.json(data)
   } catch (error) {
     console.error("Error fetching product media:", error)
-    return NextResponse.json(
-      {
-        error: String(error),
-        data: { productByHandle: null },
-      },
-      { status: 200 } // Return 200 with null data instead of 500
-    )
+    return NextResponse.json({ error: String(error) }, { status: 500 })
   }
 }

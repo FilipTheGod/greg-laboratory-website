@@ -11,24 +11,6 @@ interface ProductMediaProps {
   className?: string
 }
 
-// Define interface for the media edge from API
-interface MediaEdge {
-  node: {
-    id: string
-    mediaContentType: string
-    sources?: {
-      format: string
-      mimeType: string
-      url: string
-    }[]
-    preview?: {
-      image?: {
-        url: string
-      }
-    }
-  }
-}
-
 const ProductMedia: React.FC<ProductMediaProps> = ({
   product,
   priority = false,
@@ -42,10 +24,9 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
 
   // Check if product has video media in Shopify data
   const hasMediaData = product.media && product.media.length > 0
-  const videoMedia =
-    hasMediaData && product.media
-      ? product.media.find((media) => media.mediaContentType === "VIDEO")
-      : null
+  const videoMedia = hasMediaData
+    ? product.media?.find((media) => media.mediaContentType === "VIDEO")
+    : null
   const firstVideoSource = videoMedia?.sources?.[0]?.url || null
 
   useEffect(() => {
@@ -72,7 +53,7 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
 
           if (productData?.media?.edges) {
             const videoEdge = productData.media.edges.find(
-              (edge: MediaEdge) => edge.node.mediaContentType === "VIDEO"
+              (edge: { node: { mediaContentType: string } }) => edge.node.mediaContentType === "VIDEO"
             )
 
             if (videoEdge?.node?.sources?.[0]?.url) {
@@ -83,8 +64,9 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
             }
           }
         }
-      } catch (_) {
-        // Handle error silently - no need to log
+      } catch (error) {
+        // Handle error silently
+        console.error("Error fetching media:", error)
       } finally {
         setIsLoading(false)
       }
@@ -110,9 +92,7 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
         poster={previewImage || undefined}
         onError={handleVideoError}
       >
-        {(videoUrl || firstVideoSource) && (
-          <source src={videoUrl || firstVideoSource || ""} type="video/mp4" />
-        )}
+        <source src={videoUrl || firstVideoSource || undefined} type="video/mp4" />
         Your browser does not support the video tag.
       </video>
     )
