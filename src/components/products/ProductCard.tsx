@@ -36,7 +36,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
     <Link
       href={`/product/${product.handle}`}
-      className="group block"
+      className="group block relative"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -44,44 +44,50 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {/* Product image/video */}
         <div className="relative aspect-square overflow-hidden bg-laboratory-white">
           <div className="transition-transform group-hover:scale-105 duration-500 h-full w-full">
-            <ProductMedia product={product} priority={true} />
+            <ProductMedia product={product} priority={false} />
           </div>
         </div>
 
-        {/* Product info shown only on hover */}
-        {isHovered && (
-          <div className="mt-2">
-            {/* Price */}
-            <p className="text-laboratory-black text-xs tracking-wide text-center ">
-              ${formatPrice(product.variants[0]?.price)}
-            </p>
-
-            {/* Sizes */}
-            <div className="flex justify-center space-x-1">
-              {availableSizes.map((size) => {
-                const isAvailable = isSizeAvailable(size)
-                return (
-                  <div
-                    key={size}
-                    className={`relative flex items-center justify-center text-xs w-8 h-8
-                      ${
-                        isAvailable
-                          ? "text-laboratory-black"
-                          : "text-laboratory-black/40"
-                      }`}
-                  >
-                    {size}
-                    {!isAvailable && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-6 h-px bg-laboratory-black/40 transform rotate-45"></div>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
+        {/* Product info */}
+        <div>
+          {/* Price - always visible but only shows when hovered */}
+          <div
+            className={`text-laboratory-black text-xs tracking-wide text-center transition-opacity ${
+              isHovered ? "opacity-100" : "opacity-0"
+            } h-4 mt-1`}
+          >
+            ${formatPrice(product.variants[0]?.price)}
           </div>
-        )}
+
+          {/* Sizes - always visible but only shows when hovered */}
+          <div
+            className={`flex justify-center space-x-1 transition-opacity ${
+              isHovered ? "opacity-100" : "opacity-0"
+            } h-8`}
+          >
+            {availableSizes.map((size) => {
+              const isAvailable = isSizeAvailable(size)
+              return (
+                <div
+                  key={size}
+                  className={`relative flex items-center justify-center text-xs w-8 h-8
+                    ${
+                      isAvailable
+                        ? "text-laboratory-black"
+                        : "text-laboratory-black/40"
+                    }`}
+                >
+                  {size}
+                  {!isAvailable && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-6 h-px bg-laboratory-black/40 transform rotate-45"></div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
       </div>
     </Link>
   )

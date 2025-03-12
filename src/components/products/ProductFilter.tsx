@@ -33,25 +33,27 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ onFilterChange }) => {
 
   return (
     <div className="sticky top-24 pr-4">
-      <button
-        onClick={() => handleCategoryClick("ALL")}
-        className={`block mb-2 text-left text-xs hover:opacity-70 transition ${
-          activeCategory === "ALL" ? "font-medium" : "opacity-70"
-        }`}
-      >
-        ALL
-      </button>
-      {categories.map((category) => (
+      <div className="flex flex-col">
         <button
-          key={category}
-          onClick={() => handleCategoryClick(category)}
-          className={`block mb-2 text-left text-xs hover:opacity-70 transition ${
-            activeCategory === category ? "font-medium" : "opacity-70"
+          onClick={() => handleCategoryClick("ALL")}
+          className={`text-left text-xs hover:opacity-70 transition mb-3 ${
+            activeCategory === "ALL" ? "font-medium" : "opacity-70"
           }`}
         >
-          {category}
+          ALL
         </button>
-      ))}
+        {categories.map((category) => (
+          <button
+            key={category}
+            onClick={() => handleCategoryClick(category)}
+            className={`text-left text-xs hover:opacity-70 transition mb-1.5 whitespace-nowrap ${
+              activeCategory === category ? "font-medium" : "opacity-70"
+            }`}
+          >
+            {category}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }

@@ -49,6 +49,14 @@ const PRODUCT_MEDIA_QUERY = `
   }
 `
 
+// Function to check if we have the necessary environment variables
+function hasRequiredCredentials(): boolean {
+  return !!(
+    process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN &&
+    process.env.SHOPIFY_ADMIN_ACCESS_TOKEN
+  )
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ handle: string }> | { handle: string } }
@@ -66,15 +74,22 @@ export async function GET(
     }
 
     // Check if we have the required environment variables
-    const shopDomain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN
-    const adminToken = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN
-
-    if (!shopDomain || !adminToken) {
+    if (!hasRequiredCredentials()) {
+      // Return a standardized empty response instead of an error
       return NextResponse.json(
-        { data: null, error: "Server configuration error" },
-        { status: 200 } // Return 200 to avoid client errors, but include error message
+        {
+          data: {
+            productByHandle: {
+              media: { edges: [] },
+            },
+          },
+        },
+        { status: 200 }
       )
     }
+
+    const shopDomain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN
+    const adminToken = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN
 
     // Call Shopify Admin API
     try {
@@ -84,7 +99,7 @@ export async function GET(
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-Shopify-Access-Token": adminToken,
+            "X-Shopify-Access-Token": adminToken as string,
           },
           body: JSON.stringify({
             query: PRODUCT_MEDIA_QUERY,
@@ -96,10 +111,16 @@ export async function GET(
       )
 
       if (!response.ok) {
-        console.error(`API error: ${response.status} for handle ${handle}`)
+        // Return a standardized empty response instead of an error
         return NextResponse.json(
-          { data: null, error: `Shopify API error: ${response.status}` },
-          { status: 200 } // Return 200 to avoid client errors
+          {
+            data: {
+              productByHandle: {
+                media: { edges: [] },
+              },
+            },
+          },
+          { status: 200 }
         )
       }
 
@@ -107,26 +128,46 @@ export async function GET(
 
       // Check if product exists
       if (!data.data?.productByHandle) {
-        console.log(`Product not found for handle: ${handle}`)
+        // Return a standardized empty response
         return NextResponse.json(
-          { data: { productByHandle: null }, error: null },
-          { status: 200 } // Always return 200
+          {
+            data: {
+              productByHandle: {
+                media: { edges: [] },
+              },
+            },
+          },
+          { status: 200 }
         )
       }
 
       return NextResponse.json(data, { status: 200 })
     } catch (error) {
       console.error(`Error fetching from Shopify for handle ${handle}:`, error)
+      // Return a standardized empty response instead of an error
       return NextResponse.json(
-        { data: null, error: "Error fetching from Shopify" },
-        { status: 200 } // Return 200 to avoid client errors
+        {
+          data: {
+            productByHandle: {
+              media: { edges: [] },
+            },
+          },
+        },
+        { status: 200 }
       )
     }
   } catch (error) {
     console.error("Error in API handler:", error)
+    // Return a standardized empty response instead of an error
     return NextResponse.json(
-      { data: null, error: "Server error" },
-      { status: 200 } // Return 200 to avoid client errors
+      {
+        data: {
+          productByHandle: {
+            media: { edges: [] },
+          },
+        },
+      },
+      { status: 200 }
     )
   }
 }

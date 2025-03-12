@@ -49,6 +49,20 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
       setApiAttempted(true)
 
       try {
+        // Check if media exists in local storage first to avoid unnecessary API calls
+        const cacheKey = `product_media_${product.handle}`
+        const cached = localStorage.getItem(cacheKey)
+
+        if (cached) {
+          const parsedCache = JSON.parse(cached)
+          if (parsedCache.videoUrl) {
+            setVideoUrl(parsedCache.videoUrl)
+            setPreviewImage(parsedCache.previewImage || null)
+          }
+          setIsLoading(false)
+          return
+        }
+
         const response = await fetch(`/api/products/media/${product.handle}`)
         if (response.ok) {
           const data = await response.json()
@@ -61,13 +75,44 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
             )
 
             if (videoEdge?.node?.sources?.[0]?.url) {
-              setVideoUrl(videoEdge.node.sources[0].url)
-              if (videoEdge.node.preview?.image?.url) {
-                setPreviewImage(videoEdge.node.preview.image.url)
-              }
+              const newVideoUrl = videoEdge.node.sources[0].url
+              const newPreviewImage = videoEdge.node.preview?.image?.url || null
+
+              setVideoUrl(newVideoUrl)
+              setPreviewImage(newPreviewImage)
+
+              // Cache the results to avoid future API calls
+              localStorage.setItem(
+                cacheKey,
+                JSON.stringify({
+                  videoUrl: newVideoUrl,
+                  previewImage: newPreviewImage,
+                  timestamp: Date.now(),
+                })
+              )
+            } else {
+              // Cache the negative result as well
+              localStorage.setItem(
+                cacheKey,
+                JSON.stringify({
+                  videoUrl: null,
+                  previewImage: null,
+                  timestamp: Date.now(),
+                })
+              )
             }
           }
         } else {
+          // Cache negative results to avoid repeated calls
+          localStorage.setItem(
+            cacheKey,
+            JSON.stringify({
+              videoUrl: null,
+              previewImage: null,
+              timestamp: Date.now(),
+            })
+          )
+
           // Silently handle 404 errors - just skip video loading
           if (response.status === 404) {
             console.log(
