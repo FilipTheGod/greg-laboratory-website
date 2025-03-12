@@ -44,8 +44,8 @@ const Cart: React.FC = () => {
       >
         <div className="p-6 h-full flex flex-col">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-title tracking-wide">CART</h2>
-            <button onClick={toggleCart} className="text-medium tracking-wide">
+            <h2 className="text-xs tracking-wide">CART</h2>
+            <button onClick={toggleCart} className="text-xs tracking-wide">
               CLOSE
             </button>
           </div>
@@ -53,13 +53,13 @@ const Cart: React.FC = () => {
           {isLoading && (
             <div className="flex justify-center items-center py-4">
               <div className="w-6 h-6 border-2 border-laboratory-black border-t-transparent rounded-full animate-spin"></div>
-              <span className="ml-2 text-regular">Loading...</span>
+              <span className="ml-2 text-xs">Loading...</span>
             </div>
           )}
 
           <div className="flex-grow overflow-y-auto">
             {!isLoading && cartItems.length === 0 ? (
-              <p className="text-regular tracking-wide">Your cart is empty</p>
+              <p className="text-xs tracking-wide">Your cart is empty</p>
             ) : (
               <ul className="space-y-6">
                 {cartItems.map((item) => (
@@ -79,21 +79,19 @@ const Cart: React.FC = () => {
                     </div>
                     <div className="ml-4 flex-grow">
                       <div className="flex justify-between">
-                        <h3 className="text-regular tracking-wide">
-                          {item.title}
-                        </h3>
+                        <h3 className="text-xs tracking-wide">{item.title}</h3>
                         <button
                           onClick={() => removeFromCart(item.variant.id)}
-                          className="text-laboratory-black/70 text-regular tracking-wide"
+                          className="text-laboratory-black/70 text-xs tracking-wide"
                           disabled={isLoading}
                         >
                           Remove
                         </button>
                       </div>
-                      <p className="text-laboratory-black/70 text-regular tracking-wide">
+                      <p className="text-laboratory-black/70 text-xs tracking-wide">
                         {item.variant.title}
                       </p>
-                      <p className="text-regular tracking-wide">
+                      <p className="text-xs tracking-wide">
                         ${formatPrice(item.variant.price)}
                       </p>
 
@@ -106,25 +104,25 @@ const Cart: React.FC = () => {
                                 Math.max(1, item.quantity - 1)
                               )
                             }
-                            className="px-2 py-1 text-laboratory-black text-regular tracking-wide"
+                            className="px-2 py-1 text-laboratory-black text-xs tracking-wide"
                             disabled={isLoading}
                           >
                             -
                           </button>
-                          <span className="px-2 py-1 text-laboratory-black text-regular tracking-wide">
+                          <span className="px-2 py-1 text-laboratory-black text-xs tracking-wide">
                             {item.quantity}
                           </span>
                           <button
                             onClick={() =>
                               updateQuantity(item.variant.id, item.quantity + 1)
                             }
-                            className="px-2 py-1 text-laboratory-black text-regular tracking-wide"
+                            className="px-2 py-1 text-laboratory-black text-xs tracking-wide"
                             disabled={isLoading}
                           >
                             +
                           </button>
                         </div>
-                        <span className="text-regular tracking-wide">
+                        <span className="text-xs tracking-wide">
                           $
                           {(
                             getPriceValue(item.variant.price) * item.quantity
@@ -140,13 +138,13 @@ const Cart: React.FC = () => {
 
           <div className="pt-4 border-t border-laboratory-black/10">
             <div className="flex justify-between mb-4">
-              <span className="text-medium tracking-wide">TOTAL</span>
-              <span className="text-medium tracking-wide">
+              <span className="text-xs tracking-wide">TOTAL</span>
+              <span className="text-xs tracking-wide">
                 ${cartTotal.toFixed(2)}
               </span>
             </div>
             <button
-              className="w-full py-3 bg-laboratory-black text-laboratory-white text-medium tracking-wide disabled:opacity-50"
+              className="w-full py-3 bg-laboratory-black text-laboratory-white text-xs tracking-wide disabled:opacity-50"
               onClick={handleCheckout}
               disabled={cartItems.length === 0 || !checkoutUrl || isLoading}
             >

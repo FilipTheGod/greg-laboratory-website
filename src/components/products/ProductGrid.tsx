@@ -78,21 +78,21 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
   }, [products, filteredCategory])
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-8 p-6">
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-6 p-6">
       <div className="md:col-span-1">
         <ProductFilter onFilterChange={setFilteredCategory} />
       </div>
 
-      <div className="md:col-span-3">
+      <div className="md:col-span-4">
         {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
         ) : (
           <div className="p-8 text-center">
-            <p className="text-laboratory-black/70">
+            <p className="text-laboratory-black/70 text-xs">
               No products found in this category.
             </p>
           </div>

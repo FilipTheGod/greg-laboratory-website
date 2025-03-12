@@ -51,11 +51,12 @@ const PRODUCT_MEDIA_QUERY = `
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { handle: string } }
+  { params }: { params: Promise<{ handle: string }> | { handle: string } }
 ) {
   try {
-    // Make sure params.handle is a string before using it
-    const handle = params.handle
+    // Await the params if it's a Promise
+    const resolvedParams = params instanceof Promise ? await params : params
+    const handle = resolvedParams.handle
 
     if (!handle) {
       return NextResponse.json(
@@ -70,47 +71,62 @@ export async function GET(
 
     if (!shopDomain || !adminToken) {
       return NextResponse.json(
-        { error: "Server configuration error" },
-        { status: 500 }
+        { data: null, error: "Server configuration error" },
+        { status: 200 } // Return 200 to avoid client errors, but include error message
       )
     }
 
     // Call Shopify Admin API
-    const response = await fetch(
-      `https://${shopDomain}/admin/api/2023-07/graphql.json`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Shopify-Access-Token": adminToken,
-        },
-        body: JSON.stringify({
-          query: PRODUCT_MEDIA_QUERY,
-          variables: {
-            handle: handle,
+    try {
+      const response = await fetch(
+        `https://${shopDomain}/admin/api/2023-07/graphql.json`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Shopify-Access-Token": adminToken,
           },
-        }),
-      }
-    )
+          body: JSON.stringify({
+            query: PRODUCT_MEDIA_QUERY,
+            variables: {
+              handle: handle,
+            },
+          }),
+        }
+      )
 
-    if (!response.ok) {
-      console.error(`API error: ${response.status} for handle ${handle}`)
+      if (!response.ok) {
+        console.error(`API error: ${response.status} for handle ${handle}`)
+        return NextResponse.json(
+          { data: null, error: `Shopify API error: ${response.status}` },
+          { status: 200 } // Return 200 to avoid client errors
+        )
+      }
+
+      const data = await response.json()
+
+      // Check if product exists
+      if (!data.data?.productByHandle) {
+        console.log(`Product not found for handle: ${handle}`)
+        return NextResponse.json(
+          { data: { productByHandle: null }, error: null },
+          { status: 200 } // Always return 200
+        )
+      }
+
+      return NextResponse.json(data, { status: 200 })
+    } catch (error) {
+      console.error(`Error fetching from Shopify for handle ${handle}:`, error)
       return NextResponse.json(
-        { error: `HTTP error from Shopify: ${response.status}` },
-        { status: response.status }
+        { data: null, error: "Error fetching from Shopify" },
+        { status: 200 } // Return 200 to avoid client errors
       )
     }
-
-    const data = await response.json()
-
-    // Log for debugging but return the full response
-    if (!data.data?.productByHandle) {
-      console.error(`Product not found for handle: ${handle}`)
-    }
-
-    return NextResponse.json(data)
   } catch (error) {
-    console.error("Error fetching product media:", error)
-    return NextResponse.json({ error: String(error) }, { status: 500 })
+    console.error("Error in API handler:", error)
+    return NextResponse.json(
+      { data: null, error: "Server error" },
+      { status: 200 } // Return 200 to avoid client errors
+    )
   }
 }

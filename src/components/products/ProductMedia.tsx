@@ -21,6 +21,7 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [videoError, setVideoError] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [apiAttempted, setApiAttempted] = useState(false)
 
   // Check if product has video media in Shopify data
   const hasMediaData = product.media && product.media.length > 0
@@ -38,12 +39,14 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
       return
     }
 
-    // Otherwise, fetch from our API endpoint
+    // Otherwise, fetch from our API endpoint - but only attempt once
     const fetchMedia = async () => {
-      if (!product.handle) {
+      if (!product.handle || apiAttempted) {
         setIsLoading(false)
         return
       }
+
+      setApiAttempted(true)
 
       try {
         const response = await fetch(`/api/products/media/${product.handle}`)
@@ -53,7 +56,8 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
 
           if (productData?.media?.edges) {
             const videoEdge = productData.media.edges.find(
-              (edge: { node: { mediaContentType: string } }) => edge.node.mediaContentType === "VIDEO"
+              (edge: { node: { mediaContentType: string } }) =>
+                edge.node.mediaContentType === "VIDEO"
             )
 
             if (videoEdge?.node?.sources?.[0]?.url) {
@@ -62,6 +66,13 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
                 setPreviewImage(videoEdge.node.preview.image.url)
               }
             }
+          }
+        } else {
+          // Silently handle 404 errors - just skip video loading
+          if (response.status === 404) {
+            console.log(
+              `No video media found for ${product.handle} - using image fallback`
+            )
           }
         }
       } catch (error) {
@@ -73,7 +84,7 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
     }
 
     fetchMedia()
-  }, [product.handle, firstVideoSource, videoMedia])
+  }, [product.handle, firstVideoSource, videoMedia, apiAttempted])
 
   const handleVideoError = () => {
     setVideoError(true)
@@ -92,7 +103,10 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
         poster={previewImage || undefined}
         onError={handleVideoError}
       >
-        <source src={videoUrl || firstVideoSource || undefined} type="video/mp4" />
+        <source
+          src={videoUrl || firstVideoSource || undefined}
+          type="video/mp4"
+        />
         Your browser does not support the video tag.
       </video>
     )
@@ -114,7 +128,7 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
   // Fallback if no images
   return (
     <div className="w-full h-full flex items-center justify-center bg-laboratory-black/5">
-      <span className="text-laboratory-black/30 text-medium tracking-wide">
+      <span className="text-laboratory-black/30 text-xs tracking-wide">
         No Image
       </span>
     </div>

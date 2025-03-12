@@ -89,7 +89,7 @@ export function debugProduct(
 /**
  * Simple price formatter
  */
-function formatPrice(price: string | { amount: string } | null): string {
+function formatPrice(price: string | { amount: string }): string {
   try {
     if (typeof price === "string") {
       return parseFloat(price).toFixed(2)
