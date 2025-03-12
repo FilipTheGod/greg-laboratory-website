@@ -4,6 +4,7 @@ import './globals.css';
 import { CartProvider } from '@/contexts/CartContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import CartNotifications from '@/components/cart/CartNotifications';
 
 export const metadata: Metadata = {
   title: 'GREG LABORATORY',
@@ -24,6 +25,7 @@ export default function RootLayout({
             {children}
           </main>
           <Footer />
+          <CartNotifications />
         </CartProvider>
       </body>
     </html>

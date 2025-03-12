@@ -40,6 +40,13 @@ export interface CartItem {
   }
 }
 
+interface Notification {
+  id: string
+  message: string
+  type: "success" | "error"
+  timeout: number
+}
+
 interface CartContextType {
   isCartOpen: boolean
   cartItems: CartItem[]
@@ -47,10 +54,12 @@ interface CartContextType {
   cartTotal: number
   checkoutUrl: string
   isLoading: boolean
+  notifications: Notification[]
   toggleCart: () => void
-  addToCart: (item: CartItem) => void
-  updateQuantity: (id: string, quantity: number) => void
-  removeFromCart: (id: string) => void
+  addToCart: (item: CartItem) => Promise<void>
+  updateQuantity: (id: string, quantity: number) => Promise<void>
+  removeFromCart: (id: string) => Promise<void>
+  removeNotification: (id: string) => void
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -63,12 +72,36 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   const [checkoutId, setCheckoutId] = useState("")
   const [checkoutUrl, setCheckoutUrl] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [notifications, setNotifications] = useState<Notification[]>([])
 
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0)
   const cartTotal = cartItems.reduce(
     (total, item) => total + getPriceValue(item.variant.price) * item.quantity,
     0
   )
+
+  // Add notification
+  const addNotification = (
+    message: string,
+    type: "success" | "error" = "success",
+    timeout = 3000
+  ) => {
+    const id = Date.now().toString()
+    const newNotification = { id, message, type, timeout }
+    setNotifications((prev) => [...prev, newNotification])
+
+    // Auto-remove notification after timeout
+    setTimeout(() => {
+      removeNotification(id)
+    }, timeout)
+
+    return id
+  }
+
+  // Remove notification
+  const removeNotification = (id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id))
+  }
 
   // Initialize checkout
   useEffect(() => {
@@ -163,60 +196,78 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   const addToCart = async (newItem: CartItem) => {
     setIsLoading(true)
 
-    // Check if item already exists in cart
-    const existingItemIndex = cartItems.findIndex(
-      (item) => item.variant.id === newItem.variant.id
-    )
-
-    let updatedCartItems: CartItem[]
-
-    if (existingItemIndex >= 0) {
-      // Update existing item quantity
-      updatedCartItems = [...cartItems]
-      updatedCartItems[existingItemIndex].quantity += newItem.quantity
-    } else {
-      // Add new item
-      updatedCartItems = [...cartItems, newItem]
-    }
-
-    setCartItems(updatedCartItems)
-
-    // Update Shopify checkout
     try {
+      // Check if item already exists in cart
+      const existingItemIndex = cartItems.findIndex(
+        (item) => item.variant.id === newItem.variant.id
+      )
+
+      let updatedCartItems: CartItem[]
+
+      if (existingItemIndex >= 0) {
+        // Update existing item quantity
+        updatedCartItems = [...cartItems]
+        updatedCartItems[existingItemIndex].quantity += newItem.quantity
+      } else {
+        // Add new item
+        updatedCartItems = [...cartItems, newItem]
+      }
+
+      setCartItems(updatedCartItems)
+
+      // Update Shopify checkout
       await addItemToCheckout(checkoutId, [
         {
           variantId: newItem.variant.id,
           quantity: newItem.quantity,
         },
       ])
+
+      // Add success notification
+      const itemName = newItem.title
+      const itemVariant = newItem.variant.title
+      addNotification(`Added ${itemName} (${itemVariant}) to cart`, "success")
+
+      // Don't automatically open cart for quick add
+      // setIsCartOpen(true)
     } catch (error) {
       console.error("Error adding item to checkout:", error)
+      addNotification("Failed to add item to cart", "error")
     } finally {
       setIsLoading(false)
-      setIsCartOpen(true) // Open cart when item is added
     }
   }
 
   const updateQuantity = async (id: string, quantity: number) => {
     setIsLoading(true)
 
-    // Update local cart state
-    const updatedCartItems = cartItems.map((item) =>
-      item.variant.id === id ? { ...item, quantity } : item
-    )
-
-    setCartItems(updatedCartItems)
-
-    // Update Shopify checkout
     try {
+      // Update local cart state
+      const updatedCartItems = cartItems.map((item) =>
+        item.variant.id === id ? { ...item, quantity } : item
+      )
+
+      setCartItems(updatedCartItems)
+
+      // Update Shopify checkout
       await updateCheckoutItem(checkoutId, [
         {
           id,
           quantity,
         },
       ])
+
+      // Add success notification
+      const updatedItem = cartItems.find((item) => item.variant.id === id)
+      if (updatedItem) {
+        addNotification(
+          `Updated ${updatedItem.title} quantity to ${quantity}`,
+          "success"
+        )
+      }
     } catch (error) {
       console.error("Error updating item quantity:", error)
+      addNotification("Failed to update item quantity", "error")
     } finally {
       setIsLoading(false)
     }
@@ -225,20 +276,31 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   const removeFromCart = async (id: string) => {
     setIsLoading(true)
 
-    // Remove from local cart state
-    const updatedCartItems = cartItems.filter((item) => item.variant.id !== id)
-    setCartItems(updatedCartItems)
-
-    // If cart is empty after removal, clear localStorage
-    if (updatedCartItems.length === 0) {
-      localStorage.removeItem("cartItems")
-    }
-
-    // Update Shopify checkout
     try {
+      // Find the item being removed for notification
+      const removedItem = cartItems.find((item) => item.variant.id === id)
+
+      // Remove from local cart state
+      const updatedCartItems = cartItems.filter(
+        (item) => item.variant.id !== id
+      )
+      setCartItems(updatedCartItems)
+
+      // If cart is empty after removal, clear localStorage
+      if (updatedCartItems.length === 0) {
+        localStorage.removeItem("cartItems")
+      }
+
+      // Update Shopify checkout
       await removeCheckoutItem(checkoutId, [id])
+
+      // Add success notification
+      if (removedItem) {
+        addNotification(`Removed ${removedItem.title} from cart`, "success")
+      }
     } catch (error) {
       console.error("Error removing item from checkout:", error)
+      addNotification("Failed to remove item from cart", "error")
     } finally {
       setIsLoading(false)
     }
@@ -253,10 +315,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         cartTotal,
         checkoutUrl,
         isLoading,
+        notifications,
         toggleCart,
         addToCart,
         updateQuantity,
         removeFromCart,
+        removeNotification,
       }}
     >
       {children}
