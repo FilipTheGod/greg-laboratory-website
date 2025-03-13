@@ -45,7 +45,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     colorVariants,
     currentColor,
     hasColorVariants,
-    isLoading: isLoadingVariants,
+    isLoading: isLoadingVariants
   } = useRelatedProducts(product.handle)
 
   // Check if the product has video media
@@ -71,13 +71,25 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
     // Since we now handle colors as separate products,
     // we only need to find the variant by size
-    const variant: ShopifyProductVariant | undefined = product.variants.find(
-      (v) => v.title === selectedSize || v.title.startsWith(`${selectedSize} /`)
-    )
+    let variant: ShopifyProductVariant | undefined
+    variant = product.variants.find((v) => v.title === selectedSize || v.title.startsWith(`${selectedSize} /`))
 
     if (!variant) {
       alert("Selected size is not available")
       return
+    }
+
+    // Check inventory limits if available
+    if (variant.inventoryQuantity !== undefined) {
+      // Get current quantity in cart
+      const existingItem = useCart().cartItems.find(item => item.variant.id === variant?.id);
+      const currentQuantity = existingItem ? existingItem.quantity : 0;
+
+      // Check if adding one more would exceed inventory
+      if (currentQuantity + 1 > variant.inventoryQuantity) {
+        alert(`Sorry, we only have ${variant.inventoryQuantity} of this item in stock and you already have ${currentQuantity} in your cart.`);
+        return;
+      }
     }
 
     // Convert price to string if needed
@@ -142,14 +154,30 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
   const productAttributes = getProductAttributes()
 
-  // Check if a specific size is available
-  const isSizeAvailable = (size: string) => {
-    return product.variants.some(
-      (variant) =>
-        (variant.title === size || variant.title.startsWith(`${size} /`)) &&
-        variant.available !== false
-    )
-  }
+// Check if a specific size is available and get its inventory level
+  const getSizeAvailability = (size: string): { available: boolean; inventoryQuantity?: number } => {
+    const variantsWithSize = product.variants.filter(
+      (variant) => variant.title === size || variant.title.startsWith(`${size} /`)
+    );
+
+    if (variantsWithSize.length === 0) {
+      return { available: false };
+    }
+
+    // Check if any variant is marked as unavailable
+    const anyUnavailable = variantsWithSize.some(v => v.available === false);
+
+    // Get inventory quantity if available
+    const firstVariant = variantsWithSize[0];
+    const inventoryQuantity = firstVariant.inventoryQuantity !== undefined
+      ? firstVariant.inventoryQuantity
+      : undefined;
+
+    return {
+      available: !anyUnavailable,
+      inventoryQuantity
+    };
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 px-16">
@@ -246,21 +274,39 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             )}
 
             <div className="flex flex-wrap gap-2">
-              {availableSizes.map((size) => (
-                <button
-                  key={size}
-                  className={`px-3 py-1 transition-all text-xs
-                    ${
-                      selectedSize === size
-                        ? "bg-laboratory-black text-laboratory-white"
-                        : "bg-transparent text-laboratory-black hover:underline"
-                    } tracking-wide`}
-                  onClick={() => setSelectedSize(size)}
-                  disabled={!isSizeAvailable(size)}
-                >
-                  {size}
-                </button>
-              ))}
+              {availableSizes.map((size) => {
+                const { available, inventoryQuantity } = getSizeAvailability(size);
+                const isLowStock = available && inventoryQuantity !== undefined && inventoryQuantity <= 3;
+
+                return (
+                  <div key={size} className="flex flex-col items-center">
+                    <button
+                      className={`px-3 py-1 transition-all text-xs relative
+                        ${
+                          selectedSize === size
+                            ? "bg-laboratory-black text-laboratory-white"
+                            : "bg-transparent text-laboratory-black hover:underline"
+                        }
+                        ${!available ? "opacity-50 cursor-not-allowed" : ""}
+                        tracking-wide`}
+                      onClick={() => available && setSelectedSize(size)}
+                      disabled={!available}
+                    >
+                      {size}
+                      {!available && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-full h-px bg-laboratory-black/50 transform rotate-45"></div>
+                        </div>
+                      )}
+                    </button>
+                    {isLowStock && (
+                      <p className="text-xs text-red-500 mt-1">
+                        Only {inventoryQuantity} left
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -303,9 +349,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             </button>
             {showDescription && (
               <div className="py-2 text-xs tracking-wide">
-                <div
-                  dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
-                />
+                <div dangerouslySetInnerHTML={{ __html: product.descriptionHtml }} />
               </div>
             )}
           </div>

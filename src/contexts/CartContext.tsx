@@ -238,10 +238,27 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }
 
-  const updateQuantity = async (id: string, quantity: number) => {
+  // src/contexts/CartContext.tsx
+  // Update to the updateQuantity function - do not replace the entire file!
+
+  // Modified updateQuantity function
+  const updateQuantity = async (
+    id: string,
+    quantity: number,
+    maxInventory?: number
+  ) => {
     setIsLoading(true)
 
     try {
+      // Check inventory limits if provided
+      if (maxInventory !== undefined && quantity > maxInventory) {
+        addNotification(
+          `Sorry, only ${maxInventory} items available in stock.`,
+          "error"
+        )
+        quantity = maxInventory // Limit to available inventory
+      }
+
       // Update local cart state
       const updatedCartItems = cartItems.map((item) =>
         item.variant.id === id ? { ...item, quantity } : item

@@ -25,6 +25,7 @@ function extractBaseSku(handle: string): string {
     "red",
     "pink",
     "stone",
+    "sand",
   ]
 
   // Check if the last part is a color
@@ -60,6 +61,7 @@ function extractColor(handle: string): string | null {
     "red",
     "pink",
     "stone",
+    "sand",
   ]
 
   if (commonColors.includes(lastPart)) {
@@ -75,7 +77,8 @@ export async function GET(
   { params }: { params: { handle: string } }
 ) {
   try {
-    const handle = params.handle
+    // Safely access params.handle
+    const handle = params?.handle
 
     if (!handle) {
       return NextResponse.json(

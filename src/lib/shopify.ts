@@ -19,6 +19,7 @@ export interface ShopifyProductVariant {
   title: string
   price: string | MoneyV2
   available?: boolean
+  inventoryQuantity?: number // Added this field for inventory tracking
 }
 
 export interface ShopifyMediaSource {
@@ -93,6 +94,18 @@ export function extractPriceAmount(priceValue: string | MoneyV2): string {
 // Convert Shopify response to properly typed objects
 const convertToPlainObject = <T>(obj: unknown): T => {
   const plainObj = JSON.parse(JSON.stringify(obj))
+
+  // If this is a product object, process its variants to add inventory information
+  if (plainObj && plainObj.variants && Array.isArray(plainObj.variants)) {
+    plainObj.variants = plainObj.variants.map((variant: any) => {
+      // Extract inventory quantity if available
+      if (variant.quantityAvailable !== undefined) {
+        variant.inventoryQuantity = variant.quantityAvailable
+      }
+      return variant
+    })
+  }
+
   return plainObj as T
 }
 
