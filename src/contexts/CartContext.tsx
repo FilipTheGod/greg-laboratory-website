@@ -20,7 +20,7 @@ interface CheckoutItem {
   quantity: number
 }
 
-interface Checkout {
+interface CheckoutType {
   id: string
   webUrl: string
   completedAt?: string
@@ -113,20 +113,25 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
       const existingCartItems = localStorage.getItem("cartItems")
 
       try {
-        let activeCheckout
-        let activeCheckoutId = existingCheckoutId
+        let activeCheckout: CheckoutType | null = null
+        let activeCheckoutId = existingCheckoutId || ""
 
         if (existingCheckoutId) {
           // Fetch the existing checkout to make sure it's still valid
           try {
-            activeCheckout = await fetchCheckout(existingCheckoutId)
+            const fetchedCheckout = await fetchCheckout(existingCheckoutId)
+            activeCheckout = fetchedCheckout as CheckoutType
 
             // If checkout is completed, create a new one
             if (activeCheckout.completedAt) {
-              const newCheckout = await createCheckout()
+              const newCheckoutResponse = await createCheckout()
+              const newCheckout = newCheckoutResponse as CheckoutType
               activeCheckoutId = newCheckout.id
               activeCheckout = newCheckout
-              localStorage.setItem("checkoutId", activeCheckoutId)
+
+              if (activeCheckoutId) {
+                localStorage.setItem("checkoutId", activeCheckoutId)
+              }
 
               // Clear cart if checkout was completed
               setCartItems([])
@@ -138,21 +143,32 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
               checkoutError
             )
             // If there's an error (e.g., checkout expired), create a new one
-            const newCheckout = await createCheckout()
+            const newCheckoutResponse = await createCheckout()
+            const newCheckout = newCheckoutResponse as CheckoutType
             activeCheckoutId = newCheckout.id
             activeCheckout = newCheckout
-            localStorage.setItem("checkoutId", activeCheckoutId)
+
+            if (activeCheckoutId) {
+              localStorage.setItem("checkoutId", activeCheckoutId)
+            }
           }
         } else {
           // No existing checkout, create a new one
-          const newCheckout = await createCheckout()
+          const newCheckoutResponse = await createCheckout()
+          const newCheckout = newCheckoutResponse as CheckoutType
           activeCheckoutId = newCheckout.id
           activeCheckout = newCheckout
-          localStorage.setItem("checkoutId", activeCheckoutId)
+
+          if (activeCheckoutId) {
+            localStorage.setItem("checkoutId", activeCheckoutId)
+          }
         }
 
         setCheckoutId(activeCheckoutId)
-        setCheckoutUrl(activeCheckout.webUrl)
+
+        if (activeCheckout) {
+          setCheckoutUrl(activeCheckout.webUrl)
+        }
 
         // Restore cart items if they exist
         if (existingCartItems) {
@@ -166,29 +182,37 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
                 quantity: item.quantity,
               }))
 
-              const updatedCheckout = await addItemToCheckout(
-                activeCheckoutId,
-                lineItems
-              )
+              if (activeCheckoutId) {
+                const updatedCheckoutResponse = await addItemToCheckout(
+                  activeCheckoutId,
+                  lineItems
+                )
 
-              // Update cart items with new lineItemIds
-              if (
-                updatedCheckout.lineItems &&
-                updatedCheckout.lineItems.length > 0
-              ) {
-                parsedItems = parsedItems.map((item, index) => ({
-                  ...item,
-                  lineItemId: updatedCheckout.lineItems[index].id,
-                }))
+                const updatedCheckout = updatedCheckoutResponse as CheckoutType
+
+                // Update cart items with new lineItemIds
+                if (
+                  updatedCheckout.lineItems &&
+                  updatedCheckout.lineItems.length > 0
+                ) {
+                  parsedItems = parsedItems.map((item, index) => ({
+                    ...item,
+                    lineItemId:
+                      updatedCheckout.lineItems &&
+                      index < updatedCheckout.lineItems.length
+                        ? updatedCheckout.lineItems[index].id
+                        : undefined,
+                  }))
+                }
+
+                setCheckoutUrl(updatedCheckout.webUrl)
               }
-
-              setCheckoutUrl(updatedCheckout.webUrl)
             }
-          } else if (activeCheckout.lineItems) {
+          } else if (activeCheckout && activeCheckout.lineItems) {
             // Match existing lineItemIds with our cart items if using existing checkout
             parsedItems = parsedItems.map((item) => {
-              const lineItem = activeCheckout.lineItems.find(
-                (li) => li.variant.id === item.variant.id
+              const lineItem = activeCheckout.lineItems?.find(
+                (li: CheckoutItem) => li.variant.id === item.variant.id
               )
               return {
                 ...item,
@@ -204,7 +228,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         console.error("Error initializing checkout:", error)
         // Fallback to create a new checkout
         try {
-          const checkout = await createCheckout()
+          const checkoutResponse = await createCheckout()
+          const checkout = checkoutResponse as CheckoutType
           setCheckoutId(checkout.id)
           setCheckoutUrl(checkout.webUrl)
           localStorage.setItem("checkoutId", checkout.id)
@@ -242,12 +267,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
       )
 
       // Add to Shopify checkout
-      const response = await addItemToCheckout(checkoutId, [
+      const responseData = await addItemToCheckout(checkoutId, [
         {
           variantId: newItem.variant.id,
           quantity: newItem.quantity,
         },
       ])
+
+      const response = responseData as CheckoutType
 
       // Get line item ID from response
       const addedLineItemId =
@@ -333,12 +360,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       // Update Shopify checkout using the lineItemId
-      const response = await updateCheckoutItem(checkoutId, [
+      const responseData = await updateCheckoutItem(checkoutId, [
         {
           id: itemToUpdate.lineItemId,
           quantity,
         },
       ])
+
+      const response = responseData as CheckoutType
 
       // Update the checkout URL in case it changed
       setCheckoutUrl(response.webUrl)
@@ -382,9 +411,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       // Remove from Shopify checkout using the lineItemId
-      const response = await removeCheckoutItem(checkoutId, [
+      const responseData = await removeCheckoutItem(checkoutId, [
         itemToRemove.lineItemId,
       ])
+
+      const response = responseData as CheckoutType
 
       // Update the checkout URL in case it changed
       setCheckoutUrl(response.webUrl)

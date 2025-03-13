@@ -17,7 +17,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
   const [selectedColor, setSelectedColor] = useState<string | null>(null)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
-  const { addToCart } = useCart()
+  const { addToCart, cartItems } = useCart()
 
   // Extract available sizes from variants
   const availableSizes = Array.from(
@@ -83,10 +83,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       addToCartWithSizeAndColor(selectedSize, color)
     }
   }
-
-  // Add to cart with just size
-  // src/components/products/ProductCard.tsx
-  // These are just the add to cart functions from ProductCard.tsx - don't replace the entire file
 
   // Add to cart with just size
   const addToCartWithSize = async (size: string) => {
