@@ -9,11 +9,10 @@ interface ProductPageProps {
 
 export default async function ProductPage(props: ProductPageProps) {
   try {
-    // Await the params if it's a Promise
-    const params =
+    // Ensure params is awaited before using its properties
+    const resolvedParams =
       props.params instanceof Promise ? await props.params : props.params
-
-    const id = params.id
+    const id = resolvedParams.id
     console.log("Product id:", id)
 
     if (!id) {

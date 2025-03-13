@@ -74,11 +74,12 @@ function extractColor(handle: string): string | null {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { handle: string } }
+  { params }: { params: { handle: string } | Promise<{ handle: string }> }
 ) {
   try {
-    // Safely access params.handle
-    const handle = params?.handle
+    // Ensure params is awaited before using its properties
+    const resolvedParams = params instanceof Promise ? await params : params
+    const handle = resolvedParams?.handle
 
     if (!handle) {
       return NextResponse.json(

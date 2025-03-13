@@ -5,7 +5,7 @@ import React, { useState } from "react"
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { useCart } from "@/contexts/CartContext"
-import { ShopifyProduct, ShopifyProductVariant } from "@/lib/shopify"
+import { ShopifyProduct } from "@/lib/shopify"
 import { formatPrice } from "@/utils/price"
 import ProductMedia from "./ProductMedia"
 import ProductColorVariants from "./ProductColorVariants"
@@ -38,14 +38,14 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [showingSizeGuide, setShowingSizeGuide] = useState(false)
   const [showDescription, setShowDescription] = useState(false)
   const [showFeatures, setShowFeatures] = useState(false)
-  const { addToCart, isLoading } = useCart()
+  const { addToCart, isLoading, cartItems } = useCart()
 
   // Fetch related color variants
   const {
     colorVariants,
     currentColor,
     hasColorVariants,
-    isLoading: isLoadingVariants
+    isLoading: isLoadingVariants,
   } = useRelatedProducts(product.handle)
 
   // Check if the product has video media
@@ -71,8 +71,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
     // Since we now handle colors as separate products,
     // we only need to find the variant by size
-    let variant: ShopifyProductVariant | undefined
-    variant = product.variants.find((v) => v.title === selectedSize || v.title.startsWith(`${selectedSize} /`))
+    const variant = product.variants.find(
+      (v) => v.title === selectedSize || v.title.startsWith(`${selectedSize} /`)
+    )
 
     if (!variant) {
       alert("Selected size is not available")
@@ -81,14 +82,18 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
     // Check inventory limits if available
     if (variant.inventoryQuantity !== undefined) {
-      // Get current quantity in cart
-      const existingItem = useCart().cartItems.find(item => item.variant.id === variant?.id);
-      const currentQuantity = existingItem ? existingItem.quantity : 0;
+      // Get current quantity in cart from context
+      const existingItem = cartItems.find(
+        (item) => item.variant.id === variant.id
+      )
+      const currentQuantity = existingItem ? existingItem.quantity : 0
 
       // Check if adding one more would exceed inventory
       if (currentQuantity + 1 > variant.inventoryQuantity) {
-        alert(`Sorry, we only have ${variant.inventoryQuantity} of this item in stock and you already have ${currentQuantity} in your cart.`);
-        return;
+        alert(
+          `Sorry, we only have ${variant.inventoryQuantity} of this item in stock and you already have ${currentQuantity} in your cart.`
+        )
+        return
       }
     }
 
@@ -154,30 +159,34 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
   const productAttributes = getProductAttributes()
 
-// Check if a specific size is available and get its inventory level
-  const getSizeAvailability = (size: string): { available: boolean; inventoryQuantity?: number } => {
+  // Check if a specific size is available and get its inventory level
+  const getSizeAvailability = (
+    size: string
+  ): { available: boolean; inventoryQuantity?: number } => {
     const variantsWithSize = product.variants.filter(
-      (variant) => variant.title === size || variant.title.startsWith(`${size} /`)
-    );
+      (variant) =>
+        variant.title === size || variant.title.startsWith(`${size} /`)
+    )
 
     if (variantsWithSize.length === 0) {
-      return { available: false };
+      return { available: false }
     }
 
     // Check if any variant is marked as unavailable
-    const anyUnavailable = variantsWithSize.some(v => v.available === false);
+    const anyUnavailable = variantsWithSize.some((v) => v.available === false)
 
     // Get inventory quantity if available
-    const firstVariant = variantsWithSize[0];
-    const inventoryQuantity = firstVariant.inventoryQuantity !== undefined
-      ? firstVariant.inventoryQuantity
-      : undefined;
+    const firstVariant = variantsWithSize[0]
+    const inventoryQuantity =
+      firstVariant.inventoryQuantity !== undefined
+        ? firstVariant.inventoryQuantity
+        : undefined
 
     return {
       available: !anyUnavailable,
-      inventoryQuantity
-    };
-  };
+      inventoryQuantity,
+    }
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 px-16">
@@ -275,8 +284,12 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
             <div className="flex flex-wrap gap-2">
               {availableSizes.map((size) => {
-                const { available, inventoryQuantity } = getSizeAvailability(size);
-                const isLowStock = available && inventoryQuantity !== undefined && inventoryQuantity <= 3;
+                const { available, inventoryQuantity } =
+                  getSizeAvailability(size)
+                const isLowStock =
+                  available &&
+                  inventoryQuantity !== undefined &&
+                  inventoryQuantity <= 3
 
                 return (
                   <div key={size} className="flex flex-col items-center">
@@ -305,7 +318,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                       </p>
                     )}
                   </div>
-                );
+                )
               })}
             </div>
           </div>
@@ -349,7 +362,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             </button>
             {showDescription && (
               <div className="py-2 text-xs tracking-wide">
-                <div dangerouslySetInnerHTML={{ __html: product.descriptionHtml }} />
+                <div
+                  dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
+                />
               </div>
             )}
           </div>

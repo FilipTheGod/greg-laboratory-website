@@ -4,11 +4,12 @@ import { getProductByHandle } from "@/lib/shopify"
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { handle: string } }
+  { params }: { params: { handle: string } | Promise<{ handle: string }> }
 ) {
   try {
-    // Await params if it's a Promise
-    const handle = params?.handle
+    // Ensure params is awaited before using its properties
+    const resolvedParams = params instanceof Promise ? await params : params
+    const handle = resolvedParams?.handle
 
     if (!handle) {
       return NextResponse.json(

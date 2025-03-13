@@ -97,9 +97,9 @@ const convertToPlainObject = <T>(obj: unknown): T => {
 
   // If this is a product object, process its variants to add inventory information
   if (plainObj && plainObj.variants && Array.isArray(plainObj.variants)) {
-    plainObj.variants = plainObj.variants.map((variant: any) => {
+    plainObj.variants = plainObj.variants.map((variant: Record<string, unknown>) => {
       // Extract inventory quantity if available
-      if (variant.quantityAvailable !== undefined) {
+      if (typeof variant === 'object' && variant && 'quantityAvailable' in variant) {
         variant.inventoryQuantity = variant.quantityAvailable
       }
       return variant
