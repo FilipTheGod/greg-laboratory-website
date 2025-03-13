@@ -305,13 +305,13 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                   <div key={size} className="flex flex-col items-center">
                     <button
                       className={`px-3 py-1 transition-all text-xs relative
-                        ${
-                          selectedSize === size
-                            ? "bg-laboratory-black text-laboratory-white"
-                            : "bg-transparent text-laboratory-black hover:underline"
-                        }
-                        ${!available ? "opacity-50 cursor-not-allowed" : ""}
-                        tracking-wide`}
+              ${
+                selectedSize === size
+                  ? "bg-laboratory-black text-laboratory-white"
+                  : "bg-transparent text-laboratory-black hover:underline"
+              }
+              ${!available ? "opacity-50 cursor-not-allowed" : ""}
+              tracking-wide`}
                       onClick={() => available && setSelectedSize(size)}
                       disabled={!available}
                     >

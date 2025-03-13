@@ -1,4 +1,4 @@
-// src/contexts/CartContext.tsx
+// src/contexts/CartContext.tsx - Fixed TypeScript error
 "use client"
 
 import React, { createContext, useContext, useState, useEffect } from "react"
@@ -276,11 +276,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
 
       const response = responseData as CheckoutType
 
-      // Get line item ID from response
+      // Get line item ID from response - FIX HERE
       const addedLineItemId =
-        response.lineItems &&
-        response.lineItems.length > 0 &&
-        response.lineItems[response.lineItems.length - 1].id
+        response.lineItems && response.lineItems.length > 0
+          ? response.lineItems[response.lineItems.length - 1].id
+          : undefined
 
       // Update the checkout URL in case it changed
       setCheckoutUrl(response.webUrl)
