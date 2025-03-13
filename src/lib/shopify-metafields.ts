@@ -1,5 +1,9 @@
 // src/lib/shopify-metafields.ts
-import { FeatureType } from "@/components/products/ProductFeatureIcon"
+import {
+  FeatureType,
+  featureDisplayNames,
+  featureDescriptions,
+} from "@/components/products/ProductFeatureIcon"
 import { ShopifyProduct } from "./shopify"
 
 /**
@@ -34,12 +38,6 @@ export function getProductFeatures(product: ShopifyProduct): FeatureType[] {
  */
 export function getProductFeatureObjects(product: ShopifyProduct) {
   const featureTypes = getProductFeatures(product)
-
-  // Import these from the ProductFeatureIcon component
-  const {
-    featureDisplayNames,
-    featureDescriptions,
-  } = require("@/components/products/ProductFeatureIcon")
 
   // Map features to attribute objects
   return featureTypes.map((featureType) => ({
