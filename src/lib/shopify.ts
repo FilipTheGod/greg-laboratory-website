@@ -19,7 +19,7 @@ export interface ShopifyProductVariant {
   title: string
   price: string | MoneyV2
   available?: boolean
-  inventoryQuantity?: number // Added this field for inventory tracking
+  inventoryQuantity?: number
 }
 
 export interface ShopifyMediaSource {
@@ -97,13 +97,19 @@ const convertToPlainObject = <T>(obj: unknown): T => {
 
   // If this is a product object, process its variants to add inventory information
   if (plainObj && plainObj.variants && Array.isArray(plainObj.variants)) {
-    plainObj.variants = plainObj.variants.map((variant: Record<string, unknown>) => {
-      // Extract inventory quantity if available
-      if (typeof variant === 'object' && variant && 'quantityAvailable' in variant) {
-        variant.inventoryQuantity = variant.quantityAvailable
+    plainObj.variants = plainObj.variants.map(
+      (variant: Record<string, unknown>) => {
+        // Extract inventory quantity if available
+        if (
+          typeof variant === "object" &&
+          variant &&
+          "quantityAvailable" in variant
+        ) {
+          variant.inventoryQuantity = variant.quantityAvailable
+        }
+        return variant
       }
-      return variant
-    })
+    )
   }
 
   return plainObj as T
@@ -179,7 +185,16 @@ export async function addItemToCheckout(
   lineItems: LineItem[]
 ) {
   try {
-    const checkout = await client.checkout.addLineItems(checkoutId, lineItems)
+    // Convert IDs to ensure they're in the correct format
+    const formattedLineItems = lineItems.map((item) => ({
+      variantId: item.variantId,
+      quantity: item.quantity,
+    }))
+
+    const checkout = await client.checkout.addLineItems(
+      checkoutId,
+      formattedLineItems
+    )
     return convertToPlainObject(checkout)
   } catch (error) {
     console.error("Error adding items to checkout:", error)
@@ -192,11 +207,13 @@ export interface LineItemUpdate {
   id: string
   quantity: number
 }
+
 export async function updateCheckoutItem(
   checkoutId: string,
   lineItems: LineItemUpdate[]
 ) {
   try {
+    // Make sure we have properly formatted lineItem IDs (internal Shopify IDs)
     const checkout = await client.checkout.updateLineItems(
       checkoutId,
       lineItems
@@ -214,6 +231,7 @@ export async function removeCheckoutItem(
   lineItemIds: string[]
 ) {
   try {
+    // Make sure we have properly formatted lineItem IDs (internal Shopify IDs)
     const checkout = await client.checkout.removeLineItems(
       checkoutId,
       lineItemIds

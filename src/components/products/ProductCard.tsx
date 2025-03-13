@@ -85,6 +85,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   }
 
   // Add to cart with just size
+  // src/components/products/ProductCard.tsx
+  // These are just the add to cart functions from ProductCard.tsx - don't replace the entire file
+
+  // Add to cart with just size
   const addToCartWithSize = async (size: string) => {
     setIsAddingToCart(true)
 
@@ -95,6 +99,30 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     )
 
     if (variant) {
+      // Check inventory limits
+      if (variant.inventoryQuantity !== undefined) {
+        // Get current quantity in cart
+        const existingItem = cartItems.find(
+          (item) => item.variant.id === variant.id
+        )
+        const currentQuantity = existingItem ? existingItem.quantity : 0
+
+        // Check if adding one more would exceed inventory
+        if (currentQuantity + 1 > variant.inventoryQuantity) {
+          alert(
+            `Sorry, only ${
+              variant.inventoryQuantity
+            } items of this size are available in stock${
+              currentQuantity > 0
+                ? ` and you already have ${currentQuantity} in your cart`
+                : ""
+            }.`
+          )
+          setIsAddingToCart(false)
+          return
+        }
+      }
+
       // Convert price to string if needed
       const priceString =
         typeof variant.price === "string" ? variant.price : variant.price.amount
@@ -137,6 +165,30 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     )
 
     if (variant) {
+      // Check inventory limits
+      if (variant.inventoryQuantity !== undefined) {
+        // Get current quantity in cart
+        const existingItem = cartItems.find(
+          (item) => item.variant.id === variant.id
+        )
+        const currentQuantity = existingItem ? existingItem.quantity : 0
+
+        // Check if adding one more would exceed inventory
+        if (currentQuantity + 1 > variant.inventoryQuantity) {
+          alert(
+            `Sorry, only ${
+              variant.inventoryQuantity
+            } items of this size/color are available in stock${
+              currentQuantity > 0
+                ? ` and you already have ${currentQuantity} in your cart`
+                : ""
+            }.`
+          )
+          setIsAddingToCart(false)
+          return
+        }
+      }
+
       // Convert price to string if needed
       const priceString =
         typeof variant.price === "string" ? variant.price : variant.price.amount

@@ -63,6 +63,10 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   ).sort()
 
   // Handle add to cart
+  // src/components/products/ProductDetails.tsx
+  // This is only the handleAddToCart function from ProductDetails.tsx - don't replace the entire file
+
+  // Handle add to cart
   const handleAddToCart = () => {
     if (!selectedSize) {
       alert("Please select a size")
@@ -80,9 +84,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       return
     }
 
-    // Check inventory limits if available
+    // Check inventory limits
     if (variant.inventoryQuantity !== undefined) {
-      // Get current quantity in cart from context
+      // Get current quantity in cart for this variant
       const existingItem = cartItems.find(
         (item) => item.variant.id === variant.id
       )
@@ -91,7 +95,13 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       // Check if adding one more would exceed inventory
       if (currentQuantity + 1 > variant.inventoryQuantity) {
         alert(
-          `Sorry, we only have ${variant.inventoryQuantity} of this item in stock and you already have ${currentQuantity} in your cart.`
+          `Sorry, only ${
+            variant.inventoryQuantity
+          } items of this size are available in stock${
+            currentQuantity > 0
+              ? ` and you already have ${currentQuantity} in your cart`
+              : ""
+          }.`
         )
         return
       }
