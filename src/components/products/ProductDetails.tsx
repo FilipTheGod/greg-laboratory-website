@@ -1,4 +1,4 @@
-// src/components/products/ProductDetails.tsx
+// src/components/products/ProductDetails.tsx - Updates for styling
 "use client"
 
 import React, { useState } from "react"
@@ -61,10 +61,6 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       })
     )
   ).sort()
-
-  // Handle add to cart
-  // src/components/products/ProductDetails.tsx
-  // This is only the handleAddToCart function from ProductDetails.tsx - don't replace the entire file
 
   // Handle add to cart
   const handleAddToCart = () => {
@@ -292,7 +288,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
               </div>
             )}
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-3">
               {availableSizes.map((size) => {
                 const { available, inventoryQuantity } =
                   getSizeAvailability(size)
@@ -302,16 +298,16 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                   inventoryQuantity <= 3
 
                 return (
-                  <div key={size} className="flex flex-col items-center">
+                  <div key={size} className="flex flex-col items-start">
                     <button
-                      className={`px-3 py-1 transition-all text-xs relative
-              ${
-                selectedSize === size
-                  ? "bg-laboratory-black text-laboratory-white"
-                  : "bg-transparent text-laboratory-black hover:underline"
-              }
-              ${!available ? "opacity-50 cursor-not-allowed" : ""}
-              tracking-wide`}
+                      className={`px-1 py-1 transition-all text-xs
+                        ${
+                          selectedSize === size
+                            ? "text-laboratory-black underline"
+                            : "text-laboratory-black/70 hover:underline"
+                        }
+                        ${!available ? "opacity-50 cursor-not-allowed" : ""}
+                        tracking-wide`}
                       onClick={() => available && setSelectedSize(size)}
                       disabled={!available}
                     >
@@ -345,22 +341,20 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           {/* Add to Cart Button */}
           <div className="pt-6 pb-4">
             <motion.button
-              className="w-full py-2 bg-laboratory-black text-laboratory-white text-xs tracking-wide hover:bg-black disabled:opacity-50 relative transition-colors"
+              className={`w-full py-2 text-xs tracking-wide transition-colors ${
+                selectedSize
+                  ? "text-laboratory-black"
+                  : "text-laboratory-black/50"
+              } hover:underline disabled:opacity-50`}
               onClick={handleAddToCart}
-              whileTap={{ scale: 0.95 }}
+              whileTap={{ scale: 0.98 }}
               disabled={!selectedSize || isLoading}
             >
-              {isLoading ? (
-                <span className="flex items-center justify-center">
-                  <span className="w-3 h-3 border-2 border-laboratory-white border-t-transparent rounded-full animate-spin mr-2"></span>
-                  ADDING...
-                </span>
-              ) : (
-                "SELECT YOUR SIZE"
-              )}
+              {isLoading ? "ADDING..." : "SELECT YOUR SIZE"}
             </motion.button>
           </div>
 
+          {/* Collapsible Description Section */}
           {/* Collapsible Description Section */}
           <div className="pt-4">
             <button
@@ -371,7 +365,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
               <span>{showDescription ? "−" : "+"}</span>
             </button>
             {showDescription && (
-              <div className="py-2 text-xs tracking-wide">
+              <div className="py-2 text-xs tracking-wide product-description">
                 <div
                   dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
                 />

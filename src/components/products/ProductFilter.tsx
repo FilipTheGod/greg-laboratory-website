@@ -36,7 +36,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ onFilterChange }) => {
       <div className="flex flex-col">
         <button
           onClick={() => handleCategoryClick("ALL")}
-          className={`text-left text-xs hover:opacity-70 transition mb-3 ${
+          className={`text-left text-xs hover:opacity-70 transition mb-5 ${
             activeCategory === "ALL" ? "font-medium" : "opacity-70"
           }`}
         >
@@ -46,7 +46,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ onFilterChange }) => {
           <button
             key={category}
             onClick={() => handleCategoryClick(category)}
-            className={`text-left text-xs hover:opacity-70 transition mb-1.5 whitespace-nowrap ${
+            className={`text-left text-xs hover:opacity-70 transition mb-5 whitespace-nowrap ${
               activeCategory === category ? "font-medium" : "opacity-70"
             }`}
           >

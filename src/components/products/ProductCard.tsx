@@ -14,8 +14,6 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false)
-  const [selectedSize, setSelectedSize] = useState<string | null>(null)
-  const [isAddingToCart, setIsAddingToCart] = useState(false)
   const { addToCart, cartItems } = useCart()
 
   // Extract available sizes from variants
@@ -50,9 +48,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   // Add to cart with just size
   const addToCartWithSize = async (size: string) => {
-    setIsAddingToCart(true)
-    setSelectedSize(size)
-
     // Find the variant that matches the size
     // If there are color variants, take the first available one with this size
     const variant = product.variants.find(
@@ -81,8 +76,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 : ""
             }.`
           )
-          setIsAddingToCart(false)
-          setSelectedSize(null)
           return
         }
       }
@@ -104,20 +97,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             image: product.images[0].src,
           },
         })
-
-        // Show brief visual feedback
-        setTimeout(() => {
-          setSelectedSize(null)
-          setIsAddingToCart(false)
-        }, 1000)
       } catch (error) {
         console.error("Error adding to cart:", error)
-        setIsAddingToCart(false)
-        setSelectedSize(null)
       }
-    } else {
-      setIsAddingToCart(false)
-      setSelectedSize(null)
     }
   }
 
@@ -125,10 +107,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     <div
       className="group block relative"
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => {
-        setIsHovered(false)
-        setSelectedSize(null)
-      }}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <Link href={`/product/${product.handle}`} className="block">
         <div className="flex flex-col">
@@ -153,32 +132,26 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
       {/* Sizes - always present in the DOM but only visible when hovered */}
       <div
-        className={`flex justify-center space-x-1 transition-opacity ${
+        className={`flex justify-center space-x-3 transition-opacity ${
           isHovered ? "opacity-100" : "opacity-0"
-        } h-4 mt-0.5`}
+        } h-4 mt-2`}
       >
         {availableSizes.map((size) => {
           const isAvailable = isSizeAvailable(size)
-          const isSelected = selectedSize === size
 
           return (
             <button
               key={size}
               onClick={(e) => handleSizeClick(e, size)}
               className={`
-                relative flex items-center justify-center text-xs w-8 h-8 transition-all
-                ${
-                  isSelected
-                    ? "bg-laboratory-black text-laboratory-white"
-                    : "bg-transparent"
-                }
+                text-xs transition-all
                 ${
                   isAvailable
                     ? "text-laboratory-black hover:underline cursor-pointer"
                     : "text-laboratory-black/40 cursor-not-allowed"
                 }
               `}
-              disabled={!isAvailable || isAddingToCart}
+              disabled={!isAvailable}
             >
               {size}
               {!isAvailable && (
@@ -186,17 +159,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                   <div className="w-6 h-px bg-laboratory-black/40 transform rotate-45"></div>
                 </div>
               )}
-              {isAddingToCart && isSelected && (
-                <div className="absolute inset-0 flex items-center justify-center bg-laboratory-black">
-                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              )}
             </button>
           )
         })}
       </div>
-
-      {/* Color selection has been removed for simplified quick-add */}
     </div>
   )
 }

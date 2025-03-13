@@ -25,6 +25,20 @@ const Cart: React.FC = () => {
     }
   }
 
+  // New function to handle quantity decrease
+  const handleDecrementQuantity = (
+    variantId: string,
+    currentQuantity: number
+  ) => {
+    if (currentQuantity <= 1) {
+      // If quantity is 1 or less, remove item completely
+      removeFromCart(variantId)
+    } else {
+      // Otherwise decrease quantity by 1
+      updateQuantity(variantId, currentQuantity - 1)
+    }
+  }
+
   return (
     <>
       {/* Overlay */}
@@ -99,9 +113,9 @@ const Cart: React.FC = () => {
                         <div className="flex items-center border border-laboratory-black/20">
                           <button
                             onClick={() =>
-                              updateQuantity(
+                              handleDecrementQuantity(
                                 item.variant.id,
-                                Math.max(1, item.quantity - 1)
+                                item.quantity
                               )
                             }
                             className="px-2 py-1 text-laboratory-black text-xs tracking-wide"
@@ -136,7 +150,7 @@ const Cart: React.FC = () => {
             )}
           </div>
 
-          <div className="pt-4 border-t border-laboratory-black/10">
+          <div className="pt-4">
             <div className="flex justify-between mb-4">
               <span className="text-xs tracking-wide">TOTAL</span>
               <span className="text-xs tracking-wide">
@@ -144,7 +158,7 @@ const Cart: React.FC = () => {
               </span>
             </div>
             <button
-              className="w-full py-3 bg-laboratory-black text-laboratory-white text-xs tracking-wide disabled:opacity-50"
+              className="w-full text-center py-3 text-laboratory-black text-xs tracking-wide hover:underline disabled:opacity-50"
               onClick={handleCheckout}
               disabled={cartItems.length === 0 || !checkoutUrl || isLoading}
             >
