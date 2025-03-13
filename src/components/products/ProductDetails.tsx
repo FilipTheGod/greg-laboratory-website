@@ -300,7 +300,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                 return (
                   <div key={size} className="flex flex-col items-start">
                     <button
-                      className={`px-1 py-1 transition-all text-xs
+                      className={`px-1 py-1 transition-all text-xs relative
                         ${
                           selectedSize === size
                             ? "text-laboratory-black underline"
@@ -313,9 +313,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                     >
                       {size}
                       {!available && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-full h-px bg-laboratory-black/50 transform rotate-45"></div>
-                        </div>
+                        <span className="absolute left-0 right-0 top-1/2 h-px bg-laboratory-black/50 transform rotate-45 -translate-y-1/2"></span>
                       )}
                     </button>
                     {isLowStock && (
@@ -354,7 +352,6 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             </motion.button>
           </div>
 
-          {/* Collapsible Description Section */}
           {/* Collapsible Description Section */}
           <div className="pt-4">
             <button

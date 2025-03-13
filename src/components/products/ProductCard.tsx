@@ -144,7 +144,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               key={size}
               onClick={(e) => handleSizeClick(e, size)}
               className={`
-                text-xs transition-all
+                text-xs transition-all relative
                 ${
                   isAvailable
                     ? "text-laboratory-black hover:underline cursor-pointer"
@@ -155,9 +155,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             >
               {size}
               {!isAvailable && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-6 h-px bg-laboratory-black/40 transform rotate-45"></div>
-                </div>
+                <span className="absolute left-0 right-0 top-1/2 h-px bg-laboratory-black/40 transform rotate-45 -translate-y-1/2"></span>
               )}
             </button>
           )
