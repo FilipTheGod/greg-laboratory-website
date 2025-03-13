@@ -22,14 +22,6 @@ export interface ShopifyProductVariant {
   inventoryQuantity?: number
 }
 
-export interface ShopifyProductExtended extends ShopifyProduct {
-  metafields?: {
-    features?: {
-      value: string[] // Array of feature IDs (e.g., ["WATER_REPELLENT", "BREATHABLE"])
-    }
-  }
-}
-
 export interface ShopifyMediaSource {
   url: string
   format: string
@@ -60,6 +52,7 @@ export interface ShopifyMetafield {
   easycare?: boolean
 }
 
+// Update in src/lib/shopify.ts
 export interface ShopifyProduct {
   id: string
   title: string
@@ -70,20 +63,13 @@ export interface ShopifyProduct {
   variants: ShopifyProductVariant[]
   media?: ShopifyMedia[]
   metafields?: {
-    custom?: {
-      features?: {
-        value: {
-          waterRepellent: boolean
-          breathable: boolean
-          stretch: boolean
-          durable: boolean
-          lightweight: boolean
-          easycare: boolean
-        }
-      }
+    features?: {
+      value: string[] // Array of feature IDs
     }
   }
 }
+
+// Remove ShopifyProductExtended if not used elsewhere, or update it to be compatible
 
 // Helper function to extract price amount regardless of format
 export function extractPriceAmount(priceValue: string | MoneyV2): string {
