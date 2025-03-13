@@ -1,4 +1,4 @@
-// src/components/products/ProductDetails.tsx - Updates for styling
+// src/components/products/ProductDetails.tsx - Updated version
 "use client"
 
 import React, { useState } from "react"
@@ -10,24 +10,11 @@ import { formatPrice } from "@/utils/price"
 import ProductMedia from "./ProductMedia"
 import ProductColorVariants from "./ProductColorVariants"
 import { useRelatedProducts } from "@/hooks/useRelatedProducts"
-
-// SVG Component for product attributes
-const ProductFeatureIcon: React.FC = () => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path d="M12 2L5 12H19L12 2Z" stroke="currentColor" strokeWidth="1.5" />
-    <path
-      d="M7 16C7 18.7614 9.23858 21 12 21C14.7614 21 17 18.7614 17 16"
-      stroke="currentColor"
-      strokeWidth="1.5"
-    />
-  </svg>
-)
+import ProductFeatureIcon, {
+  FeatureType,
+  featureDisplayNames,
+  featureDescriptions,
+} from "./ProductFeatureIcon"
 
 interface ProductDetailsProps {
   product: ShopifyProduct
@@ -122,48 +109,33 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     })
   }
 
-  // Define the product attributes based on metafields or fall back to product type
-  const getProductAttributes = () => {
-    const attributes = []
+  // Get product features from metafields
+  const getProductFeatures = () => {
+    // Default features if none are specified
+    const defaultFeatures: FeatureType[] = ["WATER_REPELLENT", "BREATHABLE"]
 
-    attributes.push({
-      name: "Water Repellent",
-      icon: <ProductFeatureIcon />,
-      description: "Resists moisture and light rain",
-    })
+    // Try to get features from metafields
+    let features: FeatureType[] = defaultFeatures
 
-    attributes.push({
-      name: "Breathable",
-      icon: <ProductFeatureIcon />,
-      description: "Allows air circulation for comfort",
-    })
-
-    attributes.push({
-      name: "2-Way Stretch",
-      icon: <ProductFeatureIcon />,
-      description: "Flexible movement in multiple directions",
-    })
-
-    if (product.productType === "Technical Series") {
-      attributes.push({
-        name: "Durable",
-        icon: <ProductFeatureIcon />,
-        description: "Built for extended wear and use",
-      })
+    // Check if product has metafields with features
+    if (
+      product.metafields &&
+      product.metafields.features &&
+      Array.isArray(product.metafields.features.value)
+    ) {
+      features = product.metafields.features.value as FeatureType[]
     }
 
-    if (product.productType === "Field Study Series") {
-      attributes.push({
-        name: "Lightweight",
-        icon: <ProductFeatureIcon />,
-        description: "Minimal weight for comfortable wear",
-      })
-    }
-
-    return attributes
+    // Map features to attribute objects
+    return features.map((featureType) => ({
+      name: featureDisplayNames[featureType] || "Unknown Feature",
+      featureType: featureType,
+      description:
+        featureDescriptions[featureType] || "No description available",
+    }))
   }
 
-  const productAttributes = getProductAttributes()
+  const productFeatures = getProductFeatures()
 
   // Check if a specific size is available and get its inventory level
   const getSizeAvailability = (
@@ -371,7 +343,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           </div>
 
           {/* Collapsible Product Features Section */}
-          {productAttributes.length > 0 && (
+          {productFeatures.length > 0 && (
             <div className="mt-2">
               <button
                 className="flex items-center justify-between w-full text-xs tracking-wide pt-1 pb-1 group hover:underline"
@@ -383,15 +355,18 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
               {showFeatures && (
                 <div className="py-2">
                   <div className="grid grid-cols-1 gap-3">
-                    {productAttributes.map((attr, index) => (
+                    {productFeatures.map((feature, index) => (
                       <div key={index} className="flex items-start space-x-2">
-                        <div className="text-laboratory-black">{attr.icon}</div>
+                        <ProductFeatureIcon
+                          featureType={feature.featureType as FeatureType}
+                          size={24}
+                        />
                         <div>
                           <h3 className="text-xs tracking-wide font-medium">
-                            {attr.name}
+                            {feature.name}
                           </h3>
                           <p className="text-xs tracking-wide text-laboratory-black/70">
-                            {attr.description}
+                            {feature.description}
                           </p>
                         </div>
                       </div>

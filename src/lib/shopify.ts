@@ -22,6 +22,14 @@ export interface ShopifyProductVariant {
   inventoryQuantity?: number
 }
 
+export interface ShopifyProductExtended extends ShopifyProduct {
+  metafields?: {
+    features?: {
+      value: string[] // Array of feature IDs (e.g., ["WATER_REPELLENT", "BREATHABLE"])
+    }
+  }
+}
+
 export interface ShopifyMediaSource {
   url: string
   format: string
