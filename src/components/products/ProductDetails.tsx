@@ -110,9 +110,10 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   }
 
   // Get product features from metafields
+  // Get product features from metafields
   const getProductFeatures = () => {
-    // Default features if none are specified
-    const defaultFeatures: FeatureType[] = ["WATER_REPELLENT", "BREATHABLE"]
+    // Remove default features
+    const defaultFeatures: FeatureType[] = []
 
     // Try to get features from metafields
     let features: FeatureType[] = defaultFeatures
@@ -134,7 +135,6 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
         featureDescriptions[featureType] || "No description available",
     }))
   }
-
   const productFeatures = getProductFeatures()
 
   // Check if a specific size is available and get its inventory level
@@ -342,6 +342,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             )}
           </div>
 
+          {/* Collapsible Product Features Section */}
           {/* Collapsible Product Features Section */}
           {productFeatures.length > 0 && (
             <div className="mt-2">

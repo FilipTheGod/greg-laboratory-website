@@ -16,7 +16,7 @@ import { ShopifyProduct } from "./shopify"
  * @returns Array of feature types
  */
 export function getProductFeatures(product: ShopifyProduct): FeatureType[] {
-  // Default features if none are specified
+  // Remove default features
   const defaultFeatures: FeatureType[] = []
 
   // Check if product has metafields with features
@@ -28,7 +28,7 @@ export function getProductFeatures(product: ShopifyProduct): FeatureType[] {
     return product.metafields.features.value as FeatureType[]
   }
 
-  return defaultFeatures
+  return defaultFeatures // Return empty array if no features found
 }
 
 /**
