@@ -11,7 +11,8 @@ const COLOR_MAP: Record<string, string> = {
   Cream: "#FFFDD0",
   Navy: "#000080",
   Olive: "#556B2F",
-  Grey: "##91918E",
+  Grey: "#91918E",
+  Gray: "#91918E", // Alternative spelling
   Khaki: "#C3B091",
   Tan: "#D2B48C",
   Brown: "#A52A2A",
@@ -21,13 +22,35 @@ const COLOR_MAP: Record<string, string> = {
   Red: "#FF0000",
   Pink: "#FFC0CB",
   Stone: "#DAD6C5",
+  Beige: "#F5F5DC",
+  Charcoal: "#36454F",
+  Sage: "#9CAF88",
+  Sand: "#C2B280",
+  Terracotta: "#E2725B",
+  Rust: "#B7410E",
+  Burgundy: "#800020",
+  Camel: "#C19A6B",
+  Ivory: "#FFFFF0",
+  Taupe: "#483C32",
+  Clay: "#A7745B",
+  Oatmeal: "#E0DAB8",
+  Mustard: "#E1AD01",
 }
 
 /**
  * Get the hex color value from a color name
+ * Falls back to a default gray if the color is not recognized
  */
 export function getColorHex(colorName: string): string {
-  return COLOR_MAP[colorName] || "#CCCCCC" // Default gray for unknown colors
+  // Normalize the color name
+  const normalizedName = colorName
+    .trim()
+    .replace(/\s+/g, " ")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ")
+
+  return COLOR_MAP[normalizedName] || "#CCCCCC" // Default gray for unknown colors
 }
 
 /**
@@ -40,12 +63,18 @@ export function getColorStyle(colorName: string): {
 } {
   const colorHex = getColorHex(colorName)
 
-  // Special handling for white to ensure visibility
-  const needsBorder = colorHex === "#FFFFFF"
+  // Special handling for light colors to ensure visibility
+  const isLightColor = [
+    "#FFFFFF",
+    "#FFFDD0",
+    "#F5F5DC",
+    "#FFFFF0",
+    "#E0DAB8",
+  ].includes(colorHex)
 
   return {
     backgroundColor: colorHex,
-    borderColor: needsBorder ? "#DDDDDD" : "transparent",
+    borderColor: isLightColor ? "#DDDDDD" : "transparent",
   }
 }
 
@@ -69,33 +98,33 @@ export function getContrastTextColor(colorName: string): string {
 }
 
 /**
- * Extract color metafield data from a product if available
- * Falls back to standard color map if not found
+ * Check if a color name is known in our system
  */
-export function getProductColorData(
-  product: { metafields?: { colors?: { value?: string } } },
-  colorName: string
-): {
-  hexValue: string
-  displayName: string
-} {
-  let hexValue = COLOR_MAP[colorName] || "#CCCCCC"
-  const displayName = colorName
+export function isKnownColor(colorName: string): boolean {
+  // Normalize the color name
+  const normalizedName = colorName
+    .trim()
+    .replace(/\s+/g, " ")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ")
 
-  // Check if product has metafields with color information
-  if (product?.metafields?.colors?.value) {
-    try {
-      const colorData = JSON.parse(product.metafields.colors.value)
-      if (colorData[colorName]) {
-        hexValue = colorData[colorName]
-      }
-    } catch (e) {
-      console.error("Error parsing color metafields:", e)
+  return normalizedName in COLOR_MAP
+}
+
+/**
+ * Extract a color name from a product handle or title
+ */
+export function extractColorFromText(text: string): string | null {
+  // Convert to lowercase for easier matching
+  const lowerText = text.toLowerCase()
+
+  // Check for each color name in the text
+  for (const colorName of Object.keys(COLOR_MAP)) {
+    if (lowerText.includes(colorName.toLowerCase())) {
+      return colorName
     }
   }
 
-  return {
-    hexValue,
-    displayName,
-  }
+  return null
 }

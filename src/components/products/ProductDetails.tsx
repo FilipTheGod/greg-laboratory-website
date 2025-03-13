@@ -1,20 +1,21 @@
 // src/components/products/ProductDetails.tsx
 "use client"
 
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState } from "react"
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { useCart } from "@/contexts/CartContext"
 import { ShopifyProduct, ShopifyProductVariant } from "@/lib/shopify"
 import { formatPrice } from "@/utils/price"
 import ProductMedia from "./ProductMedia"
-import { getColorStyle } from "@/utils/colors"
+import ProductColorVariants from "./ProductColorVariants"
+import { useRelatedProducts } from "@/hooks/useRelatedProducts"
 
 // SVG Component for product attributes
 const ProductFeatureIcon: React.FC = () => (
   <svg
-    width="24"
-    height="24"
+    width="20"
+    height="20"
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
@@ -34,17 +35,24 @@ interface ProductDetailsProps {
 
 const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [selectedSize, setSelectedSize] = useState("")
-  const [selectedColor, setSelectedColor] = useState("")
   const [showingSizeGuide, setShowingSizeGuide] = useState(false)
-  const [imagesLoaded, setImagesLoaded] = useState<boolean[]>([])
+  const [showDescription, setShowDescription] = useState(false)
+  const [showFeatures, setShowFeatures] = useState(false)
   const { addToCart, isLoading } = useCart()
-  const productImagesRef = useRef<HTMLDivElement>(null)
+
+  // Fetch related color variants
+  const {
+    colorVariants,
+    currentColor,
+    hasColorVariants,
+    isLoading: isLoadingVariants,
+  } = useRelatedProducts(product.handle)
 
   // Check if the product has video media
   const hasVideo =
     product.media?.some((media) => media.mediaContentType === "VIDEO") || false
 
-  // Extract available sizes and colors from variants
+  // Extract available sizes from variants
   const availableSizes = Array.from(
     new Set(
       product.variants.map((variant) => {
@@ -54,55 +62,21 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     )
   ).sort()
 
-  const availableColors = Array.from(
-    new Set(
-      product.variants
-        .map((variant) => {
-          const parts = variant.title.split(" / ")
-          return parts.length > 1 ? parts[1] : null
-        })
-        .filter(Boolean)
-    )
-  )
-
-  // Initialize the imagesLoaded state when the product changes
-  useEffect(() => {
-    if (product.images) {
-      setImagesLoaded(new Array(product.images.length).fill(false))
-    }
-  }, [product.images])
-
-  // Handle when an image is loaded
-  const handleImageLoaded = (index: number) => {
-    setImagesLoaded((prev) => {
-      const newState = [...prev]
-      newState[index] = true
-      return newState
-    })
-  }
-
   // Handle add to cart
   const handleAddToCart = () => {
-    if (!selectedSize || (availableColors.length > 0 && !selectedColor)) {
-      alert("Please select all required options")
+    if (!selectedSize) {
+      alert("Please select a size")
       return
     }
 
-    // Find the correct variant ID based on size and color
-    let variant: ShopifyProductVariant | undefined
-
-    if (availableColors.length > 0) {
-      // If we have colors available, find by size and color
-      variant = product.variants.find(
-        (v) => v.title === `${selectedSize} / ${selectedColor}`
-      )
-    } else {
-      // If we only have sizes
-      variant = product.variants.find((v) => v.title === selectedSize)
-    }
+    // Since we now handle colors as separate products,
+    // we only need to find the variant by size
+    const variant: ShopifyProductVariant | undefined = product.variants.find(
+      (v) => v.title === selectedSize || v.title.startsWith(`${selectedSize} /`)
+    )
 
     if (!variant) {
-      alert("Selected combination is not available")
+      alert("Selected size is not available")
       return
     }
 
@@ -168,18 +142,19 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
   const productAttributes = getProductAttributes()
 
-  // Check if a specific variant combination is available
-  const isVariantAvailable = (size: string, color: string) => {
+  // Check if a specific size is available
+  const isSizeAvailable = (size: string) => {
     return product.variants.some(
       (variant) =>
-        variant.title === `${size} / ${color}` && variant.available !== false
+        (variant.title === size || variant.title.startsWith(`${size} /`)) &&
+        variant.available !== false
     )
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6">
-      {/* Product Images - Left Side - Full column layout */}
-      <div className="space-y-6" ref={productImagesRef}>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 px-16">
+      {/* Product Images - Left Side - Now 2/3 of screen */}
+      <div className="md:col-span-2 space-y-6 md:pl-12">
         {/* Video (if available) */}
         {hasVideo && (
           <div className="relative aspect-square overflow-hidden bg-laboratory-white">
@@ -201,38 +176,32 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                 fill
                 className="object-cover"
                 priority={index === 0}
-                onLoad={() => handleImageLoaded(index)}
               />
-              {!imagesLoaded[index] && (
-                <div className="absolute inset-0 flex items-center justify-center bg-laboratory-white">
-                  <div className="w-6 h-6 border-2 border-laboratory-black/20 border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              )}
             </div>
           ))}
       </div>
 
-      {/* Product Info - Right Side - Fixed position while scrolling */}
-      <div className="sticky top-24 self-start max-h-[calc(100vh-6rem)] overflow-y-auto pr-6">
-        <div className="space-y-8">
+      {/* Product Info - Right Side - Fixed position while scrolling - Now 1/3 of screen */}
+      <div className="sticky top-24 self-start max-h-[calc(100vh-8rem)] pr-4">
+        <div className="space-y-4">
           <div>
-            <h3 className="text-laboratory-black/70 text-medium tracking-wide uppercase mb-1">
+            <p className="text-xs tracking-wide text-laboratory-black/70 uppercase mb-1">
               {product.productType}
-            </h3>
-            <h1 className="text-title tracking-wide uppercase mb-2">
+            </p>
+            <h1 className="text-sm tracking-wide uppercase mb-2">
               {product.title}
             </h1>
-            <p className="text-medium tracking-wide mb-6">
+            <p className="text-xs tracking-wide mb-4">
               ${formatPrice(product.variants[0]?.price)}
             </p>
           </div>
 
           {/* Size Selection - No borders, hover underline */}
-          <div>
-            <div className="flex justify-between items-center mb-3">
-              <h2 className="text-medium tracking-wide">SIZE</h2>
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="text-xs tracking-wide">SIZE</h2>
               <button
-                className="text-regular tracking-wide underline"
+                className="text-xs tracking-wide underline"
                 onClick={() => setShowingSizeGuide(!showingSizeGuide)}
               >
                 Size Guide
@@ -240,9 +209,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             </div>
 
             {showingSizeGuide && (
-              <div className="mb-4 p-4">
-                <h3 className="text-medium tracking-wide mb-2">Size Guide</h3>
-                <table className="w-full text-regular">
+              <div className="mb-3 p-3 border border-laboratory-black/10">
+                <h3 className="text-xs tracking-wide mb-2">Size Guide</h3>
+                <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b border-laboratory-black/10">
                       <th className="text-left py-2">Size</th>
@@ -252,24 +221,24 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                   </thead>
                   <tbody>
                     <tr className="border-b border-laboratory-black/5">
-                      <td className="py-2">S</td>
-                      <td className="py-2">38-40</td>
-                      <td className="py-2">30-32</td>
+                      <td className="py-1">S</td>
+                      <td className="py-1">38-40</td>
+                      <td className="py-1">30-32</td>
                     </tr>
                     <tr className="border-b border-laboratory-black/5">
-                      <td className="py-2">M</td>
-                      <td className="py-2">40-42</td>
-                      <td className="py-2">32-34</td>
+                      <td className="py-1">M</td>
+                      <td className="py-1">40-42</td>
+                      <td className="py-1">32-34</td>
                     </tr>
                     <tr className="border-b border-laboratory-black/5">
-                      <td className="py-2">L</td>
-                      <td className="py-2">42-44</td>
-                      <td className="py-2">34-36</td>
+                      <td className="py-1">L</td>
+                      <td className="py-1">42-44</td>
+                      <td className="py-1">34-36</td>
                     </tr>
                     <tr>
-                      <td className="py-2">XL</td>
-                      <td className="py-2">44-46</td>
-                      <td className="py-2">36-38</td>
+                      <td className="py-1">XL</td>
+                      <td className="py-1">44-46</td>
+                      <td className="py-1">36-38</td>
                     </tr>
                   </tbody>
                 </table>
@@ -280,13 +249,14 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
               {availableSizes.map((size) => (
                 <button
                   key={size}
-                  className={`px-4 py-2 transition-all
+                  className={`px-3 py-1 transition-all text-xs
                     ${
                       selectedSize === size
                         ? "bg-laboratory-black text-laboratory-white"
                         : "bg-transparent text-laboratory-black hover:underline"
-                    } text-regular tracking-wide`}
+                    } tracking-wide`}
                   onClick={() => setSelectedSize(size)}
+                  disabled={!isSizeAvailable(size)}
                 >
                   {size}
                 </button>
@@ -294,98 +264,81 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             </div>
           </div>
 
-          {/* Color Selection - Using actual colors from metafields */}
-          {availableColors.length > 0 && (
-            <div>
-              <h2 className="text-medium tracking-wide mb-3">COLOR</h2>
-              <div className="flex flex-wrap gap-3">
-                {availableColors.map((color) => {
-                  const isAvailable =
-                    !selectedSize ||
-                    isVariantAvailable(selectedSize, color as string)
-
-                  return (
-                    <button
-                      key={color}
-                      className={`w-10 h-10 rounded-full relative transition-all ${
-                        selectedColor === color
-                          ? "ring-2 ring-laboratory-black ring-offset-2"
-                          : ""
-                      }`}
-                      style={getColorStyle(color as string)}
-                      onClick={() => setSelectedColor(color as string)}
-                      aria-label={`Color: ${color}`}
-                      disabled={!isAvailable}
-                    >
-                      {!isAvailable && (
-                        <div className="absolute inset-0 bg-laboratory-black opacity-50 rounded-full flex items-center justify-center">
-                          <div className="w-8 h-0.5 bg-white transform rotate-45"></div>
-                          <div className="w-8 h-0.5 bg-white transform -rotate-45 absolute"></div>
-                        </div>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
-              {selectedColor && (
-                <p className="mt-2 text-regular tracking-wide">
-                  {selectedColor}
-                </p>
-              )}
-            </div>
+          {/* Color Variants - Shows other color options for the same base SKU */}
+          {!isLoadingVariants && hasColorVariants && (
+            <ProductColorVariants
+              currentColor={currentColor}
+              colorVariants={colorVariants}
+              className="mb-4"
+            />
           )}
 
-          {/* Add to Cart Button - No border, hover underline */}
-          <motion.button
-            className="w-full py-3 bg-laboratory-black text-laboratory-white text-medium tracking-wide hover:bg-black disabled:opacity-50 relative transition-colors"
-            onClick={handleAddToCart}
-            whileTap={{ scale: 0.95 }}
-            disabled={
-              !selectedSize ||
-              (availableColors.length > 0 && !selectedColor) ||
-              isLoading
-            }
-          >
-            {isLoading ? (
-              <span className="flex items-center justify-center">
-                <span className="w-4 h-4 border-2 border-laboratory-white border-t-transparent rounded-full animate-spin mr-2"></span>
-                ADDING...
-              </span>
-            ) : (
-              "ADD TO CART"
-            )}
-          </motion.button>
-
-          {/* Product Description - No dividers */}
-          <div className="mt-8 pt-8">
-            <h2 className="text-medium tracking-wide mb-4">DESCRIPTION</h2>
-            <div
-              className="text-regular tracking-wide"
-              dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
-            />
+          {/* Add to Cart Button */}
+          <div className="pt-6 pb-4">
+            <motion.button
+              className="w-full py-2 bg-laboratory-black text-laboratory-white text-xs tracking-wide hover:bg-black disabled:opacity-50 relative transition-colors"
+              onClick={handleAddToCart}
+              whileTap={{ scale: 0.95 }}
+              disabled={!selectedSize || isLoading}
+            >
+              {isLoading ? (
+                <span className="flex items-center justify-center">
+                  <span className="w-3 h-3 border-2 border-laboratory-white border-t-transparent rounded-full animate-spin mr-2"></span>
+                  ADDING...
+                </span>
+              ) : (
+                "SELECT YOUR SIZE"
+              )}
+            </motion.button>
           </div>
 
-          {/* Product Attributes/Features - No dividers */}
-          {productAttributes.length > 0 && (
-            <div className="mt-8 pt-8">
-              <h2 className="text-medium tracking-wide mb-4">
-                PRODUCT FEATURES
-              </h2>
-              <div className="grid grid-cols-2 gap-4">
-                {productAttributes.map((attr, index) => (
-                  <div key={index} className="flex items-start space-x-3">
-                    <div className="text-laboratory-black">{attr.icon}</div>
-                    <div>
-                      <h3 className="text-regular tracking-wide font-medium">
-                        {attr.name}
-                      </h3>
-                      <p className="text-regular tracking-wide text-laboratory-black/70">
-                        {attr.description}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+          {/* Collapsible Description Section */}
+          <div className="pt-4">
+            <button
+              className="flex items-center justify-between w-full text-xs tracking-wide pt-3 pb-1 group hover:underline"
+              onClick={() => setShowDescription(!showDescription)}
+            >
+              <span>PRODUCT DETAILS</span>
+              <span>{showDescription ? "−" : "+"}</span>
+            </button>
+            {showDescription && (
+              <div className="py-2 text-xs tracking-wide">
+                <div
+                  dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
+                />
               </div>
+            )}
+          </div>
+
+          {/* Collapsible Product Features Section */}
+          {productAttributes.length > 0 && (
+            <div className="mt-2">
+              <button
+                className="flex items-center justify-between w-full text-xs tracking-wide pt-1 pb-1 group hover:underline"
+                onClick={() => setShowFeatures(!showFeatures)}
+              >
+                <span>PRODUCT FEATURES</span>
+                <span>{showFeatures ? "−" : "+"}</span>
+              </button>
+              {showFeatures && (
+                <div className="py-2">
+                  <div className="grid grid-cols-1 gap-3">
+                    {productAttributes.map((attr, index) => (
+                      <div key={index} className="flex items-start space-x-2">
+                        <div className="text-laboratory-black">{attr.icon}</div>
+                        <div>
+                          <h3 className="text-xs tracking-wide font-medium">
+                            {attr.name}
+                          </h3>
+                          <p className="text-xs tracking-wide text-laboratory-black/70">
+                            {attr.description}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
