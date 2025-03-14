@@ -4,6 +4,14 @@
  * Required for updating product metafields
  */
 
+// Define types for metafield values
+type MetafieldValue = string | string[] | number | boolean | null
+
+interface ShopifyError {
+  field: string
+  message: string
+}
+
 // GraphQL mutation for updating a product metafield
 const UPDATE_PRODUCT_METAFIELD = `
   mutation productMetafieldsSet($productId: ID!, $metafields: [MetafieldsSetInput!]!) {
@@ -26,7 +34,7 @@ export async function updateProductMetafields(
   productId: string,
   namespace: string,
   key: string,
-  value: any,
+  value: MetafieldValue,
   type: string
 ) {
   const headers = {
@@ -75,7 +83,7 @@ export async function updateProductMetafields(
     // Check for errors in the response
     if (result.data?.productMetafieldsSet?.userErrors?.length > 0) {
       const errorMessages = result.data.productMetafieldsSet.userErrors
-        .map((err: any) => err.message)
+        .map((err: ShopifyError) => err.message)
         .join(", ")
       throw new Error(`Shopify API errors: ${errorMessages}`)
     }
