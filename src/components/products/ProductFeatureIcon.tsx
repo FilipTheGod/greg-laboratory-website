@@ -86,6 +86,7 @@ const ProductFeatureIcon: React.FC<ProductFeatureIconProps> = ({
   const iconPath = featureIconPaths[featureType]
 
   if (!iconPath) {
+    console.warn(`No icon found for feature: ${featureType}`)
     return null
   }
 
@@ -96,7 +97,7 @@ const ProductFeatureIcon: React.FC<ProductFeatureIconProps> = ({
     >
       <Image
         src={iconPath}
-        alt={featureDisplayNames[featureType]}
+        alt={featureDisplayNames[featureType] || featureType}
         width={size}
         height={size}
         className="object-contain"

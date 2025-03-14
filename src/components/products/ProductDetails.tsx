@@ -1,7 +1,7 @@
-// src/components/products/ProductDetails.tsx - Updated version
+// src/components/products/ProductDetails.tsx
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { useCart } from "@/contexts/CartContext"
@@ -24,8 +24,15 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [selectedSize, setSelectedSize] = useState("")
   const [showingSizeGuide, setShowingSizeGuide] = useState(false)
   const [showDescription, setShowDescription] = useState(false)
-  const [showFeatures, setShowFeatures] = useState(false)
+  const [showFeatures, setShowFeatures] = useState(true) // Initially show features
   const { addToCart, isLoading, cartItems } = useCart()
+  const [productFeatures, setProductFeatures] = useState<
+    Array<{
+      name: string
+      featureType: FeatureType
+      description: string
+    }>
+  >([])
 
   // Fetch related color variants
   const {
@@ -34,6 +41,40 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     hasColorVariants,
     isLoading: isLoadingVariants,
   } = useRelatedProducts(product.handle)
+
+  // Extract product features on component mount
+  useEffect(() => {
+    const getProductFeatures = () => {
+      if (!product.metafields?.features?.value) {
+        return []
+      }
+
+      // Ensure value is parsed if it's a string
+      let featuresArray: string[]
+      if (typeof product.metafields.features.value === "string") {
+        try {
+          featuresArray = JSON.parse(product.metafields.features.value)
+        } catch (e) {
+          console.error("Error parsing features:", e)
+          return []
+        }
+      } else {
+        featuresArray = product.metafields.features.value
+      }
+
+      return featuresArray
+        .filter((feature): feature is FeatureType =>
+          Object.keys(featureDisplayNames).includes(feature)
+        )
+        .map((featureType) => ({
+          name: featureDisplayNames[featureType],
+          featureType: featureType,
+          description: featureDescriptions[featureType],
+        }))
+    }
+
+    setProductFeatures(getProductFeatures())
+  }, [product])
 
   // Check if the product has video media
   const hasVideo =
@@ -109,37 +150,6 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     })
   }
 
-  // In ProductDetails.tsx
-  const getProductFeatures = () => {
-    if (!product.metafields?.features?.value) {
-      return []
-    }
-
-    // Ensure value is parsed if it's a string
-    let featuresArray: string[]
-    if (typeof product.metafields.features.value === "string") {
-      try {
-        featuresArray = JSON.parse(product.metafields.features.value)
-      } catch (e) {
-        console.error("Error parsing features:", e)
-        return []
-      }
-    } else {
-      featuresArray = product.metafields.features.value
-    }
-
-    return featuresArray
-      .filter((feature): feature is FeatureType =>
-        Object.keys(featureDisplayNames).includes(feature)
-      )
-      .map((featureType) => ({
-        name: featureDisplayNames[featureType],
-        featureType: featureType,
-        description: featureDescriptions[featureType],
-      }))
-  }
-  const productFeatures = getProductFeatures()
-
   // Check if a specific size is available and get its inventory level
   const getSizeAvailability = (
     size: string
@@ -200,7 +210,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       </div>
 
       {/* Product Info - Right Side - Fixed position while scrolling - Now 1/3 of screen */}
-      <div className="sticky top-24 self-start max-h-[calc(100vh-8rem)] pr-4">
+      <div className="sticky top-24 self-start max-h-[calc(100vh-8rem)] pr-4 overflow-y-auto">
         <div className="space-y-4">
           <div>
             <p className="text-xs tracking-wide text-laboratory-black/70 uppercase mb-1">
@@ -328,9 +338,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           </div>
 
           {/* Collapsible Description Section */}
-          <div className="pt-4">
+          <div className="pt-4 border-t border-laboratory-black/10">
             <button
-              className="flex items-center justify-between w-full text-xs tracking-wide pt-3 pb-1 group hover:underline"
+              className="flex items-center justify-between w-full text-xs tracking-wide py-2 group hover:underline"
               onClick={() => setShowDescription(!showDescription)}
             >
               <span>PRODUCT DETAILS</span>
@@ -345,25 +355,25 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             )}
           </div>
 
-          {/* Collapsible Product Features Section */}
-          {/* Collapsible Product Features Section */}
+          {/* Product Features Section */}
           {productFeatures.length > 0 && (
-            <div className="mt-2">
+            <div className="pt-4 border-t border-laboratory-black/10">
               <button
-                className="flex items-center justify-between w-full text-xs tracking-wide pt-1 pb-1 group hover:underline"
+                className="flex items-center justify-between w-full text-xs tracking-wide py-2 group hover:underline"
                 onClick={() => setShowFeatures(!showFeatures)}
               >
                 <span>PRODUCT FEATURES</span>
                 <span>{showFeatures ? "−" : "+"}</span>
               </button>
               {showFeatures && (
-                <div className="py-2">
-                  <div className="grid grid-cols-1 gap-3">
+                <div className="py-4">
+                  <div className="grid grid-cols-1 gap-4">
                     {productFeatures.map((feature, index) => (
-                      <div key={index} className="flex items-start space-x-2">
+                      <div key={index} className="flex items-start space-x-3">
                         <ProductFeatureIcon
-                          featureType={feature.featureType as FeatureType}
+                          featureType={feature.featureType}
                           size={24}
+                          className="mt-1 flex-shrink-0"
                         />
                         <div>
                           <h3 className="text-xs tracking-wide font-medium">

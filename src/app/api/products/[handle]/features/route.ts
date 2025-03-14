@@ -32,14 +32,27 @@ export async function GET(
     if (
       product.metafields &&
       product.metafields.features &&
-      Array.isArray(product.metafields.features.value)
+      product.metafields.features.value
     ) {
-      features = product.metafields.features.value as FeatureType[]
+      // Parse the features value if it's a string
+      if (typeof product.metafields.features.value === "string") {
+        try {
+          features = JSON.parse(
+            product.metafields.features.value
+          ) as FeatureType[]
+        } catch (error) {
+          console.error(`Error parsing features for ${handle}:`, error)
+        }
+      } else if (Array.isArray(product.metafields.features.value)) {
+        features = product.metafields.features.value as FeatureType[]
+      }
     }
 
-    // Return the features
+    // Return the product features along with basic product info
     return NextResponse.json({
       handle: product.handle,
+      title: product.title,
+      productType: product.productType,
       features,
     })
   } catch (error) {
@@ -84,29 +97,33 @@ export async function POST(
       return NextResponse.json({ error: "Product not found" }, { status: 404 })
     }
 
-    // In a real implementation, you would update the product metafields in Shopify here
-    // This would require using the Shopify Admin API, which needs an admin access token
+    // Update the product metafields in Shopify using the Admin API
+    try {
+      // Import the admin API functions
+      const { getProductIdFromHandle, updateProductFeatures } = await import(
+        "@/lib/shopify-admin"
+      )
 
-    // For now, we'll just simulate a successful update
-    // In a real implementation, you would replace this with an actual API call
+      // Get the product ID from its handle
+      const productId = await getProductIdFromHandle(handle)
 
-    // Example with Shopify Admin API (pseudocode):
-    // const response = await shopifyAdminClient.product.updateMetafields({
-    //   productId: product.id,
-    //   metafields: [
-    //     {
-    //       key: "features",
-    //       namespace: "custom",
-    //       value: JSON.stringify(body.features),
-    //       type: "json_string"
-    //     }
-    //   ]
-    // });
-
-    // For now, just return success
+      // Update the features metafield
+      await updateProductFeatures(productId, body.features)
+    } catch (adminError) {
+      console.error(
+        `Error updating Shopify metafields for ${handle}:`,
+        adminError
+      )
+      return NextResponse.json(
+        { error: "Failed to update product features in Shopify" },
+        { status: 500 }
+      )
+    }
     return NextResponse.json({
       success: true,
       message: "Features updated successfully",
+      handle: product.handle,
+      title: product.title,
       features: body.features,
     })
   } catch (error) {
