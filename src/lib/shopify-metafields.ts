@@ -15,20 +15,24 @@ import { ShopifyProduct } from "./shopify"
  * @param product The Shopify product object
  * @returns Array of feature types
  */
+// src/lib/shopify-metafields.ts
 export function getProductFeatures(product: ShopifyProduct): FeatureType[] {
-  // Remove default features
-  const defaultFeatures: FeatureType[] = []
-
-  // Check if product has metafields with features
-  if (
-    product.metafields &&
-    product.metafields.features &&
-    Array.isArray(product.metafields.features.value)
-  ) {
-    return product.metafields.features.value as FeatureType[]
+  if (!product.metafields?.features?.value) {
+    return [];
   }
 
-  return defaultFeatures // Return empty array if no features found
+  try {
+    const features = typeof product.metafields.features.value === 'string'
+      ? JSON.parse(product.metafields.features.value)
+      : product.metafields.features.value;
+
+    return features.filter((feature: string): feature is FeatureType =>
+      Object.values(FeatureType).includes(feature as FeatureType)
+    );
+  } catch (error) {
+    console.error('Error parsing product features:', error);
+    return [];
+  }
 }
 
 /**

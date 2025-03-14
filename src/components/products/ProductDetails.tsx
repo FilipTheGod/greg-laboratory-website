@@ -109,31 +109,34 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     })
   }
 
-  // Get product features from metafields
-  // Get product features from metafields
+  // In ProductDetails.tsx
   const getProductFeatures = () => {
-    // Remove default features
-    const defaultFeatures: FeatureType[] = []
-
-    // Try to get features from metafields
-    let features: FeatureType[] = defaultFeatures
-
-    // Check if product has metafields with features
-    if (
-      product.metafields &&
-      product.metafields.features &&
-      Array.isArray(product.metafields.features.value)
-    ) {
-      features = product.metafields.features.value as FeatureType[]
+    if (!product.metafields?.features?.value) {
+      return []
     }
 
-    // Map features to attribute objects
-    return features.map((featureType) => ({
-      name: featureDisplayNames[featureType] || "Unknown Feature",
-      featureType: featureType,
-      description:
-        featureDescriptions[featureType] || "No description available",
-    }))
+    // Ensure value is parsed if it's a string
+    let featuresArray: string[]
+    if (typeof product.metafields.features.value === "string") {
+      try {
+        featuresArray = JSON.parse(product.metafields.features.value)
+      } catch (e) {
+        console.error("Error parsing features:", e)
+        return []
+      }
+    } else {
+      featuresArray = product.metafields.features.value
+    }
+
+    return featuresArray
+      .filter((feature): feature is FeatureType =>
+        Object.keys(featureDisplayNames).includes(feature)
+      )
+      .map((featureType) => ({
+        name: featureDisplayNames[featureType],
+        featureType: featureType,
+        description: featureDescriptions[featureType],
+      }))
   }
   const productFeatures = getProductFeatures()
 

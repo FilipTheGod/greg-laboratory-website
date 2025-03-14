@@ -64,7 +64,8 @@ export interface ShopifyProduct {
   media?: ShopifyMedia[]
   metafields?: {
     features?: {
-      value: string[] // Array of feature IDs
+      value: string[] | string // Can be either array or stringified JSON
+      type: "json"
     }
   }
 }
