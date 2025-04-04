@@ -138,7 +138,13 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
     }
 
     fetchMedia()
-  }, [product.handle, firstVideoSource, videoMedia, apiAttempted])
+  }, [
+    product.handle,
+    firstVideoSource,
+    videoMedia,
+    apiAttempted,
+    videoPreviewImage,
+  ])
 
   const handleVideoError = () => {
     console.error(`Video error for product ${product.handle}`)
