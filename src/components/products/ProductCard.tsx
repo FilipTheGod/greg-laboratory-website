@@ -3,9 +3,9 @@
 
 import React, { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { ShopifyProduct } from "@/lib/shopify"
 import { formatPrice } from "@/utils/price"
-import ProductMedia from "./ProductMedia"
 import { useCart } from "@/contexts/CartContext"
 
 interface ProductCardProps {
@@ -103,9 +103,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     }
   }
 
-  // We don't need to explicitly check for video here
-  // ProductMedia component will handle video detection
-
   return (
     <div
       className="group block relative"
@@ -114,10 +111,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     >
       <Link href={`/product/${product.handle}`} className="block">
         <div className="flex flex-col">
-          {/* Product image/video */}
+          {/* Product image */}
           <div className="relative aspect-square overflow-hidden bg-laboratory-white">
-            <div className="transition-transform duration-500 h-full w-full">
-              <ProductMedia product={product} priority={false} />
+            <div className="h-full w-full">
+              {product.images && product.images.length > 0 ? (
+                <Image
+                  src={product.images[0].src}
+                  alt={product.title}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <span className="text-laboratory-black/30 text-xs">No Image</span>
+                </div>
+              )}
             </div>
           </div>
           <div>
