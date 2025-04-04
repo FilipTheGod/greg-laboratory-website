@@ -10,6 +10,7 @@ import { formatPrice } from "@/utils/price"
 import ProductMedia from "./ProductMedia"
 import ProductColorVariants from "./ProductColorVariants"
 import { useRelatedProducts } from "@/hooks/useRelatedProducts"
+import InlineVideoDebugger from "@/components/debug/InlineVideoDebugger"
 import ProductFeatureIcon, {
   FeatureType,
   featureDisplayNames,
@@ -181,6 +182,10 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 px-16">
+      {/* Debug component - REMOVE AFTER FIXING VIDEO ISSUES */}
+      <div className="md:col-span-3">
+        <InlineVideoDebugger product={product} />
+      </div>
       {/* Product Images - Left Side - Now 2/3 of screen */}
       <div className="md:col-span-2 space-y-6 md:pl-12">
         {/* Video (if available) */}

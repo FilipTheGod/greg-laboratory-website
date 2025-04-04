@@ -30,7 +30,7 @@ export async function GET(
       (media) => media.mediaContentType === "VIDEO"
     )
 
-    // If there's no video media, return an empty response
+    // If there's no video media, return an empty response with more info
     if (!videoMedia) {
       return NextResponse.json({
         data: {
@@ -40,6 +40,13 @@ export async function GET(
               edges: [],
             },
           },
+        },
+        debug: {
+          productId: product.id,
+          mediaItemsCount: product.media?.length || 0,
+          mediaTypes:
+            product.media?.map((media) => media.mediaContentType) || [],
+          allMediaIds: product.media?.map((media) => media.id) || [],
         },
       })
     }
@@ -72,6 +79,14 @@ export async function GET(
         mediaContentType: videoMedia.mediaContentType,
         sources: videoMedia.sources || [],
         previewImage: videoMedia.previewImage || null,
+      },
+      debug: {
+        videoObject: JSON.parse(JSON.stringify(videoMedia)),
+        mediaPosition:
+          product.media?.findIndex((m) => m.id === videoMedia.id) || -1,
+        totalMediaItems: product.media?.length || 0,
+        url: videoMedia.sources?.[0]?.url || null,
+        mimeType: videoMedia.sources?.[0]?.mimeType || null,
       },
     })
   } catch (error) {

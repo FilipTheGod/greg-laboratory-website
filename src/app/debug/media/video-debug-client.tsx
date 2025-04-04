@@ -3,7 +3,7 @@
 
 import React, { useState } from "react"
 import Image from "next/image"
-import VideoDebug from "@/components/debug/VideoDebug"
+import VideoDebug from "@/components/debug/VideoDebugger"
 
 interface VideoSource {
   productId: string

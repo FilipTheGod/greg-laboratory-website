@@ -20,179 +20,128 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [videoError, setVideoError] = useState(false)
+  const [videoLoaded, setVideoLoaded] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [apiAttempted, setApiAttempted] = useState(false)
 
-  // Check if product has video media in Shopify data
-  const hasMediaData = product.media && product.media.length > 0
-  const videoMedia = hasMediaData
-    ? product.media?.find((media) => media.mediaContentType === "VIDEO")
-    : null
-  const firstVideoSource = videoMedia?.sources?.[0]?.url || null
-  const videoPreviewImage = videoMedia?.previewImage?.src || null
+  // Find video media in the product
+  const videoMedia = product.media?.find(
+    (media) => media.mediaContentType === "VIDEO"
+  )
 
+  // Set up video URL and preview image on component mount or when product changes
   useEffect(() => {
-    // Clear error state on new product
+    // Reset states
     setVideoError(false)
+    setVideoLoaded(false)
+    setIsLoading(true)
 
-    // If we already have video data from Shopify, use it
-    if (firstVideoSource) {
-      setVideoUrl(firstVideoSource)
-      setPreviewImage(videoPreviewImage)
-      setIsLoading(false)
-      return
+    // Check for video in the product
+    if (videoMedia && videoMedia.sources && videoMedia.sources.length > 0) {
+      // Get the source URL
+      const sourceUrl = videoMedia.sources[0].url
+      setVideoUrl(sourceUrl)
+
+      // Get the preview image if available
+      if (videoMedia.previewImage && videoMedia.previewImage.src) {
+        setPreviewImage(videoMedia.previewImage.src)
+      } else if (product.images && product.images.length > 0) {
+        // Use first product image as fallback preview
+        setPreviewImage(product.images[0].src)
+      }
+    } else {
+      // If no video found, mark as error to fall back to image
+      setVideoError(true)
     }
 
-    // Otherwise, fetch from our API endpoint - but only attempt once
-    const fetchMedia = async () => {
-      if (!product.handle || apiAttempted) {
-        setIsLoading(false)
-        return
-      }
+    setIsLoading(false)
+  }, [product.id, videoMedia, product.images])
 
-      setApiAttempted(true)
+  // Listen for video load events once URL is set
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !videoUrl) return
 
-      try {
-        // Check if media exists in local storage first to avoid unnecessary API calls
-        const cacheKey = `product_media_${product.handle}`
-        const cached = localStorage.getItem(cacheKey)
-
-        if (cached) {
-          try {
-            const parsedCache = JSON.parse(cached)
-            if (parsedCache.videoUrl) {
-              setVideoUrl(parsedCache.videoUrl)
-              setPreviewImage(parsedCache.previewImage || null)
-            }
-          } catch (e) {
-            console.error("Error parsing cached video data:", e)
-            // Continue with API call if cache parsing fails
-          }
-          setIsLoading(false)
-          return
-        }
-
-        const response = await fetch(`/api/products/media/${product.handle}`)
-        if (response.ok) {
-          const data = await response.json()
-          const productData = data.data?.productByHandle
-
-          if (productData?.media?.edges) {
-            const videoEdge = productData.media.edges.find(
-              (edge: { node: { mediaContentType: string } }) =>
-                edge.node.mediaContentType === "VIDEO"
-            )
-
-            if (videoEdge?.node?.sources?.[0]?.url) {
-              const newVideoUrl = videoEdge.node.sources[0].url
-              const newPreviewImage = videoEdge.node.preview?.image?.url || null
-
-              setVideoUrl(newVideoUrl)
-              setPreviewImage(newPreviewImage)
-
-              // Cache the results to avoid future API calls
-              localStorage.setItem(
-                cacheKey,
-                JSON.stringify({
-                  videoUrl: newVideoUrl,
-                  previewImage: newPreviewImage,
-                  timestamp: Date.now(),
-                })
-              )
-            } else {
-              // Cache the negative result as well
-              localStorage.setItem(
-                cacheKey,
-                JSON.stringify({
-                  videoUrl: null,
-                  previewImage: null,
-                  timestamp: Date.now(),
-                })
-              )
-            }
-          }
-        } else {
-          // Cache negative results to avoid repeated calls
-          localStorage.setItem(
-            cacheKey,
-            JSON.stringify({
-              videoUrl: null,
-              previewImage: null,
-              timestamp: Date.now(),
-            })
-          )
-
-          // Silently handle 404 errors - just skip video loading
-          if (response.status === 404) {
-            console.log(
-              `No video media found for ${product.handle} - using image fallback`
-            )
-          }
-        }
-      } catch (error) {
-        // Handle error silently
-        console.error("Error fetching media:", error)
-      } finally {
-        setIsLoading(false)
-      }
+    const handleCanPlay = () => {
+      setVideoLoaded(true)
     }
 
-    fetchMedia()
-  }, [
-    product.handle,
-    firstVideoSource,
-    videoMedia,
-    apiAttempted,
-    videoPreviewImage,
-  ])
+    const handleError = () => {
+      console.error(`Video error for ${product.handle}:`, video.error)
+      setVideoError(true)
+    }
 
-  const handleVideoError = () => {
-    console.error(`Video error for product ${product.handle}`)
-    setVideoError(true)
+    video.addEventListener("canplay", handleCanPlay)
+    video.addEventListener("error", handleError)
+
+    // Try to manually load the video
+    video.load()
+
+    return () => {
+      video.removeEventListener("canplay", handleCanPlay)
+      video.removeEventListener("error", handleError)
+    }
+  }, [videoUrl, product.handle])
+
+  // Show image if video has error, is loading, or no video available
+  if (videoError || isLoading || !videoUrl) {
+    // Show first product image as fallback
+    if (product.images && product.images.length > 0) {
+      return (
+        <Image
+          src={product.images[0].src}
+          alt={product.title}
+          fill
+          className={className}
+          priority={priority}
+        />
+      )
+    }
+
+    // No images available
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-laboratory-black/5">
+        <span className="text-laboratory-black/30 text-xs tracking-wide">
+          No Media
+        </span>
+      </div>
+    )
   }
 
-  // If video is available and hasn't errored, show video
-  if ((videoUrl || firstVideoSource) && !videoError && !isLoading) {
-    const sourceUrl = videoUrl || firstVideoSource
-    const posterImage = previewImage || videoPreviewImage
+  // If we have a video URL and no errors, display the video
+  return (
+    <>
+      {/* Show preview image while video loads */}
+      {!videoLoaded && previewImage && (
+        <Image
+          src={previewImage}
+          alt={product.title}
+          fill
+          className={className}
+          priority={priority}
+        />
+      )}
 
-    return (
+      {/* The actual video element with multiple source formats */}
       <video
         ref={videoRef}
         autoPlay
         loop
         muted
         playsInline
-        className={className}
-        poster={posterImage || undefined}
-        onError={handleVideoError}
+        className={`${className} ${
+          videoLoaded ? "opacity-100" : "opacity-0"
+        } transition-opacity duration-300`}
+        poster={previewImage || undefined}
       >
-        <source src={sourceUrl || undefined} type="video/mp4" />
+        {/* MP4 source - widely supported */}
+        <source src={videoUrl} type="video/mp4" />
+        {/* MOV/QuickTime source */}
+        <source src={videoUrl} type="video/quicktime" />
+        {/* Generic video source */}
+        <source src={videoUrl} />
         Your browser does not support the video tag.
       </video>
-    )
-  }
-
-  // Fallback to first image
-  if (product.images && product.images.length > 0) {
-    return (
-      <Image
-        src={product.images[0].src}
-        alt={product.title}
-        fill
-        className={className}
-        priority={priority}
-      />
-    )
-  }
-
-  // Fallback if no images
-  return (
-    <div className="w-full h-full flex items-center justify-center bg-laboratory-black/5">
-      <span className="text-laboratory-black/30 text-xs tracking-wide">
-        No Image
-      </span>
-    </div>
+    </>
   )
 }
 
