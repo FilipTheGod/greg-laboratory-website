@@ -8,6 +8,11 @@ const nextConfig = {
         hostname: "cdn.shopify.com",
         pathname: "**",
       },
+      {
+        protocol: "https",
+        hostname: "greglaboratory.com",
+        pathname: "**",
+      },
     ],
   },
 }

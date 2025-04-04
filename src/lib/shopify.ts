@@ -1,4 +1,4 @@
-// src/lib/shopify.ts
+// src/lib/shopify.ts (Fixed version)
 import Client from "shopify-buy"
 
 export interface MoneyV2 {
@@ -52,7 +52,6 @@ export interface ShopifyMetafield {
   easycare?: boolean
 }
 
-// Update in src/lib/shopify.ts
 export interface ShopifyProduct {
   id: string
   title: string
@@ -70,8 +69,6 @@ export interface ShopifyProduct {
   }
 }
 
-// Remove ShopifyProductExtended if not used elsewhere, or update it to be compatible
-
 // Helper function to extract price amount regardless of format
 export function extractPriceAmount(priceValue: string | MoneyV2): string {
   if (typeof priceValue === "string") {
@@ -88,7 +85,24 @@ export function extractPriceAmount(priceValue: string | MoneyV2): string {
 
 // Convert Shopify response to properly typed objects
 const convertToPlainObject = <T>(obj: unknown): T => {
+  // First stringify and parse to ensure we have a plain object
   const plainObj = JSON.parse(JSON.stringify(obj))
+
+  // Log the object structure for debugging (remove in production)
+  console.log(
+    "Raw Shopify response object structure:",
+    Object.keys(plainObj).length > 0 ? Object.keys(plainObj) : "Empty object"
+  )
+
+  // Special processing for media items to ensure they're properly mapped
+  if (plainObj && "media" in plainObj) {
+    console.log(
+      "Media found in product:",
+      Array.isArray(plainObj.media)
+        ? `${plainObj.media.length} items`
+        : "Format not as expected"
+    )
+  }
 
   // If this is a product object, process its variants to add inventory information
   if (plainObj && plainObj.variants && Array.isArray(plainObj.variants)) {
@@ -115,13 +129,33 @@ const client = Client.buildClient({
   domain: process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || "",
   storefrontAccessToken:
     process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN || "",
-  apiVersion: "2023-07",
+  apiVersion: "2023-07", // Make sure this matches your Shopify store's API version
 })
 
 // Fetch all products
 export async function getAllProducts(): Promise<ShopifyProduct[]> {
   try {
+    console.log("Fetching all products from Shopify...")
     const products = await client.product.fetchAll(250)
+
+    console.log(
+      `Fetched ${Array.isArray(products) ? products.length : 0} products`
+    )
+
+    // Check if media is present in the first product
+    if (Array.isArray(products) && products.length > 0) {
+      const firstProduct = products[0]
+      console.log(
+        "First product media check:",
+        "media" in firstProduct
+          ? `Has media field with ${
+              (firstProduct as unknown as { media: unknown[] }).media?.length ||
+              0
+            } items`
+          : "No media field found"
+      )
+    }
+
     return convertToPlainObject<ShopifyProduct[]>(products)
   } catch (error) {
     console.error("Error fetching all products:", error)
@@ -134,10 +168,24 @@ export async function getProductByHandle(
   handle: string
 ): Promise<ShopifyProduct | null> {
   try {
+    console.log(`Fetching product with handle: ${handle}`)
     const product = await client.product.fetchByHandle(handle)
 
     if (!product) {
+      console.log(`No product found with handle: ${handle}`)
       return null
+    }
+
+    // Debug log to check media
+    if ("media" in product) {
+      console.log(
+        `Product ${handle} media:`,
+        Array.isArray((product as unknown as { media: unknown[] }).media)
+          ? `${(product as unknown as { media: unknown[] }).media.length} items`
+          : "Media property exists but isn't an array"
+      )
+    } else {
+      console.log(`No media property found in product ${handle}`)
     }
 
     return convertToPlainObject<ShopifyProduct>(product)

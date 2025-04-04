@@ -21,69 +21,85 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [videoError, setVideoError] = useState(false)
   const [videoLoaded, setVideoLoaded] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const [fallbackToImage, setFallbackToImage] = useState(false)
 
-  // Find video media in the product
-  const videoMedia = product.media?.find(
-    (media) => media.mediaContentType === "VIDEO"
-  )
-
-  // Set up video URL and preview image on component mount or when product changes
+  // Determine if we should try to show a video based on known pattern
   useEffect(() => {
-    // Reset states
+    // Reset states when product changes
     setVideoError(false)
     setVideoLoaded(false)
-    setIsLoading(true)
+    setFallbackToImage(false)
 
-    // Check for video in the product
+    // First, try to get video data from the Shopify API if it exists
+    const videoMedia = product.media?.find(
+      (media) => media.mediaContentType === "VIDEO"
+    )
+
     if (videoMedia && videoMedia.sources && videoMedia.sources.length > 0) {
-      // Get the source URL
-      const sourceUrl = videoMedia.sources[0].url
-      setVideoUrl(sourceUrl)
-
-      // Get the preview image if available
-      if (videoMedia.previewImage && videoMedia.previewImage.src) {
-        setPreviewImage(videoMedia.previewImage.src)
-      } else if (product.images && product.images.length > 0) {
-        // Use first product image as fallback preview
-        setPreviewImage(product.images[0].src)
-      }
+      // Use the video data from Shopify API
+      setVideoUrl(videoMedia.sources[0].url)
+      setPreviewImage(videoMedia.previewImage?.src || null)
+      console.log(
+        `Using Shopify API video for ${product.handle}:`,
+        videoMedia.sources[0].url
+      )
     } else {
-      // If no video found, mark as error to fall back to image
-      setVideoError(true)
+      // If no video in the API, use the direct URL pattern based on your screenshot
+      try {
+        // Construct the URL based on pattern from your screenshot
+        const constructedUrl = `https://greglaboratory.com/cdn/shop/videos/c/vp/${product.handle}/${product.handle}-HD-720p-1.6Mbps-3913547.mp4?v=0`
+        const previewUrl = `https://greglaboratory.com/cdn/shop/files/preview_images/${product.handle}.thumbnail.0000000000_1100x.jpg?v=1733237045`
+
+        setVideoUrl(constructedUrl)
+        setPreviewImage(previewUrl)
+        console.log(
+          `Using pattern-matched video for ${product.handle}:`,
+          constructedUrl
+        )
+      } catch (error) {
+        console.error(
+          `Error generating video URL for product ${product.handle}:`,
+          error
+        )
+        setFallbackToImage(true)
+      }
     }
+  }, [product])
 
-    setIsLoading(false)
-  }, [product.id, videoMedia, product.images])
-
-  // Listen for video load events once URL is set
+  // Handle video load events
   useEffect(() => {
-    const video = videoRef.current
-    if (!video || !videoUrl) return
+    if (!videoRef.current || !videoUrl) return
 
     const handleCanPlay = () => {
       setVideoLoaded(true)
+      console.log(`Video loaded successfully for ${product.handle}`)
     }
 
-    const handleError = () => {
-      console.error(`Video error for ${product.handle}:`, video.error)
+    const handleError = (e: ErrorEvent) => {
+      console.error(`Video load error for ${product.handle}:`, e)
       setVideoError(true)
+      setFallbackToImage(true)
     }
 
-    video.addEventListener("canplay", handleCanPlay)
-    video.addEventListener("error", handleError)
+    const videoElement = videoRef.current
+    videoElement.addEventListener("canplay", handleCanPlay)
+    videoElement.addEventListener("error", handleError as EventListener)
 
-    // Try to manually load the video
-    video.load()
+    // Force reload the video to try with the new source
+    try {
+      videoElement.load()
+    } catch (e) {
+      console.error("Error reloading video:", e)
+    }
 
     return () => {
-      video.removeEventListener("canplay", handleCanPlay)
-      video.removeEventListener("error", handleError)
+      videoElement.removeEventListener("canplay", handleCanPlay)
+      videoElement.removeEventListener("error", handleError as EventListener)
     }
   }, [videoUrl, product.handle])
 
-  // Show image if video has error, is loading, or no video available
-  if (videoError || isLoading || !videoUrl) {
+  // If we have an error or should fall back to an image
+  if (videoError || fallbackToImage || !videoUrl) {
     // Show first product image as fallback
     if (product.images && product.images.length > 0) {
       return (
@@ -97,7 +113,7 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
       )
     }
 
-    // No images available
+    // Fallback if no images (shouldn't happen)
     return (
       <div className="w-full h-full flex items-center justify-center bg-laboratory-black/5">
         <span className="text-laboratory-black/30 text-xs tracking-wide">
@@ -107,7 +123,7 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
     )
   }
 
-  // If we have a video URL and no errors, display the video
+  // If we have a video URL, try to show the video
   return (
     <>
       {/* Show preview image while video loads */}
@@ -121,7 +137,7 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
         />
       )}
 
-      {/* The actual video element with multiple source formats */}
+      {/* Video element with multiple sources for better compatibility */}
       <video
         ref={videoRef}
         autoPlay
@@ -132,13 +148,15 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
           videoLoaded ? "opacity-100" : "opacity-0"
         } transition-opacity duration-300`}
         poster={previewImage || undefined}
+        onError={() => {
+          console.error(`Video error occurred for ${product.handle}`)
+          setVideoError(true)
+          setFallbackToImage(true)
+        }}
       >
-        {/* MP4 source - widely supported */}
+        {/* Add both MP4 and MOV sources for compatibility */}
         <source src={videoUrl} type="video/mp4" />
-        {/* MOV/QuickTime source */}
         <source src={videoUrl} type="video/quicktime" />
-        {/* Generic video source */}
-        <source src={videoUrl} />
         Your browser does not support the video tag.
       </video>
     </>
