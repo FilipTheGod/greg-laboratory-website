@@ -103,6 +103,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     }
   }
 
+  // We don't need to explicitly check for video here
+  // ProductMedia component will handle video detection
+
   return (
     <div
       className="group block relative"

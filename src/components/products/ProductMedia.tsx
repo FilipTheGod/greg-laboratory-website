@@ -29,12 +29,16 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
     ? product.media?.find((media) => media.mediaContentType === "VIDEO")
     : null
   const firstVideoSource = videoMedia?.sources?.[0]?.url || null
+  const videoPreviewImage = videoMedia?.previewImage?.src || null
 
   useEffect(() => {
+    // Clear error state on new product
+    setVideoError(false)
+
     // If we already have video data from Shopify, use it
     if (firstVideoSource) {
       setVideoUrl(firstVideoSource)
-      setPreviewImage(videoMedia?.previewImage?.src || null)
+      setPreviewImage(videoPreviewImage)
       setIsLoading(false)
       return
     }
@@ -54,10 +58,15 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
         const cached = localStorage.getItem(cacheKey)
 
         if (cached) {
-          const parsedCache = JSON.parse(cached)
-          if (parsedCache.videoUrl) {
-            setVideoUrl(parsedCache.videoUrl)
-            setPreviewImage(parsedCache.previewImage || null)
+          try {
+            const parsedCache = JSON.parse(cached)
+            if (parsedCache.videoUrl) {
+              setVideoUrl(parsedCache.videoUrl)
+              setPreviewImage(parsedCache.previewImage || null)
+            }
+          } catch (e) {
+            console.error("Error parsing cached video data:", e)
+            // Continue with API call if cache parsing fails
           }
           setIsLoading(false)
           return
@@ -132,11 +141,15 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
   }, [product.handle, firstVideoSource, videoMedia, apiAttempted])
 
   const handleVideoError = () => {
+    console.error(`Video error for product ${product.handle}`)
     setVideoError(true)
   }
 
   // If video is available and hasn't errored, show video
   if ((videoUrl || firstVideoSource) && !videoError && !isLoading) {
+    const sourceUrl = videoUrl || firstVideoSource
+    const posterImage = previewImage || videoPreviewImage
+
     return (
       <video
         ref={videoRef}
@@ -145,13 +158,10 @@ const ProductMedia: React.FC<ProductMediaProps> = ({
         muted
         playsInline
         className={className}
-        poster={previewImage || undefined}
+        poster={posterImage || undefined}
         onError={handleVideoError}
       >
-        <source
-          src={videoUrl || firstVideoSource || undefined}
-          type="video/mp4"
-        />
+        <source src={sourceUrl || undefined} type="video/mp4" />
         Your browser does not support the video tag.
       </video>
     )

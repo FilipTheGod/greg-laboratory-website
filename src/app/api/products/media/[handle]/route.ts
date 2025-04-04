@@ -32,13 +32,42 @@ export async function GET(
 
     // If there's no video media, return an empty response
     if (!videoMedia) {
-      return NextResponse.json({ data: { hasVideo: false } })
+      return NextResponse.json({
+        data: {
+          hasVideo: false,
+          productByHandle: {
+            media: {
+              edges: [],
+            },
+          },
+        },
+      })
     }
 
-    // Return the video media data
+    // Format the response to match GraphQL structure that the frontend expects
+    const mediaEdge = {
+      node: {
+        mediaContentType: "VIDEO",
+        sources: videoMedia.sources || [],
+        preview: videoMedia.previewImage
+          ? {
+              image: {
+                url: videoMedia.previewImage.src,
+              },
+            }
+          : null,
+      },
+    }
+
+    // Return the video media data in the format that matches what the frontend expects
     return NextResponse.json({
       data: {
         hasVideo: true,
+        productByHandle: {
+          media: {
+            edges: [mediaEdge],
+          },
+        },
         mediaId: videoMedia.id,
         mediaContentType: videoMedia.mediaContentType,
         sources: videoMedia.sources || [],
