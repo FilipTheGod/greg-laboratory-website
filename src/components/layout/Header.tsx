@@ -20,6 +20,12 @@ const Header: React.FC = () => {
 
       <div className="flex items-center space-x-4">
         <Link
+          href="https://www.instagram.com/greglaboratory/?hl=en"
+          className="text-laboratory-black hover:opacity-70 transition text-xs tracking-wide"
+        >
+          INSTAGRAM
+        </Link>
+        <Link
           href="/consultancy"
           className="text-laboratory-black text-xs tracking-wide hover:opacity-70 transition"
         >
