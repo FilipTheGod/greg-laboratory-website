@@ -3,10 +3,10 @@
 
 import React, { useState } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { ShopifyProduct } from "@/lib/shopify"
 import { formatPrice } from "@/utils/price"
 import { useCart } from "@/contexts/CartContext"
+import EnhancedProductMedia from "./EnhancedProductMedia" // Import the enhanced component
 
 interface ProductCardProps {
   product: ShopifyProduct
@@ -111,21 +111,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     >
       <Link href={`/product/${product.handle}`} className="block">
         <div className="flex flex-col">
-          {/* Product image */}
+          {/* Product media - Now using EnhancedProductMedia component */}
           <div className="relative aspect-square overflow-hidden bg-laboratory-white">
             <div className="h-full w-full">
-              {product.images && product.images.length > 0 ? (
-                <Image
-                  src={product.images[0].src}
-                  alt={product.title}
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <span className="text-laboratory-black/30 text-xs">No Image</span>
-                </div>
-              )}
+              <EnhancedProductMedia product={product} />
             </div>
           </div>
           <div>
