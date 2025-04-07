@@ -3,10 +3,10 @@
 
 import React, { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { ShopifyProduct } from "@/lib/shopify"
 import { formatPrice } from "@/utils/price"
 import { useCart } from "@/contexts/CartContext"
-import EnhancedProductMedia from "./EnhancedProductMedia" // Import the enhanced component
 
 interface ProductCardProps {
   product: ShopifyProduct
@@ -26,6 +26,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     )
   ).sort()
 
+  // Check if media includes a video
+  const hasVideo = product.media?.some((m) => m.mediaContentType === "VIDEO")
+  const videoMedia = product.media?.find((m) => m.mediaContentType === "VIDEO")
+  const videoUrl = videoMedia?.sources?.[0]?.url
+  const videoPreviewImage = videoMedia?.previewImage?.src
+
   // Check if a size is in stock (regardless of color)
   const isSizeAvailable = (size: string) => {
     return product.variants.some(
@@ -42,14 +48,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
     if (!isSizeAvailable(size)) return // Don't do anything if size is not available
 
-    // Always add to cart directly, regardless of colors
-    addToCartWithSize(size)
-  }
-
-  // Add to cart with just size
-  const addToCartWithSize = async (size: string) => {
     // Find the variant that matches the size
-    // If there are color variants, take the first available one with this size
     const variant = product.variants.find(
       (v) =>
         (v.title === size || v.title.startsWith(`${size} /`)) &&
@@ -85,7 +84,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         typeof variant.price === "string" ? variant.price : variant.price.amount
 
       try {
-        await addToCart({
+        addToCart({
           id: product.id,
           title: product.title,
           handle: product.handle,
@@ -94,7 +93,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             id: variant.id,
             title: variant.title,
             price: priceString,
-            image: product.images[0].src,
+            image: product.images[0]?.src || "",
           },
         })
       } catch (error) {
@@ -111,11 +110,35 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     >
       <Link href={`/product/${product.handle}`} className="block">
         <div className="flex flex-col">
-          {/* Product media - Now using EnhancedProductMedia component */}
+          {/* Product media (video or image) */}
           <div className="relative aspect-square overflow-hidden bg-laboratory-white">
-            <div className="h-full w-full">
-              <EnhancedProductMedia product={product} />
-            </div>
+            {hasVideo && videoUrl ? (
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="h-full w-full object-cover"
+                poster={
+                  videoPreviewImage || product.images[0]?.src || undefined
+                }
+              >
+                <source src={videoUrl} type="video/mp4" />
+              </video>
+            ) : product.images && product.images.length > 0 ? (
+              <Image
+                src={product.images[0].src}
+                alt={product.title}
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-laboratory-black/5">
+                <span className="text-laboratory-black/30 text-xs tracking-wide">
+                  No Image
+                </span>
+              </div>
+            )}
           </div>
           <div>
             {/* Price - always visible but only shows when hovered */}

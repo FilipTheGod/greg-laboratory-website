@@ -1,4 +1,4 @@
-// src/app/layout.tsx
+// src/app/layout.tsx - Keep this unchanged
 import type { Metadata } from "next"
 import "./globals.css"
 import { CartProvider } from "@/contexts/CartContext"

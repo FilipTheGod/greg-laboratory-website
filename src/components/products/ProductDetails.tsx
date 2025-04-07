@@ -1,13 +1,12 @@
 // src/components/products/ProductDetails.tsx
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { useCart } from "@/contexts/CartContext"
-import { ShopifyProduct } from "@/lib/shopify"
+import { ShopifyProduct, ShopifyMedia } from "@/lib/shopify"
 import { formatPrice } from "@/utils/price"
-import EnhancedProductMedia from "./EnhancedProductMedia"
 import ProductColorVariants from "./ProductColorVariants"
 import { useRelatedProducts } from "@/hooks/useRelatedProducts"
 import ProductFeatureIcon, {
@@ -24,18 +23,38 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [selectedSize, setSelectedSize] = useState("")
   const [showingSizeGuide, setShowingSizeGuide] = useState(false)
   const [showDescription, setShowDescription] = useState(false)
-  const [showFeatures, setShowFeatures] = useState(true) // Initially show features
+  const [showFeatures, setShowFeatures] = useState(true)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const { addToCart, isLoading, cartItems } = useCart()
-  const [productFeatures, setProductFeatures] = useState<
-    Array<{
-      name: string
-      featureType: FeatureType
-      description: string
-    }>
-  >([])
 
-  // Remove the debug components - we won't need them anymore
-  // const [debugMode] = useState(false)
+  // Get features from metafields
+  const productFeatures = React.useMemo(() => {
+    if (!product.metafields?.features?.value) {
+      return []
+    }
+
+    let featuresArray: string[]
+    if (typeof product.metafields.features.value === "string") {
+      try {
+        featuresArray = JSON.parse(product.metafields.features.value)
+      } catch (e) {
+        console.error("Error parsing features:", e)
+        return []
+      }
+    } else {
+      featuresArray = product.metafields.features.value
+    }
+
+    return featuresArray
+      .filter((feature): feature is FeatureType =>
+        Object.keys(featureDisplayNames).includes(feature)
+      )
+      .map((featureType) => ({
+        name: featureDisplayNames[featureType],
+        featureType,
+        description: featureDescriptions[featureType],
+      }))
+  }, [product.metafields?.features?.value])
 
   // Fetch related color variants
   const {
@@ -44,40 +63,6 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     hasColorVariants,
     isLoading: isLoadingVariants,
   } = useRelatedProducts(product.handle)
-
-  // Extract product features on component mount
-  useEffect(() => {
-    const getProductFeatures = () => {
-      if (!product.metafields?.features?.value) {
-        return []
-      }
-
-      // Ensure value is parsed if it's a string
-      let featuresArray: string[]
-      if (typeof product.metafields.features.value === "string") {
-        try {
-          featuresArray = JSON.parse(product.metafields.features.value)
-        } catch (e) {
-          console.error("Error parsing features:", e)
-          return []
-        }
-      } else {
-        featuresArray = product.metafields.features.value
-      }
-
-      return featuresArray
-        .filter((feature): feature is FeatureType =>
-          Object.keys(featureDisplayNames).includes(feature)
-        )
-        .map((featureType) => ({
-          name: featureDisplayNames[featureType],
-          featureType: featureType,
-          description: featureDescriptions[featureType],
-        }))
-    }
-
-    setProductFeatures(getProductFeatures())
-  }, [product])
 
   // Extract available sizes from variants
   const availableSizes = Array.from(
@@ -96,8 +81,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       return
     }
 
-    // Since we now handle colors as separate products,
-    // we only need to find the variant by size
+    // Find the correct variant based on selected size
     const variant = product.variants.find(
       (v) => v.title === selectedSize || v.title.startsWith(`${selectedSize} /`)
     )
@@ -107,15 +91,13 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       return
     }
 
-    // Check inventory limits
+    // Check inventory if available
     if (variant.inventoryQuantity !== undefined) {
-      // Get current quantity in cart for this variant
       const existingItem = cartItems.find(
         (item) => item.variant.id === variant.id
       )
       const currentQuantity = existingItem ? existingItem.quantity : 0
 
-      // Check if adding one more would exceed inventory
       if (currentQuantity + 1 > variant.inventoryQuantity) {
         alert(
           `Sorry, only ${
@@ -134,7 +116,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     const priceString =
       typeof variant.price === "string" ? variant.price : variant.price.amount
 
-    // Add to cart via context
+    // Add to cart
     addToCart({
       id: product.id,
       title: product.title,
@@ -144,12 +126,29 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
         id: variant.id,
         title: variant.title,
         price: priceString,
-        image: product.images[0].src,
+        image: product.images[0]?.src || "",
       },
     })
   }
 
-  // Check if a specific size is available and get its inventory level
+  // Get available media items (excluding the first one which is shown at the top)
+  const mediaItems = React.useMemo(() => {
+    // Combine all media: first the remaining images that aren't the first media
+    const items = [...(product.images || [])]
+    return items
+  }, [product.images])
+
+  // Check if first media item is a video
+  const firstMediaIsVideo = product.media?.some(
+    (m) => m.mediaContentType === "VIDEO"
+  )
+
+  // Get the video URL and preview image if available
+  const videoMedia = product.media?.find((m) => m.mediaContentType === "VIDEO")
+  const videoUrl = videoMedia?.sources?.[0]?.url
+  const videoPreviewImage = videoMedia?.previewImage?.src
+
+  // Check size availability and inventory
   const getSizeAvailability = (
     size: string
   ): { available: boolean; inventoryQuantity?: number } => {
@@ -162,55 +161,69 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       return { available: false }
     }
 
-    // Check if any variant is marked as unavailable
     const anyUnavailable = variantsWithSize.some((v) => v.available === false)
-
-    // Get inventory quantity if available
     const firstVariant = variantsWithSize[0]
-    const inventoryQuantity =
-      firstVariant.inventoryQuantity !== undefined
-        ? firstVariant.inventoryQuantity
-        : undefined
 
     return {
       available: !anyUnavailable,
-      inventoryQuantity,
+      inventoryQuantity: firstVariant.inventoryQuantity,
     }
   }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 px-16">
-      {/* Product Images - Left Side - Now 2/3 of screen */}
+      {/* Product Media - Left Side (2/3 of screen) */}
       <div className="md:col-span-2 space-y-6 md:pl-12">
-        {/* Video at the top */}
+        {/* First Media Item (Video or First Image) */}
         <div className="relative aspect-square overflow-hidden bg-laboratory-white">
-          <EnhancedProductMedia
-            product={product}
-            priority={true}
-            showControls={true}
-          />
+          {firstMediaIsVideo && videoUrl ? (
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              controls
+              className="w-full h-full object-cover"
+              poster={videoPreviewImage || product.images[0]?.src || undefined}
+            >
+              <source src={videoUrl} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          ) : product.images && product.images.length > 0 ? (
+            <Image
+              src={product.images[0].src}
+              alt={product.title}
+              fill
+              className="object-cover"
+              priority
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-laboratory-black/5">
+              <span className="text-laboratory-black/30 text-xs tracking-wide">
+                No Media Available
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* Images in a single column */}
-        {product.images &&
-          product.images.length > 0 &&
-          product.images.map((image, index) => (
-            <div
-              key={index}
-              className="relative aspect-square overflow-hidden bg-laboratory-white"
-            >
-              <Image
-                src={image.src}
-                alt={`${product.title} - view ${index + 1}`}
-                fill
-                className="object-cover"
-                priority={index === 0}
-              />
-            </div>
-          ))}
+        {/* Remaining Images */}
+        {mediaItems.map((image, index) => (
+          <div
+            key={index}
+            className="relative aspect-square overflow-hidden bg-laboratory-white"
+          >
+            <Image
+              src={image.src}
+              alt={`${product.title} - view ${index + 1}`}
+              fill
+              className="object-cover"
+              priority={index === 0}
+            />
+          </div>
+        ))}
       </div>
 
-      {/* Product Info - Right Side - Fixed position while scrolling - Now 1/3 of screen */}
+      {/* Product Info - Right Side (1/3 of screen) */}
       <div className="sticky top-24 self-start max-h-[calc(100vh-8rem)] pr-4 overflow-y-auto">
         <div className="space-y-4">
           <div>
@@ -225,7 +238,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             </p>
           </div>
 
-          {/* Size Selection - No borders, hover underline */}
+          {/* Size Selection */}
           <div className="mb-4">
             <div className="flex justify-between items-center mb-2">
               <h2 className="text-xs tracking-wide">SIZE</h2>
@@ -313,7 +326,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             </div>
           </div>
 
-          {/* Color Variants - Shows other color options for the same base SKU */}
+          {/* Color Variants */}
           {!isLoadingVariants && hasColorVariants && (
             <ProductColorVariants
               currentColor={currentColor}
