@@ -52,6 +52,14 @@ export interface ShopifyMetafield {
   easycare?: boolean
 }
 
+// Update to src/lib/shopify.ts - ShopifyProduct interface
+// Add this to your existing interface
+
+// Extend the ShopifyProduct interface to include metafields
+// Update to src/lib/shopify.ts - ShopifyProduct interface
+// Add this to your existing interface
+
+// Extend the ShopifyProduct interface to include metafields
 export interface ShopifyProduct {
   id: string
   title: string
@@ -62,8 +70,8 @@ export interface ShopifyProduct {
   variants: ShopifyProductVariant[]
   media?: ShopifyMedia[]
   metafields?: {
-    features?: {
-      value: string[] | string // Can be either array or stringified JSON
+    materialFeatures?: {  // Changed from features to materialFeatures
+      value: string[] | string
       type: "json"
     }
   }

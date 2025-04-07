@@ -9,6 +9,7 @@ import { ShopifyProduct } from "@/lib/shopify"
 import { formatPrice } from "@/utils/price"
 import ProductColorVariants from "./ProductColorVariants"
 import { useRelatedProducts } from "@/hooks/useRelatedProducts"
+import ProductFeaturesSection from "./ProductFeaturesSection"
 import ProductFeatureIcon from "./ProductFeatureIcon"
 import { getProductFeatureObjects } from "@/lib/shopify-metafields"
 
@@ -324,7 +325,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             </motion.button>
           </div>
 
-          {/* Collapsible Description Section */}
+          {/* Product Details Section */}
           <div className="pt-4 border-t border-laboratory-black/10">
             <button
               className="flex items-center justify-between w-full text-xs tracking-wide py-2 group hover:underline"
@@ -341,6 +342,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
               </div>
             )}
           </div>
+
+          {/* Product Features Section */}
+          <ProductFeaturesSection product={product} />
 
           {/* Product Features Section */}
           {productFeatures.length > 0 && (
