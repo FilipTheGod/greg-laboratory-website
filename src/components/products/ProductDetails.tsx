@@ -130,11 +130,12 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     })
   }
 
-  // Get available media items (excluding the first one which is shown at the top)
+  // Get available media items (ONLY 2nd image and beyond, NOT including the first image which is shown as video at the top)
   const mediaItems = React.useMemo(() => {
-    // Combine all media: first the remaining images that aren't the first media
-    const items = [...(product.images || [])]
-    return items
+    if (product.images && product.images.length > 1) {
+      return product.images.slice(1)
+    }
+    return []
   }, [product.images])
 
   // Check if first media item is a video
@@ -213,7 +214,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           >
             <Image
               src={image.src}
-              alt={`${product.title} - view ${index + 1}`}
+              alt={`${product.title} - view ${index + 2}`}
               fill
               className="object-cover"
               priority={index === 0}
@@ -224,7 +225,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
       {/* Product Info - Right Side (1/3 of screen) */}
       <div className="sticky top-24 self-start max-h-[calc(100vh-8rem)] pr-4 overflow-y-auto">
-        <div className="space-y-4">
+        <div className="space-y-4 pl-1">
           <div>
             <p className="text-xs tracking-wide text-laboratory-black/70 uppercase mb-1">
               {product.productType}
@@ -325,12 +326,12 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             </div>
           </div>
 
-          {/* Color Variants */}
+          {/* Color Variants - Expanded space for colors */}
           {!isLoadingVariants && hasColorVariants && (
             <ProductColorVariants
               currentColor={currentColor}
               colorVariants={colorVariants}
-              className="mb-4"
+              className="mb-6 py-2" /* Added more vertical padding */
             />
           )}
 
