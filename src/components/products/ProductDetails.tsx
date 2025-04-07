@@ -5,7 +5,7 @@ import React, { useState } from "react"
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { useCart } from "@/contexts/CartContext"
-import { ShopifyProduct, ShopifyMedia } from "@/lib/shopify"
+import { ShopifyProduct } from "@/lib/shopify"
 import { formatPrice } from "@/utils/price"
 import ProductColorVariants from "./ProductColorVariants"
 import { useRelatedProducts } from "@/hooks/useRelatedProducts"
@@ -24,7 +24,6 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [showingSizeGuide, setShowingSizeGuide] = useState(false)
   const [showDescription, setShowDescription] = useState(false)
   const [showFeatures, setShowFeatures] = useState(true)
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const { addToCart, isLoading, cartItems } = useCart()
 
   // Get features from metafields
