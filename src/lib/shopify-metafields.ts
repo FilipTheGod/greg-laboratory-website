@@ -16,8 +16,8 @@ import { ShopifyProduct } from "./shopify"
  * @returns Array of feature types
  */
 export function getProductFeatures(product: ShopifyProduct): FeatureType[] {
-  // Check for metafields with namespace "material" and key "features"
-  if (!product.metafields?.materialFeatures?.value) {
+  // Check for the 'features' metafield - this matches what's in your Shopify store
+  if (!product.metafields?.features?.value) {
     return []
   }
 
@@ -25,10 +25,10 @@ export function getProductFeatures(product: ShopifyProduct): FeatureType[] {
     // Handle both string and array format for metafields
     let features: string[]
 
-    if (typeof product.metafields.materialFeatures.value === "string") {
-      features = JSON.parse(product.metafields.materialFeatures.value)
+    if (typeof product.metafields.features.value === "string") {
+      features = JSON.parse(product.metafields.features.value)
     } else {
-      features = product.metafields.materialFeatures.value
+      features = product.metafields.features.value
     }
 
     // Filter to only include valid feature types

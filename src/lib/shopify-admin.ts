@@ -95,6 +95,9 @@ export async function updateProductMetafields(
   }
 }
 
+// src/lib/shopify-admin.ts
+// Update the function to use material.features instead of custom.features
+
 // Function to update product features specifically
 export async function updateProductFeatures(
   productId: string,
@@ -102,8 +105,8 @@ export async function updateProductFeatures(
 ) {
   return updateProductMetafields(
     productId,
-    "custom",
-    "features",
+    "custom", // Using the actual namespace that appears in your Shopify store
+    "features", // Using the actual key that appears in your Shopify store
     features,
     "json"
   )

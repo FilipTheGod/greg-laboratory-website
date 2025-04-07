@@ -70,8 +70,9 @@ export interface ShopifyProduct {
   variants: ShopifyProductVariant[]
   media?: ShopifyMedia[]
   metafields?: {
-    materialFeatures?: {  // Changed from features to materialFeatures
-      value: string[] | string
+    features?: {
+      // Changed to match the actual metafield name in your Shopify store
+      value: string[] | string // Can be either array or stringified JSON
       type: "json"
     }
   }
@@ -132,45 +133,105 @@ const convertToPlainObject = <T>(obj: unknown): T => {
   return plainObj as T
 }
 
-// Initialize the client
 const client = Client.buildClient({
   domain: process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || "",
   storefrontAccessToken:
     process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN || "",
-  apiVersion: "2023-07", // Make sure this matches your Shopify store's API version
+  apiVersion: "2023-07",
 })
 
-// Fetch all products
 export async function getAllProducts(): Promise<ShopifyProduct[]> {
   try {
     console.log("Fetching all products from Shopify...")
-    const products = await client.product.fetchAll(250)
 
-    console.log(
-      `Fetched ${Array.isArray(products) ? products.length : 0} products`
-    )
+    // Create a custom query that includes metafields
+    const query = `
+      {
+        products(first: 250) {
+          edges {
+            node {
+              id
+              title
+              handle
+              description
+              descriptionHtml
+              productType
+              images(first: 20) {
+                edges {
+                  node {
+                    id
+                    src
+                    altText
+                  }
+                }
+              }
+              variants(first: 100) {
+                edges {
+                  node {
+                    id
+                    title
+                    price
+                    available
+                    sku
+                  }
+                }
+              }
+              metafields(first: 10) {
+                edges {
+                  node {
+                    namespace
+                    key
+                    value
+                    type
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `
 
-    // Check if media is present in the first product
-    if (Array.isArray(products) && products.length > 0) {
-      const firstProduct = products[0]
-      console.log(
-        "First product media check:",
-        "media" in firstProduct
-          ? `Has media field with ${
-              (firstProduct as unknown as { media: unknown[] }).media?.length ||
-              0
-            } items`
-          : "No media field found"
-      )
-    }
+    // Execute the query
+    const response = await client.graphQL.query({
+      data: {
+        query,
+      },
+    })
 
-    return convertToPlainObject<ShopifyProduct[]>(products)
+    // Process the response
+    const products = response.data.products.edges.map((edge) => {
+      const product = edge.node
+      // Process metafields into the correct format
+      const metafields = {}
+
+      if (product.metafields && product.metafields.edges) {
+        product.metafields.edges.forEach((metafieldEdge) => {
+          const metafield = metafieldEdge.node
+          if (
+            metafield.namespace === "custom" &&
+            metafield.key === "features"
+          ) {
+            metafields.features = {
+              value: metafield.value,
+              type: metafield.type,
+            }
+          }
+        })
+      }
+
+      return {
+        ...product,
+        metafields,
+      }
+    })
+
+    return products
   } catch (error) {
     console.error("Error fetching all products:", error)
     return []
   }
 }
-
 // Fetch a product by handle
 export async function getProductByHandle(
   handle: string

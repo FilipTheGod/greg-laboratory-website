@@ -10,8 +10,6 @@ import { formatPrice } from "@/utils/price"
 import ProductColorVariants from "./ProductColorVariants"
 import { useRelatedProducts } from "@/hooks/useRelatedProducts"
 import ProductFeaturesSection from "./ProductFeaturesSection"
-import ProductFeatureIcon from "./ProductFeatureIcon"
-import { getProductFeatureObjects } from "@/lib/shopify-metafields"
 
 interface ProductDetailsProps {
   product: ShopifyProduct
@@ -21,13 +19,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [selectedSize, setSelectedSize] = useState("")
   const [showingSizeGuide, setShowingSizeGuide] = useState(false)
   const [showDescription, setShowDescription] = useState(false)
-  const [showFeatures, setShowFeatures] = useState(true)
   const { addToCart, isLoading, cartItems } = useCart()
-
-  // Get features from metafields using the utility function
-  const productFeatures = React.useMemo(() => {
-    return getProductFeatureObjects(product)
-  }, [product])
 
   // Fetch related color variants
   const {
@@ -199,7 +191,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
       {/* Product Info - Right Side (1/3 of screen) */}
       <div className="sticky top-24 self-start max-h-[calc(100vh-8rem)] pr-4 overflow-y-auto">
-        <div className="space-y-4 pl-1">
+        <div className="space-y-4">
           <div>
             <p className="text-xs tracking-wide text-laboratory-black/70 uppercase mb-1">
               {product.productType}
@@ -345,42 +337,6 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
           {/* Product Features Section */}
           <ProductFeaturesSection product={product} />
-
-          {/* Product Features Section */}
-          {productFeatures.length > 0 && (
-            <div className="pt-4 border-t border-laboratory-black/10">
-              <button
-                className="flex items-center justify-between w-full text-xs tracking-wide py-2 group hover:underline"
-                onClick={() => setShowFeatures(!showFeatures)}
-              >
-                <span>PRODUCT FEATURES</span>
-                <span>{showFeatures ? "−" : "+"}</span>
-              </button>
-              {showFeatures && (
-                <div className="py-4">
-                  <div className="grid grid-cols-1 gap-4">
-                    {productFeatures.map((feature, index) => (
-                      <div key={index} className="flex items-start space-x-3">
-                        <ProductFeatureIcon
-                          featureType={feature.featureType}
-                          size={24}
-                          className="mt-1 flex-shrink-0"
-                        />
-                        <div>
-                          <h3 className="text-xs tracking-wide font-medium">
-                            {feature.name}
-                          </h3>
-                          <p className="text-xs tracking-wide text-laboratory-black/70">
-                            {feature.description}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </div>
     </div>
