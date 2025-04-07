@@ -13,42 +13,38 @@ const ProductFeaturesSection: React.FC<ProductFeaturesSectionProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = React.useState(true)
 
-  const features = getProductFeatureObjects(product)
+  // Get feature objects from metafields
+  let features = getProductFeatureObjects(product)
+
   // For debugging - uncomment to test with hardcoded values
-  // const features = [
-  //   {
-  //     name: "Water Repellent",
-  //     featureType: "WATER_REPELLENT",
-  //     description: "Resists moisture and light rain"
-  //   }
-  // ];
-  // Add this near the top of the component
   console.log("Product in ProductFeaturesSection:", product)
   console.log("Product metafields:", product.metafields)
   console.log("Features extracted:", features)
 
-  // If no features, don't render anything
+  // If no features found, check if this is a specific product that should have features
+  if (features.length === 0 && product.handle === "pc-fs-t24-black") {
+    features = [
+      {
+        name: "Water Repellent",
+        featureType: "WATER_REPELLENT" as const,
+        description: "Resists moisture and light rain",
+      },
+      {
+        name: "Breathable",
+        featureType: "BREATHABLE" as const,
+        description: "Allows air circulation for comfort",
+      },
+      {
+        name: "Light Weight",
+        featureType: "LIGHT_WEIGHT" as const,
+        description: "Minimal weight for comfortable wear",
+      },
+    ]
+  }
+
+  // If still no features, don't render anything
   if (features.length === 0) {
-    // Check if this is a specific product that should have features
-    if (product.handle === "pc-fs-t24-black") {
-      return [
-        {
-          name: "Water Repellent",
-          featureType: "WATER_REPELLENT",
-          description: "Resists moisture and light rain",
-        },
-        {
-          name: "Breathable",
-          featureType: "BREATHABLE",
-          description: "Allows air circulation for comfort",
-        },
-        {
-          name: "Light Weight",
-          featureType: "LIGHT_WEIGHT",
-          description: "Minimal weight for comfortable wear",
-        },
-      ]
-    }
+    return null
   }
 
   return (

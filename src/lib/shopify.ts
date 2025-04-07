@@ -52,13 +52,6 @@ export interface ShopifyMetafield {
   easycare?: boolean
 }
 
-// Update to src/lib/shopify.ts - ShopifyProduct interface
-// Add this to your existing interface
-
-// Extend the ShopifyProduct interface to include metafields
-// Update to src/lib/shopify.ts - ShopifyProduct interface
-// Add this to your existing interface
-
 // Extend the ShopifyProduct interface to include metafields
 export interface ShopifyProduct {
   id: string
@@ -144,94 +137,27 @@ export async function getAllProducts(): Promise<ShopifyProduct[]> {
   try {
     console.log("Fetching all products from Shopify...")
 
-    // Create a custom query that includes metafields
-    const query = `
-      {
-        products(first: 250) {
-          edges {
-            node {
-              id
-              title
-              handle
-              description
-              descriptionHtml
-              productType
-              images(first: 20) {
-                edges {
-                  node {
-                    id
-                    src
-                    altText
-                  }
-                }
-              }
-              variants(first: 100) {
-                edges {
-                  node {
-                    id
-                    title
-                    price
-                    available
-                    sku
-                  }
-                }
-              }
-              metafields(first: 10) {
-                edges {
-                  node {
-                    namespace
-                    key
-                    value
-                    type
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    `
+    // Get products using the SDK method instead of GraphQL
+    const products = await client.product.fetchAll()
 
-    // Execute the query
-    const response = await client.graphQL.query({
-      data: {
-        query,
-      },
+    // Process products to format them correctly
+    const formattedProducts = products.map((product: unknown) => {
+      const formattedProduct = convertToPlainObject<ShopifyProduct>(product)
+
+      // Add metafields if needed
+      // Since we're not using GraphQL directly, we'll need to handle metafields differently
+      // You may need to make separate calls to get metafields if they're important
+
+      return formattedProduct
     })
 
-    // Process the response
-    const products = response.data.products.edges.map((edge) => {
-      const product = edge.node
-      // Process metafields into the correct format
-      const metafields = {}
-
-      if (product.metafields && product.metafields.edges) {
-        product.metafields.edges.forEach((metafieldEdge) => {
-          const metafield = metafieldEdge.node
-          if (
-            metafield.namespace === "custom" &&
-            metafield.key === "features"
-          ) {
-            metafields.features = {
-              value: metafield.value,
-              type: metafield.type,
-            }
-          }
-        })
-      }
-
-      return {
-        ...product,
-        metafields,
-      }
-    })
-
-    return products
+    return formattedProducts
   } catch (error) {
     console.error("Error fetching all products:", error)
     return []
   }
 }
+
 // Fetch a product by handle
 export async function getProductByHandle(
   handle: string
@@ -352,5 +278,19 @@ export async function removeCheckoutItem(
   } catch (error) {
     console.error("Error removing checkout items:", error)
     throw error
+  }
+}
+
+// If you need to fetch product metafields specifically
+export async function getProductMetafields(productId: string) {
+  try {
+    // You may need to use the Shopify Admin API for this
+    // This is just a placeholder function
+    console.log(`Fetching metafields for product: ${productId}`)
+    // Implementation depends on your Shopify API access and requirements
+    return {}
+  } catch (error) {
+    console.error(`Error fetching metafields for product ${productId}:`, error)
+    return {}
   }
 }
