@@ -16,6 +16,7 @@ export type FeatureType =
   | "UV_CUT"
   | "WASHABLE"
   | "ECO"
+  | "WATER_PROOF"
   | "WATER_ABSORPTION"
 
 // Mapping of feature types to their display names
@@ -33,6 +34,7 @@ export const featureDisplayNames: Record<FeatureType, string> = {
   UV_CUT: "UV Cut",
   WASHABLE: "Washable",
   ECO: "Eco",
+  WATER_PROOF: "Water Proof",
   WATER_ABSORPTION: "Water Absorption",
 }
 
@@ -51,6 +53,7 @@ export const featureDescriptions: Record<FeatureType, string> = {
   UV_CUT: "Protects from harmful ultraviolet rays",
   WASHABLE: "Can be machine or hand washed easily",
   ECO: "Environmentally friendly materials and production",
+  WATER_PROOF: "Completely prevents water penetration",
   WATER_ABSORPTION: "Effectively absorbs and wicks moisture",
 }
 
@@ -69,6 +72,7 @@ const featureIconPaths: Record<FeatureType, string> = {
   UV_CUT: "/svg/UV CUT.svg",
   WASHABLE: "/svg/WASHABLE.svg",
   ECO: "/svg/ECO.svg",
+  WATER_PROOF: "/svg/Water Proof Icon.svg",
   WATER_ABSORPTION: "/svg/WATER ABSORBTION.svg",
 }
 

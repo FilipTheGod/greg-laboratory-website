@@ -9,11 +9,8 @@ import { ShopifyProduct } from "@/lib/shopify"
 import { formatPrice } from "@/utils/price"
 import ProductColorVariants from "./ProductColorVariants"
 import { useRelatedProducts } from "@/hooks/useRelatedProducts"
-import ProductFeatureIcon, {
-  FeatureType,
-  featureDisplayNames,
-  featureDescriptions,
-} from "./ProductFeatureIcon"
+import ProductFeatureIcon from "./ProductFeatureIcon"
+import { getProductFeatureObjects } from "@/lib/shopify-metafields"
 
 interface ProductDetailsProps {
   product: ShopifyProduct
@@ -26,34 +23,10 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [showFeatures, setShowFeatures] = useState(true)
   const { addToCart, isLoading, cartItems } = useCart()
 
-  // Get features from metafields
+  // Get features from metafields using the utility function
   const productFeatures = React.useMemo(() => {
-    if (!product.metafields?.features?.value) {
-      return []
-    }
-
-    let featuresArray: string[]
-    if (typeof product.metafields.features.value === "string") {
-      try {
-        featuresArray = JSON.parse(product.metafields.features.value)
-      } catch (e) {
-        console.error("Error parsing features:", e)
-        return []
-      }
-    } else {
-      featuresArray = product.metafields.features.value
-    }
-
-    return featuresArray
-      .filter((feature): feature is FeatureType =>
-        Object.keys(featureDisplayNames).includes(feature)
-      )
-      .map((featureType) => ({
-        name: featureDisplayNames[featureType],
-        featureType,
-        description: featureDescriptions[featureType],
-      }))
-  }, [product.metafields?.features?.value])
+    return getProductFeatureObjects(product)
+  }, [product])
 
   // Fetch related color variants
   const {

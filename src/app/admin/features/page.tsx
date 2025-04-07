@@ -32,6 +32,7 @@ export default function FeaturesAdminPage() {
     "UV_CUT",
     "WASHABLE",
     "ECO",
+    "WATER_PROOF",
     "WATER_ABSORPTION",
   ]
 
@@ -110,7 +111,6 @@ export default function FeaturesAdminPage() {
       if (!response.ok) {
         throw new Error(`Failed to save features: ${response.statusText}`)
       }
-
 
       setMessage(
         `Features saved successfully for ${productTitle || productHandle}`

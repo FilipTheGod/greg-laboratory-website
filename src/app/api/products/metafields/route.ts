@@ -23,6 +23,7 @@ export async function GET() {
       "UV_CUT",
       "WASHABLE",
       "ECO",
+      "WATER_PROOF",
       "WATER_ABSORPTION",
     ]
 

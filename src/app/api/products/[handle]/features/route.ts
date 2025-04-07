@@ -119,6 +119,7 @@ export async function POST(
         { status: 500 }
       )
     }
+
     return NextResponse.json({
       success: true,
       message: "Features updated successfully",
