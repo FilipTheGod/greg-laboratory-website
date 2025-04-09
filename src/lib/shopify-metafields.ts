@@ -6,8 +6,7 @@ import { ShopifyProduct } from "./shopify"
  * Helper functions for working with Shopify metafields
  */
 
-// Define a mapping between feature types and their metafield keys
-// The keys should match what you've set up in Shopify
+// Define a mapping between feature keys and feature types
 const metafieldKeyToFeature: Record<string, FeatureType> = {
   stretch: "STRETCH",
   breathable: "BREATHABLE",
@@ -33,6 +32,7 @@ const metafieldKeyToFeature: Record<string, FeatureType> = {
  */
 export function getProductFeatures(product: ShopifyProduct): FeatureType[] {
   if (!product.metafields) {
+    console.log("No metafields found on product")
     return []
   }
 
@@ -43,10 +43,13 @@ export function getProductFeatures(product: ShopifyProduct): FeatureType[] {
 
   // Loop through all metafields to find the boolean features
   for (const key in product.metafields) {
-    // Check if this metafield matches one of our feature keys
-    // The metafield keys might be formatted as "namespace.key" in Shopify's response
-    const metafieldParts = key.split(".")
-    const metafieldKey = metafieldParts.length > 1 ? metafieldParts[1] : key
+    // Check if this metafield belongs to our 'features' namespace
+    if (!key.startsWith("features.")) {
+      continue
+    }
+
+    // Extract the actual feature key after the namespace
+    const metafieldKey = key.split(".")[1]
 
     // If this is a feature metafield and its value is true, add it to enabled features
     if (metafieldKey in metafieldKeyToFeature) {

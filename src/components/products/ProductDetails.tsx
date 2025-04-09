@@ -10,6 +10,11 @@ import { formatPrice } from "@/utils/price"
 import ProductColorVariants from "./ProductColorVariants"
 import { useRelatedProducts } from "@/hooks/useRelatedProducts"
 import ProductFeaturesSection from "./ProductFeaturesSection"
+// In src/components/products/ProductDetails.tsx
+// Add this to your src/components/products/ProductDetails.tsx file
+// At the top with the other imports:
+import { debugMetafields } from "@/utils/debug-metafields"
+import { getProductFeatures } from "@/lib/shopify-metafields"
 
 interface ProductDetailsProps {
   product: ShopifyProduct
@@ -20,6 +25,15 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [showingSizeGuide, setShowingSizeGuide] = useState(false)
   const [showDescription, setShowDescription] = useState(false)
   const { addToCart, isLoading, cartItems } = useCart()
+  React.useEffect(() => {
+    // Debug the product data when it loads
+    console.log("Product data:", product)
+    debugMetafields(product)
+
+    // Check what features we extract
+    const features = getProductFeatures(product)
+    console.log("Extracted features:", features)
+  }, [product])
 
   // Fetch related color variants
   const {
