@@ -28,7 +28,7 @@ export function getProductFeatures(product: ShopifyProduct): FeatureType[] {
     if (typeof product.metafields.features.value === "string") {
       features = JSON.parse(product.metafields.features.value)
     } else {
-      features = product.metafields.features.value
+      features = product.metafields.features.value as string[]
     }
 
     // Filter to only include valid feature types
