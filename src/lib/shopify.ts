@@ -52,7 +52,7 @@ export interface ShopifyMetafield {
   easycare?: boolean
 }
 
-// Extend the ShopifyProduct interface to include metafields
+// Updated interface definition for metafields
 export interface ShopifyProduct {
   id: string
   title: string
@@ -63,14 +63,12 @@ export interface ShopifyProduct {
   variants: ShopifyProductVariant[]
   media?: ShopifyMedia[]
   metafields?: {
-    features?: {
-      // Changed to match the actual metafield name in your Shopify store
-      value: string[] | string // Can be either array or stringified JSON
-      type: "json"
+    [key: string]: {
+      value: string | boolean | number | null
+      type: string
     }
   }
 }
-
 // Helper function to extract price amount regardless of format
 export function extractPriceAmount(priceValue: string | MoneyV2): string {
   if (typeof priceValue === "string") {

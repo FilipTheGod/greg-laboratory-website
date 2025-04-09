@@ -1,7 +1,7 @@
 // src/components/products/ProductFeaturesSection.tsx
 import React from "react"
 import { ShopifyProduct } from "@/lib/shopify"
-import { getProductFeatureObjects } from "@/lib/shopify-metafields"
+import { getProductFeatures } from "@/lib/shopify-metafields"
 import ProductFeatureIcon from "./ProductFeatureIcon"
 
 interface ProductFeaturesSectionProps {
@@ -14,33 +14,12 @@ const ProductFeaturesSection: React.FC<ProductFeaturesSectionProps> = ({
   const [isExpanded, setIsExpanded] = React.useState(true)
 
   // Get feature objects from metafields
-  let features = getProductFeatureObjects(product)
+  const features = getProductFeatures(product)
 
   // For debugging - uncomment to test with hardcoded values
   console.log("Product in ProductFeaturesSection:", product)
   console.log("Product metafields:", product.metafields)
   console.log("Features extracted:", features)
-
-  // If no features found, check if this is a specific product that should have features
-  if (features.length === 0 && product.handle === "pc-fs-t24-black") {
-    features = [
-      {
-        name: "Water Repellent",
-        featureType: "WATER_REPELLENT" as const,
-        description: "Resists moisture and light rain",
-      },
-      {
-        name: "Breathable",
-        featureType: "BREATHABLE" as const,
-        description: "Allows air circulation for comfort",
-      },
-      {
-        name: "Light Weight",
-        featureType: "LIGHT_WEIGHT" as const,
-        description: "Minimal weight for comfortable wear",
-      },
-    ]
-  }
 
   // If still no features, don't render anything
   if (features.length === 0) {
