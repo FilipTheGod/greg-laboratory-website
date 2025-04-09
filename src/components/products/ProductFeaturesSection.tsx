@@ -2,7 +2,10 @@
 import React from "react"
 import { ShopifyProduct } from "@/lib/shopify"
 import { getProductFeatures } from "@/lib/shopify-metafields"
-import ProductFeatureIcon from "./ProductFeatureIcon"
+import ProductFeatureIcon, {
+  featureDisplayNames,
+  featureDescriptions,
+} from "./ProductFeatureIcon"
 
 interface ProductFeaturesSectionProps {
   product: ShopifyProduct
@@ -13,16 +16,15 @@ const ProductFeaturesSection: React.FC<ProductFeaturesSectionProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = React.useState(true)
 
-  // Get feature objects from metafields
-  const features = getProductFeatures(product)
+  // Get feature IDs from metafields
+  const featureTypes = getProductFeatures(product)
 
-  // For debugging - uncomment to test with hardcoded values
   console.log("Product in ProductFeaturesSection:", product)
   console.log("Product metafields:", product.metafields)
-  console.log("Features extracted:", features)
+  console.log("Features extracted:", featureTypes)
 
-  // If still no features, don't render anything
-  if (features.length === 0) {
+  // If no features found, don't render anything
+  if (featureTypes.length === 0) {
     return null
   }
 
@@ -39,19 +41,19 @@ const ProductFeaturesSection: React.FC<ProductFeaturesSectionProps> = ({
       {isExpanded && (
         <div className="py-4">
           <div className="grid grid-cols-1 gap-4">
-            {features.map((feature, index) => (
+            {featureTypes.map((featureType, index) => (
               <div key={index} className="flex items-start space-x-3">
                 <ProductFeatureIcon
-                  featureType={feature.featureType}
+                  featureType={featureType}
                   size={24}
                   className="mt-1 flex-shrink-0"
                 />
                 <div>
                   <h3 className="text-xs tracking-wide font-medium">
-                    {feature.name}
+                    {featureDisplayNames[featureType]}
                   </h3>
                   <p className="text-xs tracking-wide text-laboratory-black/70">
-                    {feature.description}
+                    {featureDescriptions[featureType]}
                   </p>
                 </div>
               </div>

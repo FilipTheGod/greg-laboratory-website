@@ -53,6 +53,8 @@ export interface ShopifyMetafield {
 }
 
 // Updated interface definition for metafields
+// Update this in your src/lib/shopify.ts file
+
 export interface ShopifyProduct {
   id: string
   title: string
@@ -65,7 +67,9 @@ export interface ShopifyProduct {
   metafields?: {
     [key: string]: {
       value: string | boolean | number | null
-      type: string
+      type?: string
+      namespace?: string
+      key?: string
     }
   }
 }

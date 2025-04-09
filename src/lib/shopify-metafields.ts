@@ -1,50 +1,81 @@
-// src/lib/shopify-metafields.ts (updated)
+// src/lib/shopify-metafields.ts
 import { FeatureType } from "@/components/products/ProductFeatureIcon"
 import { ShopifyProduct } from "./shopify"
 
-// Mapping between feature types and their metafield keys
-const featureMetafieldKeys: Record<FeatureType, string> = {
-  WATER_REPELLENT: "water_repellent",
-  BREATHABLE: "breathable",
-  STRETCH: "stretch",
-  LIGHT_WEIGHT: "light_weight",
-  QUICK_DRY: "quick_dry",
-  ANTI_PILLING: "anti_pilling",
-  EASY_CARE: "easy_care",
-  ANTISTATIC_THREAD: "antistatic_thread",
-  KEEP_WARM: "keep_warm",
-  COTTON_TOUCH: "cotton_touch",
-  UV_CUT: "uv_cut",
-  WASHABLE: "washable",
-  ECO: "eco",
-  WATER_PROOF: "water_proof",
-  WATER_ABSORPTION: "water_absorption",
+/**
+ * Helper functions for working with Shopify metafields
+ */
+
+// Define a mapping between feature types and their metafield keys
+// The keys should match what you've set up in Shopify
+const metafieldKeyToFeature: Record<string, FeatureType> = {
+  stretch: "STRETCH",
+  breathable: "BREATHABLE",
+  water_repellent: "WATER_REPELLENT",
+  light_weight: "LIGHT_WEIGHT",
+  quick_dry: "QUICK_DRY",
+  anti_pilling: "ANTI_PILLING",
+  easy_care: "EASY_CARE",
+  antistatic_thread: "ANTISTATIC_THREAD",
+  keep_warm: "KEEP_WARM",
+  cotton_touch: "COTTON_TOUCH",
+  uv_cut: "UV_CUT",
+  washable: "WASHABLE",
+  eco: "ECO",
+  water_proof: "WATER_PROOF",
+  water_absorption: "WATER_ABSORPTION",
 }
 
 /**
- * Extracts product features from individual metafields
+ * Extracts product features from individual boolean metafields
  * @param product The Shopify product object
- * @returns Array of feature types
+ * @returns Array of feature types that are enabled for the product
  */
 export function getProductFeatures(product: ShopifyProduct): FeatureType[] {
   if (!product.metafields) {
     return []
   }
 
-  const features: FeatureType[] = []
+  console.log("Checking metafields for features:", product.metafields)
 
-  // Check each feature metafield
-  Object.entries(featureMetafieldKeys).forEach(([featureType, key]) => {
-    // Look for the metafield with the "features" namespace and the specific key
-    const metafieldValue = product.metafields?.[`features.${key}`]?.value
+  // Initialize an array to hold the enabled features
+  const enabledFeatures: FeatureType[] = []
 
-    // If the metafield exists and is true, add the feature
-    if (metafieldValue === true || metafieldValue === "true") {
-      features.push(featureType as FeatureType)
+  // Loop through all metafields to find the boolean features
+  for (const key in product.metafields) {
+    // Check if this metafield matches one of our feature keys
+    // The metafield keys might be formatted as "namespace.key" in Shopify's response
+    const metafieldParts = key.split(".")
+    const metafieldKey = metafieldParts.length > 1 ? metafieldParts[1] : key
+
+    // If this is a feature metafield and its value is true, add it to enabled features
+    if (metafieldKey in metafieldKeyToFeature) {
+      const value = product.metafields[key].value
+      console.log(
+        `Found feature metafield: ${metafieldKey} with value: ${value}`
+      )
+
+      // Check if the feature is enabled (value is true)
+      if (value === true || value === "true") {
+        enabledFeatures.push(metafieldKeyToFeature[metafieldKey])
+      }
     }
-  })
+  }
 
-  return features
+  console.log("Enabled features:", enabledFeatures)
+  return enabledFeatures
 }
 
-// Rest of the file remains the same...
+/**
+ * Utility function to determine if a product has a specific feature
+ * @param product The Shopify product
+ * @param featureType The feature type to check for
+ * @returns boolean indicating if product has the feature
+ */
+export function productHasFeature(
+  product: ShopifyProduct,
+  featureType: FeatureType
+): boolean {
+  const features = getProductFeatures(product)
+  return features.includes(featureType)
+}
