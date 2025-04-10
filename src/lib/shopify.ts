@@ -143,6 +143,28 @@ export async function getProductByHandle(
     // Convert the SDK product to our format
     const product = convertToPlainObject<ShopifyProduct>(sdkProduct)
 
+    // Add this new logging section here
+    if (product.media && product.media.length > 0) {
+      // Log the media data structure
+      console.log(
+        "Product media structure:",
+        JSON.stringify(product.media, null, 2)
+      )
+
+      // Ensure video media has appropriate sources
+      const videoMedia = product.media.find(
+        (m) => m.mediaContentType === "VIDEO"
+      )
+      if (videoMedia) {
+        console.log("Video media found:", videoMedia)
+        if (!videoMedia.sources || videoMedia.sources.length === 0) {
+          console.warn("Video media has no sources")
+        }
+      }
+    } else {
+      console.log("No media found for product")
+    }
+
     // Now fetch metafields for each feature using individual queries
     try {
       // Initialize metafields object if needed

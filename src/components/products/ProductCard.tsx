@@ -31,30 +31,36 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const hasVideo = product.media?.some((m) => m.mediaContentType === "VIDEO")
 
   // Fetch video URL if product has video media
-  useEffect(() => {
-    const loadVideoData = async () => {
-      if (hasVideo && product.handle) {
-        try {
-          const response = await fetch(`/api/products/media/${product.handle}`)
-          if (response.ok) {
-            const data = await response.json()
-            if (
-              data.data?.hasVideo &&
-              data.data.sources &&
-              data.data.sources.length > 0
-            ) {
-              setVideoUrl(data.data.sources[0].url)
-              setIsVideoLoaded(true)
-            }
-          }
-        } catch (error) {
-          console.error("Error loading video data:", error)
+ // In your useEffect hook for loading video data
+useEffect(() => {
+  const loadVideoData = async () => {
+    if (hasVideo && product.handle) {
+      try {
+        // Add a console log to see if this code is executing
+        console.log("Fetching video for product:", product.handle);
+
+        const response = await fetch(`/api/products/media/${product.handle}`);
+        const data = await response.json();
+
+        // Debug what data is coming back
+        console.log("Video API response:", data);
+
+        if (data.data?.hasVideo && data.data.sources && data.data.sources.length > 0) {
+          const videoSource = data.data.sources[0].url;
+          console.log("Setting video URL:", videoSource);
+          setVideoUrl(videoSource);
+          setIsVideoLoaded(true);
+        } else {
+          console.log("No video sources found in API response");
         }
+      } catch (error) {
+        console.error("Error loading video data:", error);
       }
     }
+  };
 
-    loadVideoData()
-  }, [hasVideo, product.handle])
+  loadVideoData();
+}, [hasVideo, product.handle]);
 
   // Check if a size is in stock (regardless of color)
   const isSizeAvailable = (size: string) => {
