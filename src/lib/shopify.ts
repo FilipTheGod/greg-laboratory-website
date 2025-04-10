@@ -43,14 +43,6 @@ export interface ShopifyMedia {
   alt?: string
 }
 
-// Edge structure for metafield GraphQL response
-interface MetafieldEdge {
-  node: {
-    namespace: string
-    key: string
-    value: string
-  }
-}
 
 // Updated interface definition for metafields
 export interface ShopifyProduct {
@@ -117,7 +109,7 @@ const convertToPlainObject = <T>(obj: unknown): T => {
   return plainObj as T
 }
 
-// Fetch a single product by handle WITH metafields
+// This function should replace the existing function in src/lib/shopify.ts
 export async function getProductByHandle(
   handle: string
 ): Promise<ShopifyProduct | null> {
@@ -135,13 +127,13 @@ export async function getProductByHandle(
     // Convert the SDK product to our format
     const product = convertToPlainObject<ShopifyProduct>(sdkProduct)
 
-    // Now fetch metafields using a direct GraphQL query
+    // Now fetch metafields using a direct GraphQL query to the Storefront API
     try {
-      // This query specifically targets metafields in the 'features' namespace
-      const metafieldQuery = `
-        query GetProductMetafields($handle: String!) {
+      const query = `
+        query GetProductByHandle($handle: String!) {
           productByHandle(handle: $handle) {
-            metafields(first: 20, namespace: "features") {
+            id
+            metafields(first: 20) {
               edges {
                 node {
                   namespace
@@ -150,11 +142,25 @@ export async function getProductByHandle(
                 }
               }
             }
+            metafield(namespace: "features", key: "stretch") {
+              namespace
+              key
+              value
+            }
+            metafield(namespace: "features", key: "breathable") {
+              namespace
+              key
+              value
+            }
+            metafield(namespace: "features", key: "water_repellent") {
+              namespace
+              key
+              value
+            }
           }
         }
       `
 
-      // Execute the GraphQL query
       const response = await fetch(
         `https://${domain}/api/2023-07/graphql.json`,
         {
@@ -164,45 +170,59 @@ export async function getProductByHandle(
             "X-Shopify-Storefront-Access-Token": storefrontAccessToken,
           },
           body: JSON.stringify({
-            query: metafieldQuery,
-            variables: {
-              handle: handle,
-            },
+            query,
+            variables: { handle },
           }),
         }
       )
 
-      // Parse the response
-      const metafieldData = await response.json()
-      console.log("Metafield Response:", JSON.stringify(metafieldData, null, 2))
+      const result = await response.json()
+      console.log("API Response:", JSON.stringify(result, null, 2))
 
-      // Check if we got any metafields
-      if (metafieldData?.data?.productByHandle?.metafields?.edges) {
-        const edges = metafieldData.data.productByHandle.metafields
-          .edges as MetafieldEdge[]
-
+      if (result.data && result.data.productByHandle) {
         // Initialize metafields object if needed
         product.metafields = product.metafields || {}
 
-        // Process each metafield edge
-        edges.forEach((edge) => {
-          const { namespace, key, value } = edge.node
-          const metafieldKey = `${namespace}.${key}`
+        // Process general metafields
+        if (result.data.productByHandle.metafields?.edges) {
+          result.data.productByHandle.metafields.edges.forEach((edge: any) => {
+            const { namespace, key, value } = edge.node
+            const metafieldKey = `${namespace}.${key}`
 
-          // Add to product metafields, converting string "true"/"false" to boolean
-          product.metafields![metafieldKey] = {
-            value: value === "true" ? true : value === "false" ? false : value,
-            namespace: namespace,
-            key: key,
+            // Add to product metafields
+            product.metafields![metafieldKey] = {
+              value:
+                value === "true" ? true : value === "false" ? false : value,
+              namespace,
+              key,
+            }
+          })
+        }
+
+        // Process specific metafields
+        const specificFeatures = ["stretch", "breathable", "water_repellent"]
+
+        for (const feature of specificFeatures) {
+          const metafieldData =
+            result.data.productByHandle[
+              `metafield(namespace: "features", key: "${feature}")`
+            ]
+          if (metafieldData) {
+            const metafieldKey = `features.${feature}`
+            product.metafields![metafieldKey] = {
+              value:
+                metafieldData.value === "true"
+                  ? true
+                  : metafieldData.value === "false"
+                  ? false
+                  : metafieldData.value,
+              namespace: "features",
+              key: feature,
+            }
           }
-        })
+        }
 
-        // Log the processed metafields
         console.log("Processed metafields:", product.metafields)
-      } else {
-        console.log(
-          "No metafields found in response or unexpected response format"
-        )
       }
     } catch (metafieldError) {
       console.error("Error fetching metafields:", metafieldError)
