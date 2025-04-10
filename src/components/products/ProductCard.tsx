@@ -1,7 +1,7 @@
 // src/components/products/ProductCard.tsx
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { ShopifyProduct } from "@/lib/shopify"
@@ -15,6 +15,7 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false)
   const { addToCart, cartItems } = useCart()
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   // Extract available sizes from variants
   const availableSizes = Array.from(
@@ -26,22 +27,62 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     )
   ).sort()
 
-  // Check if media includes a video and extract the source URL directly
+  // Check if media includes a video and extract the source URLs
   const videoMedia = product.media?.find((m) => m.mediaContentType === "VIDEO")
-  const videoUrl =
-    videoMedia?.sources && videoMedia.sources.length > 0
-      ? videoMedia.sources[0].url
-      : null
+
+  // Always prefer mp4 sources over m3u8 for better compatibility
+  const getMp4Source = () => {
+    if (!videoMedia?.sources || videoMedia.sources.length === 0) return null
+
+    // Find the first mp4 source (preferring SD or smaller sizes for performance)
+    const mp4Source = videoMedia.sources.find(
+      (s) =>
+        s.mimeType === "video/mp4" &&
+        (s.url.includes("SD-") || s.url.includes("480p"))
+    )
+
+    // If no SD source found, try any mp4
+    if (!mp4Source) {
+      return (
+        videoMedia.sources.find((s) => s.mimeType === "video/mp4")?.url || null
+      )
+    }
+
+    return mp4Source.url
+  }
+
+  const videoUrl = getMp4Source()
 
   console.log(`Product ${product.handle} has video:`, !!videoUrl)
   if (videoUrl) {
-    console.log(`Video URL: ${videoUrl}`)
+    console.log(`Using MP4 Video URL: ${videoUrl}`)
   }
 
   // Get the video preview image or fallback to the first product image
   const videoPreviewImage =
     videoMedia?.previewImage?.src ||
     (product.images && product.images.length > 0 ? product.images[0].src : null)
+
+  // Ensure video plays when it should
+  useEffect(() => {
+    if (videoRef.current) {
+      // Attempt to reload and play the video if it didn't autoplay
+      const videoElement = videoRef.current
+
+      // Check if video is paused after it should have started
+      const checkPlay = setTimeout(() => {
+        if (videoElement.paused) {
+          console.log("Video didn't autoplay, trying to reload and play")
+          videoElement.load()
+          videoElement.play().catch((err) => {
+            console.log("Error playing video:", err)
+          })
+        }
+      }, 1000)
+
+      return () => clearTimeout(checkPlay)
+    }
+  }, [videoUrl])
 
   // Check if a size is in stock (regardless of color)
   const isSizeAvailable = (size: string) => {
@@ -125,14 +166,25 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <div className="relative aspect-square overflow-hidden bg-laboratory-white">
             {videoUrl ? (
               <video
+                ref={videoRef}
                 autoPlay
-                loop
                 muted
+                loop
                 playsInline
                 className="h-full w-full object-cover"
                 poster={videoPreviewImage || undefined}
+                preload="auto"
               >
                 <source src={videoUrl} type="video/mp4" />
+                {/* Fallback to image if video fails */}
+                {product.images && product.images.length > 0 && (
+                  <Image
+                    src={product.images[0].src}
+                    alt={product.title}
+                    fill
+                    className="object-cover"
+                  />
+                )}
               </video>
             ) : product.images && product.images.length > 0 ? (
               <Image
