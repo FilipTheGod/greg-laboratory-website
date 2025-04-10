@@ -20,8 +20,12 @@ type ProductCategory =
 
 // Helper to map Shopify product types to our categories
 const mapProductTypeToCategory = (productType: string): ProductCategory => {
+  // Additional logging
+  console.log(`Mapping product type: "${productType}"`)
+
   // Normalize the product type by converting to uppercase and replacing spaces
   const normalizedType = productType.toUpperCase().replace(/\s+/g, " ").trim()
+  console.log(`Normalized to: "${normalizedType}"`)
 
   // Map of normalized types to categories
   const typeMap: Record<string, ProductCategory> = {
@@ -36,7 +40,9 @@ const mapProductTypeToCategory = (productType: string): ProductCategory => {
     "FIELD STUDY SERIES": "FIELD STUDY SERIES",
   }
 
-  return typeMap[normalizedType] || "STANDARD SERIES"
+  const mappedCategory = typeMap[normalizedType] || "STANDARD SERIES"
+  console.log(`Mapped to category: "${mappedCategory}"`)
+  return mappedCategory
 }
 
 const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
@@ -47,6 +53,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
   // Effect to handle any potential issues with initialProducts
   useEffect(() => {
     if (!Array.isArray(initialProducts)) {
+      console.error("initialProducts is not an array:", initialProducts)
       setProducts([])
       return
     }
@@ -54,27 +61,47 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
     // Validate product data
     const validProducts = initialProducts.filter((product) => {
       if (!product || typeof product !== "object") {
+        console.error("Invalid product object:", product)
         return false
       }
 
       if (!product.id || !product.title || !product.variants) {
+        console.error("Product missing required fields:", product)
         return false
       }
 
       return true
     })
 
+    console.log(
+      `Setting ${validProducts.length} valid products from ${initialProducts.length} initial products`
+    )
     setProducts(validProducts)
   }, [initialProducts])
 
   // Filter products based on category
   const filteredProducts = React.useMemo(() => {
-    return filteredCategory === "ALL"
-      ? products
-      : products.filter(
-          (product) =>
-            mapProductTypeToCategory(product.productType) === filteredCategory
+    console.log("Filter category:", filteredCategory)
+    console.log("All Products:", products.length)
+
+    let result: ShopifyProduct[] = []
+
+    if (filteredCategory === "ALL") {
+      result = products
+    } else {
+      result = products.filter((product) => {
+        const category = mapProductTypeToCategory(product.productType)
+        console.log(
+          `Product ${product.title}: Type=${
+            product.productType
+          }, Category=${category}, Match=${category === filteredCategory}`
         )
+        return category === filteredCategory
+      })
+    }
+
+    console.log("Filtered Products:", result.length)
+    return result
   }, [products, filteredCategory])
 
   return (

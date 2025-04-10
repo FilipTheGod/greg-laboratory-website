@@ -1,6 +1,7 @@
+// src/components/products/ProductCard.tsx
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { ShopifyProduct } from "@/lib/shopify"
@@ -14,8 +15,6 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false)
   const { addToCart, cartItems } = useCart()
-  const [videoUrl, setVideoUrl] = useState<string | null>(null)
-  const [, setIsVideoLoaded] = useState(false)
 
   // Extract available sizes from variants
   const availableSizes = Array.from(
@@ -27,40 +26,22 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     )
   ).sort()
 
-  // Check if media includes a video
-  const hasVideo = product.media?.some((m) => m.mediaContentType === "VIDEO")
+  // Check if media includes a video and extract the source URL directly
+  const videoMedia = product.media?.find((m) => m.mediaContentType === "VIDEO")
+  const videoUrl =
+    videoMedia?.sources && videoMedia.sources.length > 0
+      ? videoMedia.sources[0].url
+      : null
 
-  // Fetch video URL if product has video media
- // In your useEffect hook for loading video data
-useEffect(() => {
-  const loadVideoData = async () => {
-    if (hasVideo && product.handle) {
-      try {
-        // Add a console log to see if this code is executing
-        console.log("Fetching video for product:", product.handle);
+  console.log(`Product ${product.handle} has video:`, !!videoUrl)
+  if (videoUrl) {
+    console.log(`Video URL: ${videoUrl}`)
+  }
 
-        const response = await fetch(`/api/products/media/${product.handle}`);
-        const data = await response.json();
-
-        // Debug what data is coming back
-        console.log("Video API response:", data);
-
-        if (data.data?.hasVideo && data.data.sources && data.data.sources.length > 0) {
-          const videoSource = data.data.sources[0].url;
-          console.log("Setting video URL:", videoSource);
-          setVideoUrl(videoSource);
-          setIsVideoLoaded(true);
-        } else {
-          console.log("No video sources found in API response");
-        }
-      } catch (error) {
-        console.error("Error loading video data:", error);
-      }
-    }
-  };
-
-  loadVideoData();
-}, [hasVideo, product.handle]);
+  // Get the video preview image or fallback to the first product image
+  const videoPreviewImage =
+    videoMedia?.previewImage?.src ||
+    (product.images && product.images.length > 0 ? product.images[0].src : null)
 
   // Check if a size is in stock (regardless of color)
   const isSizeAvailable = (size: string) => {
@@ -131,10 +112,6 @@ useEffect(() => {
       }
     }
   }
-  const videoPreviewImage =
-    product.media?.find((m) => m.mediaContentType === "VIDEO")?.previewImage
-      ?.src ||
-    (product.images && product.images.length > 0 ? product.images[0].src : null)
 
   return (
     <div
@@ -146,7 +123,7 @@ useEffect(() => {
         <div className="flex flex-col">
           {/* Product media (video or image) */}
           <div className="relative aspect-square overflow-hidden bg-laboratory-white">
-            {hasVideo && videoUrl ? (
+            {videoUrl ? (
               <video
                 autoPlay
                 loop

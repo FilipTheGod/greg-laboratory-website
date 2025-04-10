@@ -1,4 +1,4 @@
-// src/lib/shopify.ts - Updated to fix GraphQL query for metafields
+// src/lib/shopify.ts
 import Client from "shopify-buy"
 
 export interface MoneyV2 {
@@ -82,6 +82,76 @@ const client = Client.buildClient({
   apiVersion: "2023-07",
 })
 
+// Define GraphQL types
+interface ShopifyGraphQLEdge<T> {
+  node: T;
+  cursor?: string;
+}
+
+interface ShopifyGraphQLConnection<T> {
+  edges: ShopifyGraphQLEdge<T>[];
+  pageInfo?: {
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+}
+
+interface ShopifyGraphQLImage {
+  id: string;
+  src: string;
+  altText: string | null;
+}
+
+interface ShopifyGraphQLVariant {
+  id: string;
+  title: string;
+  price: {
+    amount: string;
+    currencyCode: string;
+  };
+  availableForSale: boolean;
+  quantityAvailable: number;
+}
+
+interface ShopifyGraphQLMedia {
+  id?: string;
+  mediaContentType: "VIDEO" | "IMAGE" | "EXTERNAL_VIDEO" | "MODEL_3D";
+  alt: string | null;
+  previewImage: {
+    src: string;
+    altText: string | null;
+  } | null;
+  sources?: ShopifyMediaSource[];
+}
+
+interface ShopifyGraphQLProduct {
+  id: string;
+  title: string;
+  handle: string;
+  descriptionHtml: string;
+  productType: string;
+  variants: ShopifyGraphQLConnection<ShopifyGraphQLVariant>;
+  images: ShopifyGraphQLConnection<ShopifyGraphQLImage>;
+  media: ShopifyGraphQLConnection<ShopifyGraphQLMedia>;
+}
+
+// Custom GraphQL fetch function for direct API access
+async function shopifyGraphQLFetch(query: string) {
+  const URL = `https://${domain}/api/2023-07/graphql.json`
+
+  const response = await fetch(URL, {
+    method: "POST",
+    headers: {
+      "X-Shopify-Storefront-Access-Token": storefrontAccessToken,
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query })
+  })
+
+  return response.json()
+}
+
 // Helper function to convert API response to properly typed objects
 const convertToPlainObject = <T>(obj: unknown): T => {
   // First stringify and parse to ensure we have a plain object
@@ -106,6 +176,62 @@ const convertToPlainObject = <T>(obj: unknown): T => {
   return plainObj as T
 }
 
+// Format product data from GraphQL response to match our ShopifyProduct interface
+function formatGraphQLProduct(product: ShopifyGraphQLProduct): ShopifyProduct {
+  // Convert images from edges/node structure
+  const images = product.images?.edges?.map((edge) => ({
+    id: edge.node.id,
+    src: edge.node.src,
+    altText: edge.node.altText || undefined,
+  })) || []
+
+  // Convert variants from edges/node structure
+  const variants = product.variants?.edges?.map((edge) => ({
+    id: edge.node.id,
+    title: edge.node.title,
+    price: edge.node.price.amount, // Extract amount as string
+    available: edge.node.availableForSale, // Use availableForSale
+    inventoryQuantity: edge.node.quantityAvailable,
+  })) || []
+
+  // Convert media from edges/node structure with special handling for videos
+  const media = product.media?.edges?.map((edge) => {
+    const node = edge.node
+    const mediaObject: ShopifyMedia = {
+      id: node.id || `media-${Math.random().toString(36).substr(2, 9)}`,
+      mediaContentType: node.mediaContentType,
+      alt: node.alt || undefined,
+      previewImage: node.previewImage ? {
+        src: node.previewImage.src,
+        altText: node.previewImage.altText || undefined,
+      } : undefined,
+    }
+
+    // Add sources for VIDEO type
+    if (node.mediaContentType === "VIDEO" && node.sources) {
+      mediaObject.sources = node.sources.map((source) => ({
+        url: source.url,
+        format: source.format,
+        mimeType: source.mimeType,
+      }))
+    }
+
+    return mediaObject
+  }) || []
+
+  return {
+    id: product.id,
+    title: product.title,
+    handle: product.handle,
+    descriptionHtml: product.descriptionHtml,
+    productType: product.productType,
+    images,
+    variants,
+    media,
+    metafields: {},
+  }
+}
+
 // Feature keys we want to check for - must match the keys in Shopify
 const featureKeys = [
   "stretch",
@@ -125,45 +251,80 @@ const featureKeys = [
   "water_absorption",
 ]
 
-// Fetch a single product by handle WITH metafields
+// Fetch a single product by handle WITH metafields and media including video sources
 export async function getProductByHandle(
   handle: string
 ): Promise<ShopifyProduct | null> {
   try {
     console.log(`Fetching product with handle: ${handle}`)
 
-    // First use the SDK to get the product
-    const sdkProduct = await client.product.fetchByHandle(handle)
+    // Define query with GraphQL fragment for videos
+    const query = `
+    {
+      productByHandle(handle: "${handle}") {
+        id
+        title
+        handle
+        descriptionHtml
+        productType
+        variants(first: 100) {
+          edges {
+            node {
+              id
+              title
+              price {
+                amount
+                currencyCode
+              }
+              availableForSale
+              quantityAvailable
+            }
+          }
+        }
+        images(first: 20) {
+          edges {
+            node {
+              id
+              src
+              altText
+            }
+          }
+        }
+        media(first: 10) {
+          edges {
+            node {
+              id
+              mediaContentType
+              alt
+              previewImage {
+                src
+                altText
+              }
+              ... on Video {
+                sources {
+                  url
+                  format
+                  mimeType
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    `
 
-    if (!sdkProduct) {
+    // Execute the GraphQL query
+    const result = await shopifyGraphQLFetch(query)
+    console.log("Query result:", JSON.stringify(result, null, 2))
+
+    if (!result.data?.productByHandle) {
       console.log(`No product found with handle: ${handle}`)
       return null
     }
 
-    // Convert the SDK product to our format
-    const product = convertToPlainObject<ShopifyProduct>(sdkProduct)
-
-    // Add this new logging section here
-    if (product.media && product.media.length > 0) {
-      // Log the media data structure
-      console.log(
-        "Product media structure:",
-        JSON.stringify(product.media, null, 2)
-      )
-
-      // Ensure video media has appropriate sources
-      const videoMedia = product.media.find(
-        (m) => m.mediaContentType === "VIDEO"
-      )
-      if (videoMedia) {
-        console.log("Video media found:", videoMedia)
-        if (!videoMedia.sources || videoMedia.sources.length === 0) {
-          console.warn("Video media has no sources")
-        }
-      }
-    } else {
-      console.log("No media found for product")
-    }
+    // Convert product to our format
+    const product = formatGraphQLProduct(result.data.productByHandle)
 
     // Now fetch metafields for each feature using individual queries
     try {
@@ -172,7 +333,7 @@ export async function getProductByHandle(
 
       // Query the metafields one by one (current API requirement)
       for (const key of featureKeys) {
-        const query = `
+        const metafieldQuery = `
           query GetProductMetafield($handle: String!) {
             productByHandle(handle: $handle) {
               metafield(namespace: "features", key: "${key}") {
@@ -194,18 +355,18 @@ export async function getProductByHandle(
               "X-Shopify-Storefront-Access-Token": storefrontAccessToken,
             },
             body: JSON.stringify({
-              query,
+              query: metafieldQuery,
               variables: { handle },
             }),
           }
         )
 
         // Parse the response
-        const result = await response.json()
+        const metafieldResult = await response.json()
 
         // Extract the metafield data if it exists
-        if (result.data?.productByHandle?.metafield) {
-          const metafield = result.data.productByHandle.metafield
+        if (metafieldResult.data?.productByHandle?.metafield) {
+          const metafield = metafieldResult.data.productByHandle.metafield
           const metafieldKey = `features.${metafield.key}`
 
           // Add to product metafields, converting string "true"/"false" to boolean
@@ -239,22 +400,104 @@ export async function getProductByHandle(
   }
 }
 
-// The rest of your functions can stay the same...
-
+// Updated getAllProducts function with video support
 export async function getAllProducts(): Promise<ShopifyProduct[]> {
   try {
     console.log("Fetching all products from Shopify...")
-    const products = await client.product.fetchAll()
-    return products.map((product) =>
-      convertToPlainObject<ShopifyProduct>(product)
+
+    // Define your GraphQL query with Video fragment
+    const query = `
+    {
+      products(first: 250) {
+        edges {
+          node {
+            id
+            title
+            handle
+            descriptionHtml
+            productType
+            variants(first: 100) {
+              edges {
+                node {
+                  id
+                  title
+                  price {
+                    amount
+                    currencyCode
+                  }
+                  availableForSale
+                  quantityAvailable
+                }
+              }
+            }
+            images(first: 20) {
+              edges {
+                node {
+                  id
+                  src
+                  altText
+                }
+              }
+            }
+            media(first: 10) {
+              edges {
+                node {
+                  id
+                  mediaContentType
+                  alt
+                  previewImage {
+                    src
+                    altText
+                  }
+                  ... on Video {
+                    sources {
+                      url
+                      format
+                      mimeType
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    `
+
+    // Execute the GraphQL query
+    const result = await shopifyGraphQLFetch(query)
+
+    console.log("GraphQL Response:", JSON.stringify(result, null, 2))
+
+    if (!result.data?.products?.edges) {
+      console.log("No products found or invalid response format")
+      return []
+    }
+
+    console.log("Raw product count:", result.data.products.edges.length)
+
+    // Process the GraphQL response
+    const products = result.data.products.edges.map((edge: ShopifyGraphQLEdge<ShopifyGraphQLProduct>) =>
+      formatGraphQLProduct(edge.node)
     )
+
+    console.log(`Found ${products.length} formatted products`)
+
+    // Log each product's type for debugging category filtering
+    products.forEach((product: ShopifyProduct) => {
+      console.log(`Product: ${product.title}, Type: ${product.productType}`)
+    })
+
+    return products
   } catch (error) {
     console.error("Error fetching all products:", error)
     return []
   }
 }
 
-// Create a new checkout
+// The rest of your functions can stay the same...
+
 export async function createCheckout() {
   try {
     const checkout = await client.checkout.create()

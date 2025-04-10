@@ -1,4 +1,5 @@
 // src/app/api/products/media/[handle]/route.ts
+// This file is now optional since we fetch videos directly
 import { NextRequest, NextResponse } from "next/server"
 import { getProductByHandle } from "@/lib/shopify"
 
