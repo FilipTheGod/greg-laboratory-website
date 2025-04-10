@@ -1,4 +1,4 @@
-// src/lib/shopify.ts - Updated to fix TypeScript errors and handle metafields correctly
+// src/lib/shopify.ts - Updated to fix GraphQL query for metafields
 import Client from "shopify-buy"
 
 export interface MoneyV2 {
@@ -43,6 +43,13 @@ export interface ShopifyMedia {
   alt?: string
 }
 
+// Define interface for metafield data
+export interface ShopifyMetafield {
+  namespace: string
+  key: string
+  value: string
+  type?: string
+}
 
 // Updated interface definition for metafields
 export interface ShopifyProduct {
@@ -75,22 +82,12 @@ const client = Client.buildClient({
   apiVersion: "2023-07",
 })
 
-// Convert Shopify response to properly typed objects
+// Helper function to convert API response to properly typed objects
 const convertToPlainObject = <T>(obj: unknown): T => {
   // First stringify and parse to ensure we have a plain object
   const plainObj = JSON.parse(JSON.stringify(obj))
 
-  // Special processing for media items
-  if (plainObj && "media" in plainObj) {
-    console.log(
-      "Media found in product:",
-      Array.isArray(plainObj.media)
-        ? `${plainObj.media.length} items`
-        : "Format not as expected"
-    )
-  }
-
-  // Process variants to add inventory information
+  // Process variants to add inventory information if needed
   if (plainObj && plainObj.variants && Array.isArray(plainObj.variants)) {
     plainObj.variants = plainObj.variants.map(
       (variant: Record<string, unknown>) => {
@@ -109,7 +106,26 @@ const convertToPlainObject = <T>(obj: unknown): T => {
   return plainObj as T
 }
 
-// This function should replace the existing function in src/lib/shopify.ts
+// Feature keys we want to check for - must match the keys in Shopify
+const featureKeys = [
+  "stretch",
+  "breathable",
+  "water_repellent",
+  "light_weight",
+  "quick_dry",
+  "anti_pilling",
+  "easy_care",
+  "antistatic_thread",
+  "keep_warm",
+  "cotton_touch",
+  "uv_cut",
+  "washable",
+  "eco",
+  "water_proof",
+  "water_absorption",
+]
+
+// Fetch a single product by handle WITH metafields
 export async function getProductByHandle(
   handle: string
 ): Promise<ShopifyProduct | null> {
@@ -127,103 +143,69 @@ export async function getProductByHandle(
     // Convert the SDK product to our format
     const product = convertToPlainObject<ShopifyProduct>(sdkProduct)
 
-    // Now fetch metafields using a direct GraphQL query to the Storefront API
+    // Now fetch metafields for each feature using individual queries
     try {
-      const query = `
-        query GetProductByHandle($handle: String!) {
-          productByHandle(handle: $handle) {
-            id
-            metafields(first: 20) {
-              edges {
-                node {
-                  namespace
-                  key
-                  value
-                }
+      // Initialize metafields object if needed
+      product.metafields = product.metafields || {}
+
+      // Query the metafields one by one (current API requirement)
+      for (const key of featureKeys) {
+        const query = `
+          query GetProductMetafield($handle: String!) {
+            productByHandle(handle: $handle) {
+              metafield(namespace: "features", key: "${key}") {
+                namespace
+                key
+                value
               }
             }
-            metafield(namespace: "features", key: "stretch") {
-              namespace
-              key
-              value
-            }
-            metafield(namespace: "features", key: "breathable") {
-              namespace
-              key
-              value
-            }
-            metafield(namespace: "features", key: "water_repellent") {
-              namespace
-              key
-              value
-            }
           }
-        }
-      `
+        `
 
-      const response = await fetch(
-        `https://${domain}/api/2023-07/graphql.json`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Shopify-Storefront-Access-Token": storefrontAccessToken,
-          },
-          body: JSON.stringify({
-            query,
-            variables: { handle },
-          }),
-        }
-      )
-
-      const result = await response.json()
-      console.log("API Response:", JSON.stringify(result, null, 2))
-
-      if (result.data && result.data.productByHandle) {
-        // Initialize metafields object if needed
-        product.metafields = product.metafields || {}
-
-        // Process general metafields
-        if (result.data.productByHandle.metafields?.edges) {
-          result.data.productByHandle.metafields.edges.forEach((edge: any) => {
-            const { namespace, key, value } = edge.node
-            const metafieldKey = `${namespace}.${key}`
-
-            // Add to product metafields
-            product.metafields![metafieldKey] = {
-              value:
-                value === "true" ? true : value === "false" ? false : value,
-              namespace,
-              key,
-            }
-          })
-        }
-
-        // Process specific metafields
-        const specificFeatures = ["stretch", "breathable", "water_repellent"]
-
-        for (const feature of specificFeatures) {
-          const metafieldData =
-            result.data.productByHandle[
-              `metafield(namespace: "features", key: "${feature}")`
-            ]
-          if (metafieldData) {
-            const metafieldKey = `features.${feature}`
-            product.metafields![metafieldKey] = {
-              value:
-                metafieldData.value === "true"
-                  ? true
-                  : metafieldData.value === "false"
-                  ? false
-                  : metafieldData.value,
-              namespace: "features",
-              key: feature,
-            }
+        // Execute the GraphQL query
+        const response = await fetch(
+          `https://${domain}/api/2023-07/graphql.json`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Shopify-Storefront-Access-Token": storefrontAccessToken,
+            },
+            body: JSON.stringify({
+              query,
+              variables: { handle },
+            }),
           }
-        }
+        )
 
-        console.log("Processed metafields:", product.metafields)
+        // Parse the response
+        const result = await response.json()
+
+        // Extract the metafield data if it exists
+        if (result.data?.productByHandle?.metafield) {
+          const metafield = result.data.productByHandle.metafield
+          const metafieldKey = `features.${metafield.key}`
+
+          // Add to product metafields, converting string "true"/"false" to boolean
+          product.metafields[metafieldKey] = {
+            value:
+              metafield.value === "true"
+                ? true
+                : metafield.value === "false"
+                ? false
+                : metafield.value,
+            namespace: metafield.namespace,
+            key: metafield.key,
+          }
+
+          console.log(
+            `Found metafield ${metafieldKey} with value: ${metafield.value}`
+          )
+        }
       }
+
+      // Log the final metafields object
+      console.log("Processed metafields:", product.metafields)
     } catch (metafieldError) {
       console.error("Error fetching metafields:", metafieldError)
     }
@@ -235,7 +217,8 @@ export async function getProductByHandle(
   }
 }
 
-// Rest of functions remain the same...
+// The rest of your functions can stay the same...
+
 export async function getAllProducts(): Promise<ShopifyProduct[]> {
   try {
     console.log("Fetching all products from Shopify...")
@@ -248,8 +231,6 @@ export async function getAllProducts(): Promise<ShopifyProduct[]> {
     return []
   }
 }
-
-// Other functions like createCheckout, fetchCheckout, etc.
 
 // Create a new checkout
 export async function createCheckout() {

@@ -10,7 +10,7 @@ dotenv.config({ path: ".env.local" })
 const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || ""
 const adminAccessToken = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN || ""
 
-// List of features to expose
+// List of features to expose - IMPORTANT: these must match exactly with your metafield keys in Shopify
 const featuresToExpose = [
   "stretch",
   "breathable",
@@ -53,6 +53,8 @@ async function exposeMetafieldToStorefront(key: string) {
       },
     }
 
+    console.log(`Attempting to expose ${key} metafield to Storefront API...`)
+
     const response = await fetch(
       `https://${domain}/admin/api/2023-07/graphql.json`,
       {
@@ -69,6 +71,7 @@ async function exposeMetafieldToStorefront(key: string) {
     )
 
     const result = await response.json()
+    console.log(`Response for ${key}:`, JSON.stringify(result, null, 2))
 
     if (result.errors) {
       console.error(`Error exposing metafield ${key}:`, result.errors)
@@ -78,10 +81,14 @@ async function exposeMetafieldToStorefront(key: string) {
     if (
       result.data?.metafieldStorefrontVisibilityCreate?.userErrors?.length > 0
     ) {
-      console.warn(
-        `Warning exposing metafield ${key}:`,
-        result.data.metafieldStorefrontVisibilityCreate.userErrors
-      )
+      const errors = result.data.metafieldStorefrontVisibilityCreate.userErrors
+      // If the error is just that it's already exposed, consider it a success
+      if (errors.some((err) => err.message.includes("already exists"))) {
+        console.log(`Metafield ${key} is already exposed to Storefront API`)
+        return true
+      }
+
+      console.warn(`Warning exposing metafield ${key}:`, errors)
       return false
     }
 
@@ -97,6 +104,12 @@ async function main() {
   console.log(
     `Exposing ${featuresToExpose.length} metafields to Storefront API...`
   )
+  console.log(`Using Shopify store: ${domain}`)
+
+  if (!adminAccessToken) {
+    console.error("SHOPIFY_ADMIN_ACCESS_TOKEN is not set in .env.local")
+    process.exit(1)
+  }
 
   let successCount = 0
 
@@ -108,6 +121,12 @@ async function main() {
   console.log(
     `Completed! Successfully exposed ${successCount} of ${featuresToExpose.length} metafields to Storefront API.`
   )
+  console.log("Next steps:")
+  console.log(
+    "1. In your Shopify admin, go to the product page and set the feature values"
+  )
+  console.log("2. Restart your development server")
+  console.log("3. Check your product page to see the features displayed")
 }
 
 main().catch(console.error)

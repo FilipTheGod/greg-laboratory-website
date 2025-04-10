@@ -7,6 +7,7 @@ import { ShopifyProduct } from "./shopify"
  */
 
 // Define a mapping between metafield keys and feature types
+// The keys must match exactly with the keys in your Shopify metafields
 const metafieldKeyToFeature: Record<string, FeatureType> = {
   stretch: "STRETCH",
   breathable: "BREATHABLE",
@@ -36,7 +37,7 @@ export function getProductFeatures(product: ShopifyProduct): FeatureType[] {
     return []
   }
 
-  console.log("Product metafields:", product.metafields)
+  console.log("Getting features from metafields:", product.metafields)
 
   // Initialize an array to hold the enabled features
   const enabledFeatures: FeatureType[] = []
@@ -66,16 +67,6 @@ export function getProductFeatures(product: ShopifyProduct): FeatureType[] {
       }
     }
   }
-
-  // For hardcoded testing - uncomment if needed
-  /*
-  if (product.handle === "pc-fs-t24-black") {
-    console.log("Adding hardcoded features for testing");
-    if (!enabledFeatures.includes("STRETCH")) enabledFeatures.push("STRETCH");
-    if (!enabledFeatures.includes("BREATHABLE")) enabledFeatures.push("BREATHABLE");
-    if (!enabledFeatures.includes("WATER_REPELLENT")) enabledFeatures.push("WATER_REPELLENT");
-  }
-  */
 
   console.log("Final enabled features:", enabledFeatures)
   return enabledFeatures
