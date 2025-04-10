@@ -10,9 +10,6 @@ import { formatPrice } from "@/utils/price"
 import ProductColorVariants from "./ProductColorVariants"
 import { useRelatedProducts } from "@/hooks/useRelatedProducts"
 import ProductFeaturesSection from "./ProductFeaturesSection"
-// Add this code to your ProductDetails.tsx file at the top with other imports
-import { debugMetafields } from "@/utils/debug-metafields"
-import { getProductFeatures } from "@/lib/shopify-metafields"
 
 interface ProductDetailsProps {
   product: ShopifyProduct
@@ -23,19 +20,6 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [showingSizeGuide, setShowingSizeGuide] = useState(false)
   const [showDescription, setShowDescription] = useState(false)
   const { addToCart, isLoading, cartItems } = useCart()
-  // Add this inside your ProductDetails component, after the state declarations:
-  React.useEffect(() => {
-    // Debug the product data when it loads
-    console.log("Product data:", product)
-    debugMetafields(product)
-
-    // Check what features we extract
-    const features = getProductFeatures(product)
-    console.log("Extracted features:", features)
-
-    // Check the components tree to see if ProductFeaturesSection is rendered
-    console.log("Product features section should render if features are found")
-  }, [product])
 
   // Fetch related color variants
   const {
@@ -112,23 +96,13 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     })
   }
 
-  // Get available media items (ONLY 2nd image and beyond, NOT including the first image which is shown as video at the top)
+  // Get available media items (ALL images only)
   const mediaItems = React.useMemo(() => {
-    if (product.images && product.images.length > 1) {
-      return product.images.slice(1)
+    if (product.images && product.images.length > 0) {
+      return product.images
     }
     return []
   }, [product.images])
-
-  // Check if first media item is a video
-  const firstMediaIsVideo = product.media?.some(
-    (m) => m.mediaContentType === "VIDEO"
-  )
-
-  // Get the video URL and preview image if available
-  const videoMedia = product.media?.find((m) => m.mediaContentType === "VIDEO")
-  const videoUrl = videoMedia?.sources?.[0]?.url
-  const videoPreviewImage = videoMedia?.previewImage?.src
 
   // Check size availability and inventory
   const getSizeAvailability = (
@@ -156,22 +130,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 px-16">
       {/* Product Media - Left Side (2/3 of screen) */}
       <div className="md:col-span-2 space-y-6 md:pl-12">
-        {/* First Media Item (Video or First Image) */}
+        {/* First Image */}
         <div className="relative aspect-square overflow-hidden bg-laboratory-white">
-          {firstMediaIsVideo && videoUrl ? (
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              controls
-              className="w-full h-full object-cover"
-              poster={videoPreviewImage || product.images[0]?.src || undefined}
-            >
-              <source src={videoUrl} type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-          ) : product.images && product.images.length > 0 ? (
+          {product.images && product.images.length > 0 ? (
             <Image
               src={product.images[0].src}
               alt={product.title}
@@ -189,7 +150,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
         </div>
 
         {/* Remaining Images */}
-        {mediaItems.map((image, index) => (
+        {mediaItems.slice(1).map((image, index) => (
           <div
             key={index}
             className="relative aspect-square overflow-hidden bg-laboratory-white"
