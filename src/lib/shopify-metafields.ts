@@ -6,7 +6,7 @@ import { ShopifyProduct } from "./shopify"
  * Helper functions for working with Shopify metafields
  */
 
-// Define a mapping between feature keys and feature types
+// Define a mapping between metafield keys and feature types
 const metafieldKeyToFeature: Record<string, FeatureType> = {
   stretch: "STRETCH",
   breathable: "BREATHABLE",
@@ -26,7 +26,7 @@ const metafieldKeyToFeature: Record<string, FeatureType> = {
 }
 
 /**
- * Extracts product features from individual boolean metafields
+ * Extracts product features from metafields
  * @param product The Shopify product object
  * @returns Array of feature types that are enabled for the product
  */
@@ -36,14 +36,14 @@ export function getProductFeatures(product: ShopifyProduct): FeatureType[] {
     return []
   }
 
-  console.log("Checking metafields for features:", product.metafields)
+  console.log("Product metafields:", product.metafields)
 
   // Initialize an array to hold the enabled features
   const enabledFeatures: FeatureType[] = []
 
   // Loop through all metafields to find the boolean features
   for (const key in product.metafields) {
-    // Check if this metafield belongs to our 'features' namespace
+    // Skip non-feature metafields
     if (!key.startsWith("features.")) {
       continue
     }
@@ -51,21 +51,33 @@ export function getProductFeatures(product: ShopifyProduct): FeatureType[] {
     // Extract the actual feature key after the namespace
     const metafieldKey = key.split(".")[1]
 
+    // Log what we found for debugging
+    console.log(`Found metafield key: ${metafieldKey}`)
+
     // If this is a feature metafield and its value is true, add it to enabled features
     if (metafieldKey in metafieldKeyToFeature) {
       const value = product.metafields[key].value
-      console.log(
-        `Found feature metafield: ${metafieldKey} with value: ${value}`
-      )
+      console.log(`Feature ${metafieldKey} has value: ${value}`)
 
-      // Check if the feature is enabled (value is true)
+      // Check if the feature is enabled (value is true or "true")
       if (value === true || value === "true") {
+        console.log(`Adding feature: ${metafieldKeyToFeature[metafieldKey]}`)
         enabledFeatures.push(metafieldKeyToFeature[metafieldKey])
       }
     }
   }
 
-  console.log("Enabled features:", enabledFeatures)
+  // For hardcoded testing - uncomment if needed
+  /*
+  if (product.handle === "pc-fs-t24-black") {
+    console.log("Adding hardcoded features for testing");
+    if (!enabledFeatures.includes("STRETCH")) enabledFeatures.push("STRETCH");
+    if (!enabledFeatures.includes("BREATHABLE")) enabledFeatures.push("BREATHABLE");
+    if (!enabledFeatures.includes("WATER_REPELLENT")) enabledFeatures.push("WATER_REPELLENT");
+  }
+  */
+
+  console.log("Final enabled features:", enabledFeatures)
   return enabledFeatures
 }
 

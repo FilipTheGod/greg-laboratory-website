@@ -10,9 +10,7 @@ import { formatPrice } from "@/utils/price"
 import ProductColorVariants from "./ProductColorVariants"
 import { useRelatedProducts } from "@/hooks/useRelatedProducts"
 import ProductFeaturesSection from "./ProductFeaturesSection"
-// In src/components/products/ProductDetails.tsx
-// Add this to your src/components/products/ProductDetails.tsx file
-// At the top with the other imports:
+// Add this code to your ProductDetails.tsx file at the top with other imports
 import { debugMetafields } from "@/utils/debug-metafields"
 import { getProductFeatures } from "@/lib/shopify-metafields"
 
@@ -25,6 +23,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [showingSizeGuide, setShowingSizeGuide] = useState(false)
   const [showDescription, setShowDescription] = useState(false)
   const { addToCart, isLoading, cartItems } = useCart()
+  // Add this inside your ProductDetails component, after the state declarations:
   React.useEffect(() => {
     // Debug the product data when it loads
     console.log("Product data:", product)
@@ -33,6 +32,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     // Check what features we extract
     const features = getProductFeatures(product)
     console.log("Extracted features:", features)
+
+    // Check the components tree to see if ProductFeaturesSection is rendered
+    console.log("Product features section should render if features are found")
   }, [product])
 
   // Fetch related color variants
@@ -205,7 +207,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
       {/* Product Info - Right Side (1/3 of screen) */}
       <div className="sticky top-24 self-start max-h-[calc(100vh-8rem)] pr-4 overflow-y-auto">
-        <div className="space-y-4">
+        <div className="space-y-4 pl-1">
           <div>
             <p className="text-xs tracking-wide text-laboratory-black/70 uppercase mb-1">
               {product.productType}
@@ -311,7 +313,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             <ProductColorVariants
               currentColor={currentColor}
               colorVariants={colorVariants}
-              className="mb-6 py-2" /* Added more vertical padding */
+              className="" /* Added more vertical padding */
             />
           )}
 

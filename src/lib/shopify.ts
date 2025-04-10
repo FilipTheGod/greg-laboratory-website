@@ -1,4 +1,4 @@
-// src/lib/shopify.ts - Updated to fetch metafields
+// src/lib/shopify.ts - Updated to fix TypeScript errors and handle metafields correctly
 import Client from "shopify-buy"
 
 export interface MoneyV2 {
@@ -43,6 +43,15 @@ export interface ShopifyMedia {
   alt?: string
 }
 
+// Edge structure for metafield GraphQL response
+interface MetafieldEdge {
+  node: {
+    namespace: string
+    key: string
+    value: string
+  }
+}
+
 // Updated interface definition for metafields
 export interface ShopifyProduct {
   id: string
@@ -63,23 +72,10 @@ export interface ShopifyProduct {
   }
 }
 
-// Helper function to extract price amount regardless of format
-export function extractPriceAmount(priceValue: string | MoneyV2): string {
-  if (typeof priceValue === "string") {
-    return priceValue
-  } else if (
-    typeof priceValue === "object" &&
-    priceValue &&
-    priceValue.amount
-  ) {
-    return priceValue.amount
-  }
-  return "0.00"
-}
-
 // Create a custom client with direct GraphQL access
 const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || ""
-const storefrontAccessToken = process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN || ""
+const storefrontAccessToken =
+  process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN || ""
 
 const client = Client.buildClient({
   domain,
@@ -92,7 +88,7 @@ const convertToPlainObject = <T>(obj: unknown): T => {
   // First stringify and parse to ensure we have a plain object
   const plainObj = JSON.parse(JSON.stringify(obj))
 
-  // Special processing for media items to ensure they're properly mapped
+  // Special processing for media items
   if (plainObj && "media" in plainObj) {
     console.log(
       "Media found in product:",
@@ -102,11 +98,10 @@ const convertToPlainObject = <T>(obj: unknown): T => {
     )
   }
 
-  // If this is a product object, process its variants to add inventory information
+  // Process variants to add inventory information
   if (plainObj && plainObj.variants && Array.isArray(plainObj.variants)) {
     plainObj.variants = plainObj.variants.map(
       (variant: Record<string, unknown>) => {
-        // Extract inventory quantity if available
         if (
           typeof variant === "object" &&
           variant &&
@@ -142,7 +137,24 @@ export async function getProductByHandle(
 
     // Now fetch metafields using a direct GraphQL query
     try {
-      // Construct a simple fetch request to the Storefront API
+      // This query specifically targets metafields in the 'features' namespace
+      const metafieldQuery = `
+        query GetProductMetafields($handle: String!) {
+          productByHandle(handle: $handle) {
+            metafields(first: 20, namespace: "features") {
+              edges {
+                node {
+                  namespace
+                  key
+                  value
+                }
+              }
+            }
+          }
+        }
+      `
+
+      // Execute the GraphQL query
       const response = await fetch(
         `https://${domain}/api/2023-07/graphql.json`,
         {
@@ -152,21 +164,7 @@ export async function getProductByHandle(
             "X-Shopify-Storefront-Access-Token": storefrontAccessToken,
           },
           body: JSON.stringify({
-            query: `
-              query GetProductMetafields($handle: String!) {
-                productByHandle(handle: $handle) {
-                  metafields(namespace: "features", first: 20) {
-                    edges {
-                      node {
-                        namespace
-                        key
-                        value
-                      }
-                    }
-                  }
-                }
-              }
-            `,
+            query: metafieldQuery,
             variables: {
               handle: handle,
             },
@@ -174,27 +172,37 @@ export async function getProductByHandle(
         }
       )
 
+      // Parse the response
       const metafieldData = await response.json()
-      console.log("Metafield Response:", metafieldData)
+      console.log("Metafield Response:", JSON.stringify(metafieldData, null, 2))
 
+      // Check if we got any metafields
       if (metafieldData?.data?.productByHandle?.metafields?.edges) {
-        // Add metafields to our product object
-        product.metafields = {}
+        const edges = metafieldData.data.productByHandle.metafields
+          .edges as MetafieldEdge[]
 
-        metafieldData.data.productByHandle.metafields.edges.forEach(
-          (edge: any) => {
-            const { namespace, key, value } = edge.node
-            const metafieldKey = `${namespace}.${key}`
+        // Initialize metafields object if needed
+        product.metafields = product.metafields || {}
 
-            product.metafields![metafieldKey] = {
-              value: value === "true" ? true : value === "false" ? false : value,
-              namespace: namespace,
-              key: key,
-            }
+        // Process each metafield edge
+        edges.forEach((edge) => {
+          const { namespace, key, value } = edge.node
+          const metafieldKey = `${namespace}.${key}`
+
+          // Add to product metafields, converting string "true"/"false" to boolean
+          product.metafields![metafieldKey] = {
+            value: value === "true" ? true : value === "false" ? false : value,
+            namespace: namespace,
+            key: key,
           }
-        )
+        })
 
+        // Log the processed metafields
         console.log("Processed metafields:", product.metafields)
+      } else {
+        console.log(
+          "No metafields found in response or unexpected response format"
+        )
       }
     } catch (metafieldError) {
       console.error("Error fetching metafields:", metafieldError)
@@ -207,30 +215,21 @@ export async function getProductByHandle(
   }
 }
 
-// The rest of your other functions (createCheckout, fetchCheckout, etc.)
-// would remain the same...
-
+// Rest of functions remain the same...
 export async function getAllProducts(): Promise<ShopifyProduct[]> {
   try {
     console.log("Fetching all products from Shopify...")
-
-    // Get products using the SDK method
     const products = await client.product.fetchAll()
-
-    // Process products to format them correctly
-    const formattedProducts = products.map((product: any) => {
-      return convertToPlainObject<ShopifyProduct>(product)
-    })
-
-    // Note: Metafields aren't included in the fetchAll response
-    // If you need metafields, you'd need to fetch them separately for each product
-
-    return formattedProducts
+    return products.map((product) =>
+      convertToPlainObject<ShopifyProduct>(product)
+    )
   } catch (error) {
     console.error("Error fetching all products:", error)
     return []
   }
 }
+
+// Other functions like createCheckout, fetchCheckout, etc.
 
 // Create a new checkout
 export async function createCheckout() {
