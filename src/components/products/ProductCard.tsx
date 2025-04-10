@@ -1,7 +1,6 @@
-// src/components/products/ProductCard.tsx
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { ShopifyProduct } from "@/lib/shopify"
@@ -15,6 +14,8 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false)
   const { addToCart, cartItems } = useCart()
+  const [videoUrl, setVideoUrl] = useState<string | null>(null)
+  const [, setIsVideoLoaded] = useState(false)
 
   // Extract available sizes from variants
   const availableSizes = Array.from(
@@ -28,9 +29,32 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   // Check if media includes a video
   const hasVideo = product.media?.some((m) => m.mediaContentType === "VIDEO")
-  const videoMedia = product.media?.find((m) => m.mediaContentType === "VIDEO")
-  const videoUrl = videoMedia?.sources?.[0]?.url
-  const videoPreviewImage = videoMedia?.previewImage?.src
+
+  // Fetch video URL if product has video media
+  useEffect(() => {
+    const loadVideoData = async () => {
+      if (hasVideo && product.handle) {
+        try {
+          const response = await fetch(`/api/products/media/${product.handle}`)
+          if (response.ok) {
+            const data = await response.json()
+            if (
+              data.data?.hasVideo &&
+              data.data.sources &&
+              data.data.sources.length > 0
+            ) {
+              setVideoUrl(data.data.sources[0].url)
+              setIsVideoLoaded(true)
+            }
+          }
+        } catch (error) {
+          console.error("Error loading video data:", error)
+        }
+      }
+    }
+
+    loadVideoData()
+  }, [hasVideo, product.handle])
 
   // Check if a size is in stock (regardless of color)
   const isSizeAvailable = (size: string) => {
@@ -101,6 +125,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       }
     }
   }
+  const videoPreviewImage =
+    product.media?.find((m) => m.mediaContentType === "VIDEO")?.previewImage
+      ?.src ||
+    (product.images && product.images.length > 0 ? product.images[0].src : null)
 
   return (
     <div
@@ -119,9 +147,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 muted
                 playsInline
                 className="h-full w-full object-cover"
-                poster={
-                  videoPreviewImage || product.images[0]?.src || undefined
-                }
+                poster={videoPreviewImage || undefined}
               >
                 <source src={videoUrl} type="video/mp4" />
               </video>
