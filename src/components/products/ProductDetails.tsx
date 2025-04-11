@@ -10,6 +10,7 @@ import { formatPrice } from "@/utils/price"
 import ProductColorVariants from "./ProductColorVariants"
 import { useRelatedProducts } from "@/hooks/useRelatedProducts"
 import ProductFeaturesSection from "./ProductFeaturesSection"
+import MobileProductCarousel from "./MobileProductCarousel"
 
 interface ProductDetailsProps {
   product: ShopifyProduct
@@ -127,9 +128,17 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 px-16">
-      {/* Product Media - Left Side (2/3 of screen) */}
-      <div className="md:col-span-2 space-y-6 md:pl-12">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 px-4 md:px-16 product-details-container">
+      {/* Mobile Carousel - Only visible on mobile */}
+      <div className="md:hidden w-full mb-6">
+        <MobileProductCarousel
+          images={mediaItems}
+          productTitle={product.title}
+        />
+      </div>
+
+      {/* Desktop Layout - Product Media - Left Side (2/3 of screen) */}
+      <div className="hidden md:block md:col-span-2 space-y-6 md:pl-12">
         {/* First Image */}
         <div className="relative aspect-square overflow-hidden bg-laboratory-white">
           {product.images && product.images.length > 0 ? (
@@ -157,7 +166,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           >
             <Image
               src={image.src}
-              alt={`${product.title} - view ${index + 2}`}
+              alt={image.altText || `${product.title} - view ${index + 2}`}
               fill
               className="object-cover"
               priority={index === 0}
@@ -166,8 +175,8 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
         ))}
       </div>
 
-      {/* Product Info - Right Side (1/3 of screen) */}
-      <div className="sticky top-24 self-start max-h-[calc(100vh-8rem)] pr-4 overflow-y-auto">
+      {/* Product Info - Right Side (1/3 of screen on desktop, full width on mobile) */}
+      <div className="md:sticky md:top-24 self-start max-h-[calc(100vh-8rem)] pr-0 md:pr-4 overflow-y-auto">
         <div className="space-y-4 pl-1">
           <div>
             <p className="text-xs tracking-wide text-laboratory-black/70 uppercase mb-1">
@@ -194,7 +203,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             </div>
 
             {showingSizeGuide && (
-              <div className="mb-3 p-3 border border-laboratory-black/10">
+              <div className="mb-3 p-3 border border-laboratory-black/10 overflow-x-auto">
                 <h3 className="text-xs tracking-wide mb-2">Size Guide</h3>
                 <table className="w-full text-xs">
                   <thead>
