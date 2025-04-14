@@ -1,7 +1,7 @@
 // src/components/products/MobileProductCarousel.tsx
 import React, { useState, useRef } from "react"
 import Image from "next/image"
-import { motion } from "framer-motion"
+import { motion, PanInfo } from "framer-motion" // Import PanInfo from framer-motion
 import { ShopifyImage } from "@/lib/shopify"
 
 interface MobileProductCarouselProps {
@@ -27,29 +27,26 @@ const MobileProductCarousel: React.FC<MobileProductCarouselProps> = ({
     )
   }
 
-  // Function to navigate to next slide
-  const nextSlide = () => {
-    if (images.length <= 1) return
-    setCurrentSlide((prev) => (prev === images.length - 1 ? 0 : prev + 1))
-  }
+  // Handle drag end to determine which slide to show
+  // Using proper types from framer-motion
+  const handleDragEnd = (
+    _: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ): void => {
+    const dragDistance = info.offset.x
+    const threshold = 50 // Minimum distance to trigger slide change
 
-  // Function to navigate to previous slide
-  const prevSlide = () => {
-    if (images.length <= 1) return
-    setCurrentSlide((prev) => (prev === 0 ? images.length - 1 : prev - 1))
-  }
+    if (Math.abs(dragDistance) < threshold) {
+      // If the drag wasn't substantial, snap back to current slide
+      return
+    }
 
-  // Function to go to specific slide
-  const goToSlide = (index: number) => {
-    setCurrentSlide(index)
-  }
-
-  // Handle swipe gestures
-  const handleSwipe = (direction: number) => {
-    if (direction > 0) {
-      prevSlide()
-    } else {
-      nextSlide()
+    if (dragDistance > 0 && currentSlide > 0) {
+      // Dragged right, go to previous slide
+      setCurrentSlide((prev) => prev - 1)
+    } else if (dragDistance < 0 && currentSlide < images.length - 1) {
+      // Dragged left, go to next slide
+      setCurrentSlide((prev) => prev + 1)
     }
   }
 
@@ -63,10 +60,10 @@ const MobileProductCarousel: React.FC<MobileProductCarouselProps> = ({
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.2}
-            onDragEnd={(_, info) => handleSwipe(info.offset.x)}
-            className="flex h-full"
+            onDragEnd={handleDragEnd}
+            className="flex h-full touch-pan-y"
             animate={{ x: -currentSlide * 100 + "%" }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
             style={{ width: `${images.length * 100}%` }}
           >
             {images.map((image, index) => (
@@ -85,26 +82,6 @@ const MobileProductCarousel: React.FC<MobileProductCarouselProps> = ({
               </div>
             ))}
           </motion.div>
-
-          {/* Navigation Arrows - Only show if more than one image */}
-          {images.length > 1 && (
-            <>
-              <button
-                onClick={prevSlide}
-                className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-laboratory-white/70 w-8 h-8 flex items-center justify-center z-10 text-laboratory-black rounded-full"
-                aria-label="Previous image"
-              >
-                ←
-              </button>
-              <button
-                onClick={nextSlide}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-laboratory-white/70 w-8 h-8 flex items-center justify-center z-10 text-laboratory-black rounded-full"
-                aria-label="Next image"
-              >
-                →
-              </button>
-            </>
-          )}
         </div>
 
         {/* Slide Indicators - Only show if more than one image */}
@@ -113,7 +90,7 @@ const MobileProductCarousel: React.FC<MobileProductCarouselProps> = ({
             {images.map((_, index) => (
               <button
                 key={index}
-                onClick={() => goToSlide(index)}
+                onClick={() => setCurrentSlide(index)}
                 className={`w-2 h-2 rounded-full carousel-dot ${
                   currentSlide === index
                     ? "bg-laboratory-black active"

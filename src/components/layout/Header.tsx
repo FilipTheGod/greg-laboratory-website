@@ -17,7 +17,7 @@ const Header: React.FC = () => {
         <div className="hidden md:flex justify-between items-center">
           <Link href="/" className="flex items-center">
             <Image
-              src="/images/Logo1.png"
+              src="/images/GregLab_LOGO.png"
               alt="GREG LABORATORY"
               width={150}
               height={30}
@@ -63,8 +63,8 @@ const Header: React.FC = () => {
         <Cart />
       </header>
 
-      {/* Mobile bottom navigation - always visible */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden py-12 px-8">
+      {/* Mobile bottom navigation - always visible but with padding at the bottom */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden py-4 px-8 ">
         <div className="flex justify-between items-center">
           <Link
             href="https://www.instagram.com/greglaboratory/?hl=en"
@@ -86,6 +86,9 @@ const Header: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Add padding to the bottom of the page on mobile to account for the fixed navbar */}
+      <div className="md:hidden h-12"></div>
     </>
   )
 }

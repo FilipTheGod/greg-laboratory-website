@@ -114,3 +114,27 @@ button {
     width: calc(100% + 2rem);
   }
 }
+
+/* Add to src/app/globals.css */
+
+/* Add padding to the bottom of the content area on mobile to prevent the navbar from covering content */
+@media (max-width: 767px) {
+  body {
+    padding-bottom: 3rem; /* Adjust this value to match the height of your mobile navbar */
+  }
+
+  /* Make sure dropdowns and modals at the bottom of the page are visible above the navbar */
+  .product-description,
+  .product-features-section,
+  [class*="dropdown"],
+  [class*="modal"] {
+    z-index: 30;
+  }
+}
+
+/* Improve carousel touch handling */
+.product-carousel {
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
