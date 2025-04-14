@@ -32,8 +32,6 @@ button {
   @apply focus:outline-none;
 }
 
-/* Add these styles to your globals.css file to ensure rich text from Shopify is displayed properly */
-
 /* Rich text content from Shopify */
 .product-description ul {
   list-style-type: disc;
@@ -64,41 +62,27 @@ button {
   letter-spacing: 0.25em;
 }
 
-/* Add to src/app/globals.css */
-
-/* Improve carousel touch handling */
-.product-carousel {
-  touch-action: pan-x;
+/* Mobile carousel improvements */
+.mobile-carousel-container {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
-}
-
-/* Hide scrollbar for the carousel */
-.product-carousel {
-  -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
 }
 
-.product-carousel::-webkit-scrollbar {
-  display: none; /* Chrome, Safari and Opera */
+.mobile-carousel-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
-/* Prevent text selection during swipe */
-.product-carousel * {
-  user-select: none;
-  -webkit-user-select: none;
+.mobile-carousel-slide {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
-/* Custom navigation dots */
-.carousel-dot {
-  transition: all 0.2s ease;
-}
-
-.carousel-dot.active {
-  transform: scale(1.2);
-}
-
-/* Additional responsive adjustments */
+/* Fix for mobile spacing */
 @media (max-width: 768px) {
   .product-details-container {
     padding-left: 1rem;
@@ -110,4 +94,9 @@ button {
     margin-right: -1rem;
     width: calc(100% + 2rem);
   }
+}
+
+/* Ensure smooth scrolling behavior */
+html {
+  scroll-behavior: smooth;
 }
