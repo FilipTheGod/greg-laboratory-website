@@ -1,7 +1,7 @@
 // src/components/products/MobileProductCarousel.tsx
 import React, { useState, useRef } from "react"
 import Image from "next/image"
-import { motion, PanInfo } from "framer-motion" // Import PanInfo from framer-motion
+import { motion, PanInfo } from "framer-motion"
 import { ShopifyImage } from "@/lib/shopify"
 
 interface MobileProductCarouselProps {
@@ -15,6 +15,7 @@ const MobileProductCarousel: React.FC<MobileProductCarouselProps> = ({
 }) => {
   const [currentSlide, setCurrentSlide] = useState(0)
   const carouselRef = useRef<HTMLDivElement>(null)
+  const [isDragging, setIsDragging] = useState(false)
 
   // If there are no images, show placeholder
   if (!images || images.length === 0) {
@@ -27,26 +28,43 @@ const MobileProductCarousel: React.FC<MobileProductCarouselProps> = ({
     )
   }
 
+  // Handle drag start
+  const handleDragStart = (): void => {
+    setIsDragging(true)
+  }
+
   // Handle drag end to determine which slide to show
-  // Using proper types from framer-motion
   const handleDragEnd = (
     _: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo
   ): void => {
-    const dragDistance = info.offset.x
-    const threshold = 50 // Minimum distance to trigger slide change
+    setIsDragging(false)
 
-    if (Math.abs(dragDistance) < threshold) {
+    // Prevent scrolling if there's only one image
+    if (images.length <= 1) return
+
+    const dragDistance = info.offset.x
+    const swipeThreshold = 50 // Minimum distance to trigger slide change
+
+    if (Math.abs(dragDistance) < swipeThreshold) {
       // If the drag wasn't substantial, snap back to current slide
       return
     }
 
     if (dragDistance > 0 && currentSlide > 0) {
       // Dragged right, go to previous slide
-      setCurrentSlide((prev) => prev - 1)
+      setCurrentSlide((prev) => Math.max(0, prev - 1))
     } else if (dragDistance < 0 && currentSlide < images.length - 1) {
       // Dragged left, go to next slide
-      setCurrentSlide((prev) => prev + 1)
+      setCurrentSlide((prev) => Math.min(images.length - 1, prev + 1))
+    }
+  }
+
+  // Handle direct clicks on the indicator dots
+  const handleDotClick = (index: number): void => {
+    // Only respond if not currently dragging
+    if (!isDragging) {
+      setCurrentSlide(index)
     }
   }
 
@@ -59,11 +77,16 @@ const MobileProductCarousel: React.FC<MobileProductCarouselProps> = ({
             ref={carouselRef}
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.2}
+            dragElastic={0.1} // Reduced elasticity to prevent excessive stretching
+            onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             className="flex h-full touch-pan-y"
             animate={{ x: -currentSlide * 100 + "%" }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
+            transition={{
+              duration: 0.3,
+              ease: "easeInOut",
+              type: "tween", // Use tween instead of spring for more predictable movement
+            }}
             style={{ width: `${images.length * 100}%` }}
           >
             {images.map((image, index) => (
@@ -90,7 +113,7 @@ const MobileProductCarousel: React.FC<MobileProductCarouselProps> = ({
             {images.map((_, index) => (
               <button
                 key={index}
-                onClick={() => setCurrentSlide(index)}
+                onClick={() => handleDotClick(index)}
                 className={`w-2 h-2 rounded-full carousel-dot ${
                   currentSlide === index
                     ? "bg-laboratory-black active"

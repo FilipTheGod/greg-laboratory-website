@@ -12,7 +12,7 @@ export default function Consultancy() {
   const [submitted, setSubmitted] = useState(false)
 
   // Client list data
-  const clientListLeft = [
+  const clients = [
     "CLIENTS",
     "NETFLIX",
     "ETHEREAL",
@@ -43,38 +43,36 @@ export default function Consultancy() {
   }
 
   return (
-    <div className="min-h-[100vh] relative overflow-hidden">
-      {/* Left column of clients */}
-      <div className="absolute left-8 top-0 pt-10 text-sm md:text-lg lg:text-2xl font-normal tracking-wide">
-        {clientListLeft.map((client, index) => (
-          <div key={`left-${index}`} className="mb-1 md:mb-1">
-            {client}
-          </div>
-        ))}
-      </div>
+    <div className="min-h-[100vh] relative overflow-hidden flex flex-col items-center justify-center">
+      {/* Main content - centered and smaller text */}
+      <div className="text-center max-w-3xl mx-auto px-6 mb-12">
+        <h1 className="text-xs md:text-sm lg:text-base tracking-wide leading-relaxed mb-12">
+          GREG LABORATORY SPECIALIZES IN TECHNICAL DESIGN CONSULTATION, PATTERN
+          DEVELOPMENT, AND CONSTRUCTION METHODOLOGY. WE OFFER BOTH{" "}
+          <a
+            href="mailto:info@greglaboratory.com"
+            className="underline font-bold transition-colors duration-300 hover:text-laboratory-black/60"
+          >
+            COLLABORATIONS
+          </a>{" "}
+          AND{" "}
+          <button
+            onClick={() => setShowContactForm(true)}
+            className="underline transition-colors font-bold duration-300 hover:text-laboratory-black/60"
+          >
+            CONSULTANCY
+          </button>{" "}
+          SERVICES FOR SELECTED PARTNERS AND CLIENTS SEEKING ELEVATED TECHNICAL
+          SOLUTIONS.
+        </h1>
 
-      {/* Central content */}
-      <div className="flex items-center justify-center min-h-screen px-20 md:px-24 lg:px-36">
-        <div className="w-full max-w-6xl mx-auto text-center">
-          <h1 className="text-xl md:text-2xl lg:text-3xl tracking-wide leading-relaxed">
-            GREG LABORATORY SPECIALIZES IN TECHNICAL DESIGN CONSULTATION,
-            PATTERN DEVELOPMENT, AND CONSTRUCTION METHODOLOGY. WE OFFER BOTH{" "}
-            <a
-              href="mailto:info@greglaboratory.com"
-              className="underline transition-colors duration-300 hover:text-laboratory-black/60"
-            >
-              COLLABORATIONS
-            </a>{" "}
-            AND{" "}
-            <button
-              onClick={() => setShowContactForm(true)}
-              className="underline transition-colors duration-300 hover:text-laboratory-black/60"
-            >
-              CONSULTANCY
-            </button>{" "}
-            SERVICES FOR SELECTED PARTNERS AND CLIENTS SEEKING ELEVATED
-            TECHNICAL SOLUTIONS.
-          </h1>
+        {/* Client list - centered */}
+        <div className="text-xs md:text-sm font-normal tracking-wide">
+          {clients.map((client, index) => (
+            <div key={index} className="mb-1">
+              {client}
+            </div>
+          ))}
         </div>
       </div>
 
@@ -97,23 +95,27 @@ export default function Consultancy() {
             >
               {submitted ? (
                 <div className="text-center py-8">
-                  <h3 className="text-medium tracking-wide mb-4">
-                    THANK YOU
-                  </h3>
+                  <h3 className="text-medium tracking-wide mb-4">THANK YOU</h3>
                   <p className="text-regular tracking-wide">
                     WE WILL GET BACK TO YOU AS SOON AS POSSIBLE.
                   </p>
                 </div>
               ) : (
                 <>
-                  <h2 className="text-medium tracking-wide mb-6 text-center">CONSULTANCY REQUEST</h2>
+                  <h2 className="text-medium tracking-wide mb-6 text-center">
+                    CONSULTANCY REQUEST
+                  </h2>
                   <p className="text-regular tracking-wide mb-6 text-center">
-                    SUBMIT YOUR MESSAGE BELOW AND WE&apos;LL GET BACK TO YOU AS QUICKLY AS POSSIBLE.
+                    SUBMIT YOUR MESSAGE BELOW AND WE&apos;LL GET BACK TO YOU AS
+                    QUICKLY AS POSSIBLE.
                   </p>
 
                   <form onSubmit={handleSubmit}>
                     <div className="mb-4">
-                      <label htmlFor="email" className="block text-regular tracking-wide mb-2">
+                      <label
+                        htmlFor="email"
+                        className="block text-regular tracking-wide mb-2"
+                      >
                         EMAIL
                       </label>
                       <input
@@ -127,7 +129,10 @@ export default function Consultancy() {
                     </div>
 
                     <div className="mb-6">
-                      <label htmlFor="message" className="block text-regular tracking-wide mb-2">
+                      <label
+                        htmlFor="message"
+                        className="block text-regular tracking-wide mb-2"
+                      >
                         MESSAGE
                       </label>
                       <textarea

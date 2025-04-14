@@ -32,11 +32,11 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ onFilterChange }) => {
   }
 
   return (
-    <div className="sticky top-24 z-50 pr-4">
+    <div className="sticky top-24 z-50 pr-2">
       <div className="flex flex-col">
         <button
           onClick={() => handleCategoryClick("ALL")}
-          className={`text-left text-xs hover:opacity-70 transition mb-5 ${
+          className={`text-left text-[10px] hover:opacity-70 transition mb-3 ${
             activeCategory === "ALL" ? "font-medium" : "opacity-70"
           }`}
         >
@@ -46,7 +46,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ onFilterChange }) => {
           <button
             key={category}
             onClick={() => handleCategoryClick(category)}
-            className={`text-left text-xs hover:opacity-70 transition mb-5 whitespace-nowrap ${
+            className={`text-left text-[10px] hover:opacity-70 transition mb-3 whitespace-nowrap ${
               activeCategory === category ? "font-medium" : "opacity-70"
             }`}
           >

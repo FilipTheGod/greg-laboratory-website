@@ -18,8 +18,9 @@ interface ProductDetailsProps {
 
 const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [selectedSize, setSelectedSize] = useState("")
-  const [showingSizeGuide, setShowingSizeGuide] = useState(false)
+  // At the top of the component:
   const [showDescription, setShowDescription] = useState(false)
+  const [showFeatures, setShowFeatures] = useState(false) 
   const { addToCart, isLoading, cartItems } = useCart()
 
   // Fetch related color variants
@@ -185,59 +186,14 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             <h1 className="text-sm tracking-wide uppercase mb-2">
               {product.title}
             </h1>
-            <p className="text-xs tracking-wide mb-4">
+            <p className="text-xs tracking-wide mb-6">
               ${formatPrice(product.variants[0]?.price)}
             </p>
           </div>
 
           {/* Size Selection */}
           <div className="mb-4">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-xs tracking-wide">SIZE</h2>
-              <button
-                className="text-xs tracking-wide underline"
-                onClick={() => setShowingSizeGuide(!showingSizeGuide)}
-              >
-                Size Guide
-              </button>
-            </div>
-
-            {showingSizeGuide && (
-              <div className="mb-3 p-3 border border-laboratory-black/10 overflow-x-auto">
-                <h3 className="text-xs tracking-wide mb-2">Size Guide</h3>
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="border-b border-laboratory-black/10">
-                      <th className="text-left py-2">Size</th>
-                      <th className="text-left py-2">Chest (in)</th>
-                      <th className="text-left py-2">Waist (in)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-b border-laboratory-black/5">
-                      <td className="py-1">S</td>
-                      <td className="py-1">38-40</td>
-                      <td className="py-1">30-32</td>
-                    </tr>
-                    <tr className="border-b border-laboratory-black/5">
-                      <td className="py-1">M</td>
-                      <td className="py-1">40-42</td>
-                      <td className="py-1">32-34</td>
-                    </tr>
-                    <tr className="border-b border-laboratory-black/5">
-                      <td className="py-1">L</td>
-                      <td className="py-1">42-44</td>
-                      <td className="py-1">34-36</td>
-                    </tr>
-                    <tr>
-                      <td className="py-1">XL</td>
-                      <td className="py-1">44-46</td>
-                      <td className="py-1">36-38</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            )}
+            <h2 className="text-xs tracking-wide mb-2">SIZE</h2>
 
             <div className="flex flex-wrap gap-3">
               {availableSizes.map((size) => {
@@ -252,13 +208,13 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                   <div key={size} className="flex flex-col items-start">
                     <button
                       className={`px-1 py-1 transition-all text-xs relative
-                        ${
-                          selectedSize === size
-                            ? "text-laboratory-black underline"
-                            : "text-laboratory-black/70 hover:underline"
-                        }
-                        ${!available ? "opacity-50 cursor-not-allowed" : ""}
-                        tracking-wide`}
+              ${
+                selectedSize === size
+                  ? "text-laboratory-black underline"
+                  : "text-laboratory-black/70 hover:underline"
+              }
+              ${!available ? "opacity-50 cursor-not-allowed" : ""}
+              tracking-wide`}
                       onClick={() => available && setSelectedSize(size)}
                       disabled={!available}
                     >
@@ -277,29 +233,29 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
               })}
             </div>
           </div>
-
-          {/* Color Variants - Expanded space for colors */}
           {!isLoadingVariants && hasColorVariants && (
             <ProductColorVariants
               currentColor={currentColor}
               colorVariants={colorVariants}
-              className="" /* Added more vertical padding */
+              className="mb-2" // Make it smaller with less vertical padding
             />
           )}
 
           {/* Add to Cart Button */}
           <div className="pt-6 pb-4">
             <motion.button
-              className={`w-full py-2 text-xs tracking-wide transition-colors ${
-                selectedSize
-                  ? "text-laboratory-black"
-                  : "text-laboratory-black/50"
-              } hover:underline disabled:opacity-50`}
+              className={`w-full py-3 text-sm tracking-wide transition-colors
+      ${
+        selectedSize
+          ? "bg-laboratory-black text-laboratory-white"
+          : "bg-laboratory-black/30 text-laboratory-white"
+      }
+      disabled:opacity-50`}
               onClick={handleAddToCart}
               whileTap={{ scale: 0.98 }}
               disabled={!selectedSize || isLoading}
             >
-              {isLoading ? "ADDING..." : "SELECT YOUR SIZE"}
+              {isLoading ? "ADDING..." : "ADD TO CART"}
             </motion.button>
           </div>
 
@@ -322,7 +278,17 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           </div>
 
           {/* Product Features Section */}
-          <ProductFeaturesSection product={product} />
+          <div className="pt-4 border-t border-laboratory-black/10">
+            <button
+              className="flex items-center justify-between w-full text-xs tracking-wide py-2 group hover:underline"
+              onClick={() => setShowFeatures(!showFeatures)}
+            >
+              <span>PRODUCT FEATURES</span>
+              <span>{showFeatures ? "−" : "+"}</span>
+            </button>
+
+            {showFeatures && <ProductFeaturesSection product={product} />}
+          </div>
         </div>
       </div>
     </div>

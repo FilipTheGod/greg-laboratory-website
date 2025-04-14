@@ -15,7 +15,7 @@ interface ProductFeaturesSectionProps {
 const ProductFeaturesSection: React.FC<ProductFeaturesSectionProps> = ({
   product,
 }) => {
-  const [isExpanded, setIsExpanded] = React.useState(true)
+  const [isExpanded, setIsExpanded] = React.useState(false) // Changed to false to be closed by default
   const [features, setFeatures] = React.useState<FeatureType[]>([])
 
   // Extract features from product metafields

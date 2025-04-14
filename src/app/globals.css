@@ -138,3 +138,44 @@ button {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
 }
+
+/* Add this to src/app/globals.css */
+
+/* Hide scrollbar for the carousel */
+.product-carousel {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.product-carousel::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+/* Prevent text selection during swipe */
+.product-carousel * {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Custom navigation dots */
+.carousel-dot {
+  transition: all 0.2s ease;
+}
+
+.carousel-dot.active {
+  transform: scale(1.2);
+}
+
+/* Additional responsive adjustments */
+@media (max-width: 768px) {
+  .product-details-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .product-carousel-container {
+    margin-left: -1rem;
+    margin-right: -1rem;
+    width: calc(100% + 2rem);
+  }
+}
