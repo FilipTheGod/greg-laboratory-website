@@ -20,7 +20,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [selectedSize, setSelectedSize] = useState("")
   // At the top of the component:
   const [showDescription, setShowDescription] = useState(false)
-  const [showFeatures, setShowFeatures] = useState(false) 
+
   const { addToCart, isLoading, cartItems } = useCart()
 
   // Fetch related color variants
@@ -180,20 +180,20 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       <div className="md:sticky md:top-24 self-start max-h-[calc(100vh-8rem)] pr-0 md:pr-4 overflow-y-auto">
         <div className="space-y-4 pl-1">
           <div>
-            <p className="text-xs tracking-wide text-laboratory-black/70 uppercase mb-1">
+            <p className="text-xs tracking-wide text-laboratory-black/70 uppercase mb-2">
               {product.productType}
             </p>
-            <h1 className="text-sm tracking-wide uppercase mb-2">
+            <h1 className="text-sm tracking-wide uppercase mb-1">
               {product.title}
             </h1>
-            <p className="text-xs tracking-wide mb-6">
+            <p className="text-xs tracking-wide mb-8">
               ${formatPrice(product.variants[0]?.price)}
             </p>
           </div>
 
           {/* Size Selection */}
           <div className="mb-4">
-            <h2 className="text-xs tracking-wide mb-2">SIZE</h2>
+            <h2 className="text-xs tracking-wide mb-2">SELECT SIZE</h2>
 
             <div className="flex flex-wrap gap-3">
               {availableSizes.map((size) => {
@@ -278,17 +278,8 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           </div>
 
           {/* Product Features Section */}
-          <div className="pt-4 border-t border-laboratory-black/10">
-            <button
-              className="flex items-center justify-between w-full text-xs tracking-wide py-2 group hover:underline"
-              onClick={() => setShowFeatures(!showFeatures)}
-            >
-              <span>PRODUCT FEATURES</span>
-              <span>{showFeatures ? "−" : "+"}</span>
-            </button>
 
-            {showFeatures && <ProductFeaturesSection product={product} />}
-          </div>
+          <ProductFeaturesSection product={product} />
         </div>
       </div>
     </div>

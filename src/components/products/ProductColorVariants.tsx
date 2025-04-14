@@ -46,14 +46,13 @@ const ProductColorVariants: React.FC<ProductColorVariantsProps> = ({
 
   return (
     <div className={`mb-4 ${className}`}>
-      <h2 className="text-xs tracking-wide mb-3">COLOR</h2>
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2">
         {allColors.map((colorInfo) => (
           <button
             key={colorInfo.color}
-            className={`w-10 h-10 rounded-full relative transition-all ${
+            className={`w-8 h-8 rounded-full relative transition-all ${
               colorInfo.isCurrent
-                ? "ring-2 ring-laboratory-black ring-offset-2"
+                ? "ring-1 ring-laboratory-black ring-offset-1"
                 : "hover:opacity-80"
             }`}
             style={getColorStyle(colorInfo.color)}
@@ -66,9 +65,7 @@ const ProductColorVariants: React.FC<ProductColorVariantsProps> = ({
           />
         ))}
       </div>
-      {currentColor && (
-        <p className="mt-3 text-xs tracking-wide">{currentColor}</p>
-      )}
+      {/* Removed the color text that was here */}
     </div>
   )
 }

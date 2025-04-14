@@ -64,73 +64,7 @@ button {
   letter-spacing: 0.25em;
 }
 
-/* Add this to src/app/globals.css */
-
-/* Carousel styles */
-.product-carousel {
-  touch-action: pan-y;
-  -webkit-overflow-scrolling: touch;
-}
-
-.product-carousel:focus {
-  outline: none;
-}
-
-/* Hide scrollbar for the carousel */
-.product-carousel {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
-}
-
-.product-carousel::-webkit-scrollbar {
-  display: none; /* Chrome, Safari and Opera */
-}
-
-/* Prevent text selection during swipe */
-.product-carousel * {
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-/* Custom navigation dots */
-.carousel-dot {
-  transition: all 0.2s ease;
-}
-
-.carousel-dot.active {
-  transform: scale(1.2);
-}
-
-/* Additional responsive adjustments */
-@media (max-width: 768px) {
-  .product-details-container {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-
-  .product-carousel-container {
-    margin-left: -1rem;
-    margin-right: -1rem;
-    width: calc(100% + 2rem);
-  }
-}
-
 /* Add to src/app/globals.css */
-
-/* Add padding to the bottom of the content area on mobile to prevent the navbar from covering content */
-@media (max-width: 767px) {
-  body {
-    padding-bottom: 3rem; /* Adjust this value to match the height of your mobile navbar */
-  }
-
-  /* Make sure dropdowns and modals at the bottom of the page are visible above the navbar */
-  .product-description,
-  .product-features-section,
-  [class*="dropdown"],
-  [class*="modal"] {
-    z-index: 30;
-  }
-}
 
 /* Improve carousel touch handling */
 .product-carousel {
@@ -138,8 +72,6 @@ button {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
 }
-
-/* Add this to src/app/globals.css */
 
 /* Hide scrollbar for the carousel */
 .product-carousel {
