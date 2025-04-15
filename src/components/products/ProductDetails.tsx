@@ -183,9 +183,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             <p className="text-xs tracking-wide text-laboratory-black/70 uppercase mb-2">
               {product.productType}
             </p>
-            <h1 className="text-sm tracking-wide uppercase mb-1">
-              {product.title}
-            </h1>
+            <h1 className="product-title uppercase mb-1">{product.title}</h1>
             <p className="text-xs tracking-wide mb-8">
               ${formatPrice(product.variants[0]?.price)}
             </p>
@@ -269,8 +267,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
               <span>{showDescription ? "−" : "+"}</span>
             </button>
             {showDescription && (
-              <div className="py-2 text-xs tracking-wide product-description">
+              <div className="py-2 product-description">
                 <div
+                  className="product-details-body-text text-xs"
                   dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
                 />
               </div>

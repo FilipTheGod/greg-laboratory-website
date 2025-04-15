@@ -14,13 +14,13 @@ const Header: React.FC = () => {
     <>
       <header className="sticky top-0 z-50 py-4 px-6">
         {/* Desktop Navigation */}
-        <div className="hidden md:flex justify-between items-center">
-          <Link href="/" className="flex items-center">
+        <div className="md:hidden flex flex-col items-center">
+          <Link href="/" className="flex items-center mb-4">
             <Image
               src="/images/GregLab_LOGO.png"
               alt="GREG LABORATORY"
-              width={150}
-              height={30}
+              width={120}
+              height={24}
               className="object-contain"
             />
           </Link>
@@ -63,32 +63,26 @@ const Header: React.FC = () => {
         <Cart />
       </header>
 
-      {/* Mobile bottom navigation - always visible but with padding at the bottom */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden py-4 px-8 ">
-        <div className="flex justify-between items-center">
-          <Link
-            href="https://www.instagram.com/greglaboratory/?hl=en"
-            className="text-laboratory-black hover:opacity-70 transition text-xs tracking-wide"
-          >
-            INSTAGRAM
-          </Link>
-          <Link
-            href="/consultancy"
-            className="text-laboratory-black text-xs tracking-wide hover:opacity-70 transition"
-          >
-            CONSULTANCY
-          </Link>
-          <button
-            onClick={toggleCart}
-            className="text-laboratory-black text-xs tracking-wide hover:opacity-70 transition"
-          >
-            CART({cartCount})
-          </button>
-        </div>
+      <div className="flex justify-center space-x-6 mb-4">
+        <Link
+          href="https://www.instagram.com/greglaboratory/?hl=en"
+          className="text-laboratory-black hover:opacity-70 transition text-xs tracking-wide"
+        >
+          INSTAGRAM
+        </Link>
+        <Link
+          href="/consultancy"
+          className="text-laboratory-black text-xs tracking-wide hover:opacity-70 transition"
+        >
+          CONSULTANCY
+        </Link>
+        <button
+          onClick={toggleCart}
+          className="text-laboratory-black text-xs tracking-wide hover:opacity-70 transition"
+        >
+          CART({cartCount})
+        </button>
       </div>
-
-      {/* Add padding to the bottom of the page on mobile to account for the fixed navbar */}
-      <div className="md:hidden h-12"></div>
     </>
   )
 }

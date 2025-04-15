@@ -46,29 +46,31 @@ export default function Consultancy() {
     <div className="min-h-[100vh] relative overflow-hidden flex flex-col items-center justify-center">
       {/* Main content - centered and smaller text */}
       <div className="text-center max-w-3xl mx-auto px-6 mb-12">
-        <h1 className="text-xs md:text-sm lg:text-base tracking-wide leading-relaxed mb-12">
-          GREG LABORATORY SPECIALIZES IN TECHNICAL DESIGN CONSULTATION, PATTERN
-          DEVELOPMENT, AND CONSTRUCTION METHODOLOGY. WE OFFER BOTH{" "}
-          <a
-            href="mailto:info@greglaboratory.com"
-            className="underline font-bold transition-colors duration-300 hover:text-laboratory-black/60"
-          >
-            COLLABORATIONS
-          </a>{" "}
-          AND{" "}
-          <button
-            onClick={() => setShowContactForm(true)}
-            className="underline transition-colors font-bold duration-300 hover:text-laboratory-black/60"
-          >
-            CONSULTANCY
-          </button>{" "}
-          SERVICES FOR SELECTED PARTNERS AND CLIENTS SEEKING ELEVATED TECHNICAL
-          SOLUTIONS.
-        </h1>
+
+<h1 className="text-xs md:text-sm lg:text-base consultancy-text leading-relaxed mb-12">
+  GREG LABORATORY SPECIALIZES IN TECHNICAL DESIGN CONSULTATION,
+  PATTERN DEVELOPMENT, AND CONSTRUCTION METHODOLOGY. WE OFFER BOTH{" "}
+  <a
+    href="mailto:info@greglaboratory.com"
+    className="underline transition-colors duration-300 hover:text-laboratory-black/60"
+  >
+    COLLABORATIONS
+  </a>{" "}
+  AND{" "}
+  <button
+    onClick={() => setShowContactForm(true)}
+    className="underline transition-colors duration-300 hover:text-laboratory-black/60"
+  >
+    CONSULTANCY
+  </button>{" "}
+  SERVICES FOR SELECTED PARTNERS AND CLIENTS SEEKING ELEVATED
+  TECHNICAL SOLUTIONS.
+</h1>
 
         {/* Client list - centered */}
-        <div className="text-xs md:text-sm font-normal tracking-wide">
-          {clients.map((client, index) => (
+        <div className="text-xs md:text-sm font-normal tracking-wide mt-8">
+          <div className="font-bold mb-2">CLIENTS</div>
+          {clients.slice(1).map((client, index) => (
             <div key={index} className="mb-1">
               {client}
             </div>

@@ -104,29 +104,30 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
     return result
   }, [products, filteredCategory])
 
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-6 p-6">
-      <div className="md:col-span-1">
-        <ProductFilter onFilterChange={setFilteredCategory} />
-      </div>
-
-      <div className="md:col-span-4">
-        {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-14">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        ) : (
-          <div className="p-8 text-center">
-            <p className="text-laboratory-black/70 text-xs">
-              No products found in this category.
-            </p>
-          </div>
-        )}
-      </div>
+ // In src/components/products/ProductGrid.tsx
+return (
+  <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-6">
+    <div className="md:col-span-1">
+      <ProductFilter onFilterChange={setFilteredCategory} />
     </div>
-  )
+
+    <div className="md:col-span-4">
+      {filteredProducts.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-10 product-grid">
+          {filteredProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      ) : (
+        <div className="p-8 text-center">
+          <p className="text-laboratory-black/70 text-xs">
+            No products found in this category.
+          </p>
+        </div>
+      )}
+    </div>
+  </div>
+)
 }
 
 export default ProductGrid

@@ -204,9 +204,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <div>
             {/* Price - always visible but only shows when hovered */}
             <div
-              className={`text-laboratory-black text-xs tracking-wide text-center transition-opacity ${
+              className={`text-laboratory-black text-xs tracking-wide text-center transition-opacity product-price ${
                 isHovered ? "opacity-100" : "opacity-0"
-              } h-4 mt-1`}
+              } h-4 mt-3`}
             >
               ${formatPrice(product.variants[0]?.price)}
             </div>
