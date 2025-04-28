@@ -40,8 +40,7 @@ const mapProductTypeToCategory = (productType: string): ProductCategory => {
 }
 
 const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
-  const [filteredCategory, setFilteredCategory] =
-    useState<ProductCategory>("ALL")
+  const [filteredCategory, setFilteredCategory] = useState<ProductCategory>("ALL")
   const [products, setProducts] = useState<ShopifyProduct[]>(initialProducts)
 
   // Effect to handle any potential issues with initialProducts
@@ -82,6 +81,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
     }
   }, [products, filteredCategory])
 
+  // Handle filter change from ProductFilter component
   const handleFilterChange = (category: ProductCategory) => {
     setFilteredCategory(category)
   }

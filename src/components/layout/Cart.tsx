@@ -55,7 +55,7 @@ const Cart: React.FC = () => {
 
           {/* Cart Panel - full screen on mobile */}
           <motion.div
-            className="fixed inset-0 md:inset-auto md:top-0 md:right-0 md:h-full md:w-96 z-50"
+            className="fixed inset-0 md:inset-auto md:top-0 md:right-0 md:h-full md:w-96 bg-laboratory-white z-50"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}

@@ -18,7 +18,6 @@ interface ProductDetailsProps {
 
 const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [selectedSize, setSelectedSize] = useState("")
-  // At the top of the component:
   const [showDescription, setShowDescription] = useState(false)
 
   const { addToCart, isLoading, cartItems } = useCart()
@@ -129,7 +128,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 px-4 md:px-16 product-details-container">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 px-4 md:px-16 product-details-container bg-[#f6f6f6]">
       {/* Mobile Carousel - Only visible on mobile */}
       <div className="md:hidden w-full mb-6">
         <MobileProductCarousel
@@ -277,7 +276,6 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
           </div>
 
           {/* Product Features Section */}
-
           <ProductFeaturesSection product={product} />
         </div>
       </div>

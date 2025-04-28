@@ -43,7 +43,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ onFilterChange }) => {
   }
 
   return (
-    <div className="sticky top-24 z-50 pr-2">
+    <div className="sticky top-24 z-40 pr-2">
       <div className="flex flex-col">
         {categories.map((category) => (
           <button
