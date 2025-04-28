@@ -21,8 +21,8 @@ type ProductCategory =
 // Custom event interface for type safety
 interface ProductFilterEvent extends CustomEvent {
   detail: {
-    category: ProductCategory;
-  };
+    category: ProductCategory
+  }
 }
 
 // Helper to map Shopify product types to our categories
@@ -47,7 +47,8 @@ const mapProductTypeToCategory = (productType: string): ProductCategory => {
 }
 
 const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
-  const [filteredCategory, setFilteredCategory] = useState<ProductCategory>("ALL")
+  const [filteredCategory, setFilteredCategory] =
+    useState<ProductCategory>("ALL")
   const [products, setProducts] = useState<ShopifyProduct[]>(initialProducts)
 
   // Listen for filter events from any ProductFilter component
@@ -60,10 +61,10 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
       }
     }
 
-    window.addEventListener('productFilterChange', handleFilterChange)
+    window.addEventListener("productFilterChange", handleFilterChange)
 
     return () => {
-      window.removeEventListener('productFilterChange', handleFilterChange)
+      window.removeEventListener("productFilterChange", handleFilterChange)
     }
   }, [])
 
@@ -111,13 +112,13 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
   // }
 
   return (
-    <div className="container mx-auto px-4 md:pl-48 pt-8">
+    <div className="container mx-auto px-4 md:pl-80 pt-8">
       {/* Mobile filter - visible only on mobile */}
       {/* <div className="md:hidden mb-8">
         <ProductFilter onFilterChange={handleFilterChange} />
       </div> */}
 
-      {/* Product Grid */}
+      {/* Product Grid - Now with 3 columns layout */}
       {filteredProducts.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredProducts.map((product) => (

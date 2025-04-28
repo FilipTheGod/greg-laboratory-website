@@ -13,7 +13,7 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const [isHovered, setIsHovered] = useState(false)
+  const [, setIsHovered] = useState(false)
   const { addToCart, cartItems } = useCart()
   const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -52,11 +52,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   }
 
   const videoUrl = getMp4Source()
-
-  console.log(`Product ${product.handle} has video:`, !!videoUrl)
-  if (videoUrl) {
-    console.log(`Using MP4 Video URL: ${videoUrl}`)
-  }
 
   // Get the video preview image or fallback to the first product image
   const videoPreviewImage =
@@ -163,7 +158,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       <Link href={`/product/${product.handle}`} className="block">
         <div className="flex flex-col">
           {/* Product media (video or image) */}
-          <div className="relative aspect-square overflow-hidden bg-laboratory-white">
+          <div className="relative aspect-square overflow-hidden ">
             {videoUrl ? (
               <video
                 ref={videoRef}
@@ -201,12 +196,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               </div>
             )}
           </div>
-          <div>
-            {/* Price - always visible but only shows when hovered */}
+
+          {/* Price - Always visible on mobile, only on hover for desktop */}
+          <div className="mt-3">
             <div
-              className={`text-laboratory-black text-xs tracking-wide text-center transition-opacity product-price ${
-                isHovered ? "opacity-100" : "opacity-0"
-              } h-4 mt-3`}
+              className={`text-laboratory-black text-xs tracking-wide text-center transition-opacity md:opacity-0 md:group-hover:opacity-100`}
             >
               ${formatPrice(product.variants[0]?.price)}
             </div>
@@ -214,11 +208,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
       </Link>
 
-      {/* Sizes - always present in the DOM but only visible when hovered */}
+      {/* Sizes - Always visible on mobile, only on hover for desktop */}
       <div
-        className={`flex justify-center space-x-3 transition-opacity ${
-          isHovered ? "opacity-100" : "opacity-0"
-        } h-4 mt-2`}
+        className={`flex justify-center space-x-3 transition-opacity mt-2 md:opacity-0 md:group-hover:opacity-100`}
       >
         {availableSizes.map((size) => {
           const isAvailable = isSizeAvailable(size)

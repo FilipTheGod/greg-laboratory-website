@@ -16,7 +16,8 @@ const Header: React.FC = () => {
   const pathname = usePathname()
 
   // Check if we're on the home page
-  const isHomePage = pathname === "/" ||
+  const isHomePage =
+    pathname === "/" ||
     pathname.startsWith("/STANDARD") ||
     pathname.startsWith("/TECHNICAL") ||
     pathname.startsWith("/LABORATORY") ||
@@ -39,14 +40,14 @@ const Header: React.FC = () => {
   return (
     <>
       {/* Desktop Header */}
-      <header className="sticky top-0 z-50  ">
+      <header className="sticky top-0 z-50 ">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center py-4">
             {/* Mobile Hamburger Menu - Left Side */}
             <div className="flex md:hidden items-center">
               <button
                 onClick={toggleMenu}
-                className="p-2  text-black rounded mr-4"
+                className="p-2  text-black rounded"
                 aria-label="Menu"
               >
                 <svg
@@ -66,20 +67,22 @@ const Header: React.FC = () => {
               </button>
             </div>
 
-            {/* Logo - Desktop */}
-            <div className="flex-1 text-center md:text-left">
-              <Link href="/" className="hidden md:inline-block">
+            {/* Logo - Desktop aligned to left */}
+            <div className="hidden md:flex w-48 pl-8">
+              <Link href="/" className="block">
                 <Image
                   src="/images/GregLab_LOGO.png"
                   alt="GREG LABORATORY"
-                  width={220}
-                  height={30}
-                  className="object-contain "
+                  width={100}
+                  height={25}
+                  className="object-contain"
                 />
               </Link>
+            </div>
 
-              {/* Logo - Mobile */}
-              <Link href="/" className="inline-block md:hidden">
+            {/* Mobile Logo - Centered */}
+            <div className="flex justify-center md:hidden pl-8 flex-1">
+              <Link href="/">
                 <Image
                   src="/images/Logo_Mobile.png"
                   alt="GREG LABORATORY"
@@ -90,8 +93,8 @@ const Header: React.FC = () => {
               </Link>
             </div>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
+            {/* Desktop Navigation - Pushed to right */}
+            <div className="hidden md:flex items-center justify-end space-x-8 pr-8">
               <Link
                 href="https://www.instagram.com/greglaboratory/?hl=en"
                 className="text-black hover:opacity-70 transition text-xs tracking-wide"
@@ -116,7 +119,7 @@ const Header: React.FC = () => {
             <div className="md:hidden">
               <button
                 onClick={toggleCart}
-                className="text-black text-xs tracking-wide  p-2 rounded"
+                className="text-black text-xs tracking-wide p-2 rounded"
               >
                 CART ({cartCount})
               </button>
@@ -155,10 +158,10 @@ const Header: React.FC = () => {
             >
               <div className="flex flex-col h-full">
                 {/* Header */}
-                <div className="flex justify-between items-center p-4 ">
+                <div className="flex justify-between items-center p-4">
                   <Link href="/" onClick={toggleMenu}>
                     <Image
-                      src="/images/Logo_Mobile.png"
+                      src="/images/GregLab_LOGO.png"
                       alt="GREG LABORATORY"
                       width={40}
                       height={25}
@@ -173,19 +176,19 @@ const Header: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Navigation Links */}
+                {/* Navigation Links - larger size */}
                 <div className="p-4 ">
                   <div className="flex items-center space-x-8">
                     <Link
                       href="https://www.instagram.com/greglaboratory/?hl=en"
-                      className="text-black hover:opacity-70 transition text-xs tracking-wide"
+                      className="text-black hover:opacity-70 transition text-sm tracking-wide"
                       onClick={toggleMenu}
                     >
                       INSTAGRAM
                     </Link>
                     <Link
                       href="/consultancy"
-                      className="text-black text-xs tracking-wide hover:opacity-70 transition"
+                      className="text-black text-sm tracking-wide hover:opacity-70 transition"
                       onClick={toggleMenu}
                     >
                       CONSULTANCY
@@ -193,9 +196,9 @@ const Header: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Mobile Filter - only shown on home page */}
+                {/* Mobile Filter - only shown on home page - closer to nav links */}
                 {isHomePage && (
-                  <div className="p-4 flex-1 overflow-y-auto">
+                  <div className="pt-2 px-4 flex-1 overflow-y-auto">
                     <ProductFilter onFilterChange={handleFilterChange} />
                   </div>
                 )}
