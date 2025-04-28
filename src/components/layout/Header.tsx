@@ -6,7 +6,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useCart } from "@/contexts/CartContext"
 import Cart from "./Cart"
-import { motion, AnimatePresence } from "framer-motion"
+import MobileMenu from "./MobileMenu"
 import { usePathname } from "next/navigation"
 
 const Header: React.FC = () => {
@@ -15,23 +15,19 @@ const Header: React.FC = () => {
   const pathname = usePathname()
 
   // Check if we're on the home page
-  const isHomePage =
-    pathname === "/" ||
-    pathname === "/ALL" ||
-    pathname === "/STANDARD" ||
-    pathname === "/TECHNICAL" ||
-    pathname === "/LABORATORY%20EQUIPMENT" ||
-    pathname === "/COLLABORATIVE%20PROTOCOL" ||
+  const isHomePage = pathname === "/" || pathname === "/ALL" ||
+    pathname === "/STANDARD" || pathname === "/TECHNICAL" ||
+    pathname === "/LABORATORY%20EQUIPMENT" || pathname === "/COLLABORATIVE%20PROTOCOL" ||
     pathname === "/FIELD%20STUDY"
 
-  // Product categories
+  // Product categories with display names
   const categories = [
-    "ALL",
-    "STANDARD",
-    "TECHNICAL",
-    "LABORATORY EQUIPMENT",
-    "COLLABORATIVE PROTOCOL",
-    "FIELD STUDY",
+    { value: "ALL", display: "ALL" },
+    { value: "STANDARD SERIES", display: "STANDARD SERIES" },
+    { value: "TECHNICAL SERIES", display: "TECHNICAL" },
+    { value: "LABORATORY EQUIPMENT SERIES", display: "LABORATORY EQUIPMENT" },
+    { value: "COLLABORATIVE PROTOCOL SERIES", display: "COLLABORATIVE PROTOCOL" },
+    { value: "FIELD STUDY SERIES", display: "FIELD STUDY" },
   ]
 
   const toggleMenu = () => {
@@ -41,7 +37,7 @@ const Header: React.FC = () => {
   return (
     <>
       {/* Desktop Header */}
-      <header className="sticky top-0 z-50  border-black/10">
+      <header className="sticky top-0 z-50 border-b border-black/10">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center py-4">
             {/* Logo */}
@@ -112,108 +108,27 @@ const Header: React.FC = () => {
 
       {/* Desktop Categories - Sticky Sidebar - Only show on home page */}
       {isHomePage && (
-        <div className="hidden md:block fixed left-0 top-24 h-screen w-48 pl-8 pt-4 z-40 bg-transparent">
+        <div className="hidden md:block fixed left-0 top-24 h-screen w-48 pl-8 pt-4 z-40">
           <div className="flex flex-col space-y-3">
-            {categories.map((category, index) => (
+            {categories.map((category) => (
               <Link
-                key={index}
-                href={
-                  category === "ALL"
-                    ? "/"
-                    : `/${category.replace(/\s+/g, "%20")}`
-                }
+                key={category.value}
+                href={category.value === "ALL" ? "/" : `/${category.display.replace(/\s+/g, '%20')}`}
                 className="text-xs tracking-wide hover:opacity-70 transition"
               >
-                {category}
+                {category.display}
               </Link>
             ))}
           </div>
         </div>
       )}
 
-      {/* Mobile Menu Panel */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <>
-            {/* Overlay - half-transparent background */}
-            <motion.div
-              className="fixed inset-0 bg-black bg-opacity-20 z-40 md:hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={toggleMenu}
-            />
-
-            {/* Sliding Panel */}
-            <motion.div
-              className="fixed left-0 top-0 h-full w-3/4 max-w-sm z-50 md:hidden"
-              initial={{ x: "-100%" }}
-              animate={{ x: "0%" }}
-              exit={{ x: "-100%" }}
-              transition={{ ease: "easeOut", duration: 0.3 }}
-            >
-              <div className="flex justify-between items-center p-4 border-b border-black/10">
-                <Link href="/" onClick={toggleMenu}>
-                  <Image
-                    src="/images/GregLab_LOGO.png"
-                    alt="GREG LABORATORY"
-                    width={100}
-                    height={25}
-                    className="object-contain"
-                  />
-                </Link>
-                <button
-                  onClick={toggleMenu}
-                  className="text-black text-xs tracking-wide"
-                >
-                  CLOSE
-                </button>
-              </div>
-
-              <div className="p-4 border-b border-black/10">
-                <div className="flex items-center space-x-8">
-                  <Link
-                    href="https://www.instagram.com/greglaboratory/?hl=en"
-                    className="text-black hover:opacity-70 transition text-xs tracking-wide"
-                    onClick={toggleMenu}
-                  >
-                    INSTAGRAM
-                  </Link>
-                  <Link
-                    href="/consultancy"
-                    className="text-black text-xs tracking-wide hover:opacity-70 transition"
-                    onClick={toggleMenu}
-                  >
-                    CONSULTANCY
-                  </Link>
-                </div>
-              </div>
-
-              {/* Only show categories on relevant pages */}
-              {isHomePage && (
-                <div className="p-4">
-                  <div className="flex flex-col space-y-6">
-                    {categories.map((category, index) => (
-                      <Link
-                        key={index}
-                        href={
-                          category === "ALL"
-                            ? "/"
-                            : `/${category.replace(/\s+/g, "%20")}`
-                        }
-                        className="text-xs tracking-wide hover:opacity-70 transition"
-                        onClick={toggleMenu}
-                      >
-                        {category}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      {/* Mobile Menu Component */}
+      <MobileMenu
+        isOpen={isMenuOpen}
+        onClose={toggleMenu}
+        isHomePage={isHomePage}
+      />
 
       {/* Cart Component */}
       <Cart />

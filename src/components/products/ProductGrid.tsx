@@ -3,20 +3,20 @@
 
 import React, { useState, useEffect } from "react"
 import ProductCard from "./ProductCard"
+import ProductFilter from "./ProductFilter"
 import { ShopifyProduct } from "@/lib/shopify"
-import { usePathname } from "next/navigation"
 
 interface ProductGridProps {
   initialProducts: ShopifyProduct[]
 }
 
 type ProductCategory =
+  | "STANDARD SERIES"
+  | "TECHNICAL SERIES"
+  | "LABORATORY EQUIPMENT SERIES"
+  | "COLLABORATIVE PROTOCOL SERIES"
+  | "FIELD STUDY SERIES"
   | "ALL"
-  | "STANDARD"
-  | "TECHNICAL"
-  | "LABORATORY EQUIPMENT"
-  | "COLLABORATIVE PROTOCOL"
-  | "FIELD STUDY"
 
 // Helper to map Shopify product types to our categories
 const mapProductTypeToCategory = (productType: string): ProductCategory => {
@@ -25,52 +25,24 @@ const mapProductTypeToCategory = (productType: string): ProductCategory => {
 
   // Map of normalized types to categories
   const typeMap: Record<string, ProductCategory> = {
-    "STANDARD SERIES": "STANDARD",
-    "TECHNICAL SERIES": "TECHNICAL",
-    "LABORATORY EQUIPMENT": "LABORATORY EQUIPMENT",
-    "LABORATORY EQUIPMENT SERIES": "LABORATORY EQUIPMENT",
-    "COLLABORATIVE PROTOCOL": "COLLABORATIVE PROTOCOL",
-    "COLLABORATIVE PROTOCOL SERIES": "COLLABORATIVE PROTOCOL",
-    "FIELD STUDY": "FIELD STUDY",
-    "FIELD SERIES": "FIELD STUDY",
-    "FIELD STUDY SERIES": "FIELD STUDY",
+    "STANDARD SERIES": "STANDARD SERIES",
+    "TECHNICAL SERIES": "TECHNICAL SERIES",
+    "LABORATORY EQUIPMENT": "LABORATORY EQUIPMENT SERIES",
+    "LABORATORY EQUIPMENT SERIES": "LABORATORY EQUIPMENT SERIES",
+    "COLLABORATIVE PROTOCOL": "COLLABORATIVE PROTOCOL SERIES",
+    "COLLABORATIVE PROTOCOL SERIES": "COLLABORATIVE PROTOCOL SERIES",
+    "FIELD STUDY": "FIELD STUDY SERIES",
+    "FIELD SERIES": "FIELD STUDY SERIES",
+    "FIELD STUDY SERIES": "FIELD STUDY SERIES",
   }
 
   return typeMap[normalizedType] || "ALL"
 }
 
 const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
+  const [filteredCategory, setFilteredCategory] =
+    useState<ProductCategory>("ALL")
   const [products, setProducts] = useState<ShopifyProduct[]>(initialProducts)
-  const pathname = usePathname()
-
-  // Determine the current category from the URL path
-  const getCurrentCategory = React.useCallback((): ProductCategory => {
-    if (pathname === "/") return "ALL"
-    // Remove the leading slash and decode URL
-    const path = decodeURIComponent(pathname.substring(1))
-
-    // Check if the path matches one of our categories
-    if (
-      path === "STANDARD" ||
-      path === "TECHNICAL" ||
-      path === "LABORATORY EQUIPMENT" ||
-      path === "COLLABORATIVE PROTOCOL" ||
-      path === "FIELD STUDY"
-    ) {
-      return path as ProductCategory
-    }
-
-    return "ALL"
-  }, [pathname])
-
-  const [filteredCategory, setFilteredCategory] = useState<ProductCategory>(
-    getCurrentCategory()
-  )
-
-  // Update filtered category when pathname changes
-  useEffect(() => {
-    setFilteredCategory(getCurrentCategory())
-  }, [getCurrentCategory])
 
   // Effect to handle any potential issues with initialProducts
   useEffect(() => {
@@ -110,8 +82,17 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
     }
   }, [products, filteredCategory])
 
+  const handleFilterChange = (category: ProductCategory) => {
+    setFilteredCategory(category)
+  }
+
   return (
     <div className="container mx-auto px-4 md:pl-48 pt-8">
+      {/* Mobile filter - visible only on mobile */}
+      <div className="md:hidden mb-8">
+        <ProductFilter onFilterChange={handleFilterChange} />
+      </div>
+
       {/* Product Grid */}
       {filteredProducts.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
