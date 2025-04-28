@@ -18,6 +18,13 @@ type ProductCategory =
   | "FIELD STUDY SERIES"
   | "ALL"
 
+// Custom event interface for type safety
+interface ProductFilterEvent extends CustomEvent {
+  detail: {
+    category: ProductCategory
+  }
+}
+
 // Helper to map Shopify product types to our categories
 const mapProductTypeToCategory = (productType: string): ProductCategory => {
   // Normalize the product type by converting to uppercase and replacing spaces
@@ -40,8 +47,26 @@ const mapProductTypeToCategory = (productType: string): ProductCategory => {
 }
 
 const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
-  const [filteredCategory, setFilteredCategory] = useState<ProductCategory>("ALL")
+  const [filteredCategory, setFilteredCategory] =
+    useState<ProductCategory>("ALL")
   const [products, setProducts] = useState<ShopifyProduct[]>(initialProducts)
+
+  // Listen for filter events from any ProductFilter component
+  useEffect(() => {
+    const handleFilterChange = (event: Event) => {
+      // Type cast to our custom event type
+      const filterEvent = event as ProductFilterEvent
+      if (filterEvent.detail && filterEvent.detail.category) {
+        setFilteredCategory(filterEvent.detail.category)
+      }
+    }
+
+    window.addEventListener("productFilterChange", handleFilterChange)
+
+    return () => {
+      window.removeEventListener("productFilterChange", handleFilterChange)
+    }
+  }, [])
 
   // Effect to handle any potential issues with initialProducts
   useEffect(() => {
@@ -81,7 +106,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
     }
   }, [products, filteredCategory])
 
-  // Handle filter change from ProductFilter component
+  // This function is called from the ProductFilter in mobile view
   const handleFilterChange = (category: ProductCategory) => {
     setFilteredCategory(category)
   }

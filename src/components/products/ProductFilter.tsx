@@ -1,7 +1,8 @@
 // src/components/products/ProductFilter.tsx
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
+import {  usePathname } from "next/navigation"
 
 type ProductCategory =
   | "STANDARD SERIES"
@@ -26,7 +27,26 @@ interface ProductFilterProps {
 }
 
 const ProductFilter: React.FC<ProductFilterProps> = ({ onFilterChange }) => {
-  const [activeCategory, setActiveCategory] = useState<ProductCategory>("ALL")
+
+  const pathname = usePathname()
+
+  // Determine active category from pathname or default to ALL
+  const getInitialCategory = React.useCallback((): ProductCategory => {
+    if (pathname === "/") return "ALL"
+    if (pathname.includes("STANDARD")) return "STANDARD SERIES"
+    if (pathname.includes("TECHNICAL")) return "TECHNICAL SERIES"
+    if (pathname.includes("LABORATORY")) return "LABORATORY EQUIPMENT SERIES"
+    if (pathname.includes("COLLABORATIVE")) return "COLLABORATIVE PROTOCOL SERIES"
+    if (pathname.includes("FIELD")) return "FIELD STUDY SERIES"
+    return "ALL"
+  }, [pathname])
+
+  const [activeCategory, setActiveCategory] = useState<ProductCategory>(getInitialCategory())
+
+  // Update active category when pathname changes
+  useEffect(() => {
+    setActiveCategory(getInitialCategory())
+  }, [getInitialCategory])
 
   const categories: ProductCategory[] = [
     "ALL",
@@ -39,6 +59,13 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ onFilterChange }) => {
 
   const handleCategoryClick = (category: ProductCategory) => {
     setActiveCategory(category)
+
+    // Create a global event to make filter changes affect ProductGrid
+    const filterEvent = new CustomEvent('productFilterChange', {
+      detail: { category }
+    })
+    window.dispatchEvent(filterEvent)
+
     onFilterChange(category)
   }
 

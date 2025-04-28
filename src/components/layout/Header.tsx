@@ -27,28 +27,68 @@ const Header: React.FC = () => {
     setIsMenuOpen(!isMenuOpen)
   }
 
-  // Create a dummy function for the desktop filter
-  // The actual filtering happens in the ProductGrid component
-  const handleDesktopFilterChange = () => {
-    // This doesn't need to do anything as it's just for display in the sidebar
+  const handleFilterChange = (category: string | number) => {
+    // This function will be used for all filter instances
+    console.log("Filter changed:", category)
+    // Close the menu if in mobile view
+    if (window.innerWidth < 768) {
+      toggleMenu()
+    }
   }
 
   return (
     <>
       {/* Desktop Header */}
-      <header className="sticky top-0 z-50 border-b border-black/10 bg-laboratory-white">
+      <header className="sticky top-0 z-50  ">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center py-4">
-            {/* Logo */}
-            <Link href="/" className="block">
-              <Image
-                src="/images/GregLab_LOGO.png"
-                alt="GREG LABORATORY"
-                width={120}
-                height={30}
-                className="object-contain"
-              />
-            </Link>
+            {/* Mobile Hamburger Menu - Left Side */}
+            <div className="flex md:hidden items-center">
+              <button
+                onClick={toggleMenu}
+                className="p-2  text-black rounded mr-4"
+                aria-label="Menu"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  className="w-6 h-6"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Logo - Desktop */}
+            <div className="flex-1 text-center md:text-left">
+              <Link href="/" className="hidden md:inline-block">
+                <Image
+                  src="/images/GregLab_LOGO.png"
+                  alt="GREG LABORATORY"
+                  width={120}
+                  height={30}
+                  className="object-contain"
+                />
+              </Link>
+
+              {/* Logo - Mobile */}
+              <Link href="/" className="inline-block md:hidden">
+                <Image
+                  src="/images/Logo_Mobile.png"
+                  alt="GREG LABORATORY"
+                  width={100}
+                  height={25}
+                  className="object-contain"
+                />
+              </Link>
+            </div>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
@@ -72,31 +112,11 @@ const Header: React.FC = () => {
               </button>
             </div>
 
-            {/* Mobile Navigation Button */}
-            <div className="flex md:hidden items-center space-x-4">
-              <button
-                onClick={toggleMenu}
-                className="p-2 bg-laboratory-white text-black rounded"
-                aria-label="Menu"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  className="w-6 h-6"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-              </button>
+            {/* Mobile Cart Button */}
+            <div className="md:hidden">
               <button
                 onClick={toggleCart}
-                className="text-black text-xs tracking-wide bg-laboratory-white p-2 rounded"
+                className="text-black text-xs tracking-wide  p-2 rounded"
               >
                 CART ({cartCount})
               </button>
@@ -108,7 +128,7 @@ const Header: React.FC = () => {
       {/* Desktop Categories - Sticky Sidebar - Only show on home page */}
       {isHomePage && (
         <div className="hidden md:block fixed left-0 top-24 h-screen w-48 pl-8 pt-4 z-40">
-          <ProductFilter onFilterChange={handleDesktopFilterChange} />
+          <ProductFilter onFilterChange={handleFilterChange} />
         </div>
       )}
 
@@ -135,10 +155,10 @@ const Header: React.FC = () => {
             >
               <div className="flex flex-col h-full">
                 {/* Header */}
-                <div className="flex justify-between items-center p-4 border-b border-black/10">
+                <div className="flex justify-between items-center p-4 ">
                   <Link href="/" onClick={toggleMenu}>
                     <Image
-                      src="/images/GregLab_LOGO.png"
+                      src="/images/Logo_Mobile.png"
                       alt="GREG LABORATORY"
                       width={100}
                       height={25}
@@ -154,7 +174,7 @@ const Header: React.FC = () => {
                 </div>
 
                 {/* Navigation Links */}
-                <div className="p-4 border-b border-black/10">
+                <div className="p-4 ">
                   <div className="flex items-center space-x-8">
                     <Link
                       href="https://www.instagram.com/greglaboratory/?hl=en"
@@ -176,12 +196,7 @@ const Header: React.FC = () => {
                 {/* Mobile Filter - only shown on home page */}
                 {isHomePage && (
                   <div className="p-4 flex-1 overflow-y-auto">
-                    <ProductFilter
-                      onFilterChange={() => {
-                        // Just close the menu when filter is selected on mobile
-                        toggleMenu()
-                      }}
-                    />
+                    <ProductFilter onFilterChange={handleFilterChange} />
                   </div>
                 )}
               </div>
