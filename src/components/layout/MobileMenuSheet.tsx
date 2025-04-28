@@ -3,7 +3,7 @@
 
 import React from "react"
 import Link from "next/link"
-import Image from "next/image"
+// import Image from "next/image"
 import ProductFilter from "../products/ProductFilter"
 import { usePathname } from "next/navigation"
 import {
@@ -68,8 +68,8 @@ const MobileMenuSheet: React.FC<MobileMenuSheetProps> = ({
         </SheetHeader>
         <div className="flex flex-col h-full">
           {/* Header with logo and close button */}
-          <div className="flex justify-between items-center p-4 border-b border-laboratory-black/10">
-            <Link href="/">
+          <div className="flex justify-between items-center p-4 ">
+            {/* <Link href="/">
               <Image
                 src="/images/GregLab_LOGO.png"
                 alt="GREG LABORATORY"
@@ -77,22 +77,30 @@ const MobileMenuSheet: React.FC<MobileMenuSheetProps> = ({
                 height={25}
                 className="object-contain"
               />
-            </Link>
-            <SheetClose className="text-black text-xs tracking-wide ml-auto"/>
+            </Link> */}
+
+
+            <SheetClose className="text-black text-xs tracking-wide ml-auto" />
           </div>
 
           {/* Navigation Links */}
-          <div className="p-4 border-b border-laboratory-black/10">
-            <div className="flex items-center space-x-8">
+          <div className="p-3 ">
+            <div className="flex items-center font-semibold space-x-4">
+            <Link
+                href="/"
+                className="text-black hover:opacity-70 transition  text-sm tracking-wide"
+              >
+                HOME
+              </Link>
               <Link
                 href="https://www.instagram.com/greglaboratory/?hl=en"
-                className="text-black hover:opacity-70 transition text-xs tracking-wide"
+                className="text-black hover:opacity-70 transition  text-sm tracking-wide"
               >
                 INSTAGRAM
               </Link>
               <Link
                 href="/consultancy"
-                className="text-black text-xs tracking-wide hover:opacity-70 transition"
+                className="text-black hover:opacity-70 transition text-sm  tracking-wide"
               >
                 CONSULTANCY
               </Link>

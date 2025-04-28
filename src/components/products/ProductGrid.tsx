@@ -112,7 +112,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
   // }
 
   return (
-    <div className="container mx-auto px-4 md:pl-80 pt-8">
+    <div className="container mx-auto px-4 md:pl-80">
       {/* Mobile filter - visible only on mobile */}
       {/* <div className="md:hidden mb-8">
         <ProductFilter onFilterChange={handleFilterChange} />
