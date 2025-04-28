@@ -146,3 +146,89 @@ button {
 html {
   scroll-behavior: smooth;
 }
+
+/* Add these styles to your globals.css file */
+
+/* Header styling */
+.mobile-menu-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 80%;
+  max-width: 300px;
+  z-index: 100;
+  background-color: var(--laboratory-white);
+  overflow-y: auto;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Category links in sidebar */
+.category-link {
+  font-size: 14px;
+  letter-spacing: 0.2em;
+  font-weight: 500;
+  padding: 8px 0;
+  transition: opacity 0.2s ease;
+}
+
+.category-link:hover {
+  opacity: 0.7;
+}
+
+.category-link.active {
+  font-weight: 700;
+}
+
+/* Header border and shadow */
+.site-header {
+  border-bottom: 1px solid rgba(10, 9, 8, 0.1);
+  background-color: var(--laboratory-white);
+}
+
+/* Cart indicator */
+.cart-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Mobile menu overlay */
+.mobile-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(10, 9, 8, 0.5);
+  z-index: 90;
+  backdrop-filter: blur(2px);
+}
+
+/* Logo sizing */
+@media (max-width: 768px) {
+  .header-logo {
+    width: 100px;
+    height: auto;
+  }
+}
+
+/* Desktop category navigation */
+.desktop-categories {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .desktop-categories {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .desktop-categories a {
+    font-size: 12px;
+    letter-spacing: 0.25em;
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+}

@@ -3,7 +3,6 @@
 
 import React, { useState, useEffect } from "react"
 import ProductCard from "./ProductCard"
-import ProductFilter from "./ProductFilter"
 import { ShopifyProduct } from "@/lib/shopify"
 
 interface ProductGridProps {
@@ -11,44 +10,48 @@ interface ProductGridProps {
 }
 
 type ProductCategory =
-  | "STANDARD SERIES"
-  | "TECHNICAL SERIES"
-  | "LABORATORY EQUIPMENT SERIES"
-  | "COLLABORATIVE PROTOCOL SERIES"
-  | "FIELD STUDY SERIES"
   | "ALL"
+  | "STANDARD"
+  | "TECHNICAL"
+  | "LABORATORY EQUIPMENT"
+  | "COLLABORATIVE PROTOCOL"
+  | "FIELD STUDY"
 
 // Helper to map Shopify product types to our categories
 const mapProductTypeToCategory = (productType: string): ProductCategory => {
-  // Additional logging
-  console.log(`Mapping product type: "${productType}"`)
-
   // Normalize the product type by converting to uppercase and replacing spaces
   const normalizedType = productType.toUpperCase().replace(/\s+/g, " ").trim()
-  console.log(`Normalized to: "${normalizedType}"`)
 
   // Map of normalized types to categories
   const typeMap: Record<string, ProductCategory> = {
-    "STANDARD SERIES": "STANDARD SERIES",
-    "TECHNICAL SERIES": "TECHNICAL SERIES",
-    "LABORATORY EQUIPMENT": "LABORATORY EQUIPMENT SERIES",
-    "LABORATORY EQUIPMENT SERIES": "LABORATORY EQUIPMENT SERIES",
-    "COLLABORATIVE PROTOCOL": "COLLABORATIVE PROTOCOL SERIES",
-    "COLLABORATIVE PROTOCOL SERIES": "COLLABORATIVE PROTOCOL SERIES",
-    "FIELD STUDY": "FIELD STUDY SERIES",
-    "FIELD SERIES": "FIELD STUDY SERIES",
-    "FIELD STUDY SERIES": "FIELD STUDY SERIES",
+    "STANDARD SERIES": "STANDARD",
+    "TECHNICAL SERIES": "TECHNICAL",
+    "LABORATORY EQUIPMENT": "LABORATORY EQUIPMENT",
+    "LABORATORY EQUIPMENT SERIES": "LABORATORY EQUIPMENT",
+    "COLLABORATIVE PROTOCOL": "COLLABORATIVE PROTOCOL",
+    "COLLABORATIVE PROTOCOL SERIES": "COLLABORATIVE PROTOCOL",
+    "FIELD STUDY": "FIELD STUDY",
+    "FIELD SERIES": "FIELD STUDY",
+    "FIELD STUDY SERIES": "FIELD STUDY",
   }
 
-  const mappedCategory = typeMap[normalizedType] || "STANDARD SERIES"
-  console.log(`Mapped to category: "${mappedCategory}"`)
-  return mappedCategory
+  return typeMap[normalizedType] || "ALL"
 }
 
 const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
   const [filteredCategory, setFilteredCategory] =
     useState<ProductCategory>("ALL")
   const [products, setProducts] = useState<ShopifyProduct[]>(initialProducts)
+
+  // Categories - shown on mobile only (desktop is handled by the Header component)
+  const categories: ProductCategory[] = [
+    "ALL",
+    "STANDARD",
+    "TECHNICAL",
+    "LABORATORY EQUIPMENT",
+    "COLLABORATIVE PROTOCOL",
+    "FIELD STUDY",
+  ]
 
   // Effect to handle any potential issues with initialProducts
   useEffect(() => {
@@ -73,61 +76,59 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
       return true
     })
 
-    console.log(
-      `Setting ${validProducts.length} valid products from ${initialProducts.length} initial products`
-    )
     setProducts(validProducts)
   }, [initialProducts])
 
   // Filter products based on category
   const filteredProducts = React.useMemo(() => {
-    console.log("Filter category:", filteredCategory)
-    console.log("All Products:", products.length)
-
-    let result: ShopifyProduct[] = []
-
     if (filteredCategory === "ALL") {
-      result = products
+      return products
     } else {
-      result = products.filter((product) => {
+      return products.filter((product) => {
         const category = mapProductTypeToCategory(product.productType)
-        console.log(
-          `Product ${product.title}: Type=${
-            product.productType
-          }, Category=${category}, Match=${category === filteredCategory}`
-        )
         return category === filteredCategory
       })
     }
-
-    console.log("Filtered Products:", result.length)
-    return result
   }, [products, filteredCategory])
 
- // In src/components/products/ProductGrid.tsx
-return (
-  <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-6">
-    <div className="md:col-span-1">
-      <ProductFilter onFilterChange={setFilteredCategory} />
-    </div>
+  // Category handling function
+  const handleCategoryClick = (category: ProductCategory) => {
+    setFilteredCategory(category)
+  }
 
-    <div className="md:col-span-4">
+  return (
+    <div className="container mx-auto px-4 md:pl-48 pt-8">
+      {/* Mobile Categories - only visible on mobile */}
+      <div className="md:hidden flex flex-col space-y-4 mb-8">
+        {categories.map((category) => (
+          <button
+            key={category}
+            onClick={() => handleCategoryClick(category)}
+            className={`text-left text-xs tracking-wide ${
+              filteredCategory === category ? "opacity-100" : "opacity-70"
+            }`}
+          >
+            {category}
+          </button>
+        ))}
+      </div>
+
+      {/* Product Grid */}
       {filteredProducts.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-10 product-grid">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
       ) : (
-        <div className="p-8 text-center">
-          <p className="text-laboratory-black/70 text-xs">
+        <div className="text-center py-12">
+          <p className="text-xs tracking-wide opacity-70">
             No products found in this category.
           </p>
         </div>
       )}
     </div>
-  </div>
-)
+  )
 }
 
 export default ProductGrid
