@@ -72,9 +72,9 @@ const Header: React.FC = () => {
                 <Image
                   src="/images/GregLab_LOGO.png"
                   alt="GREG LABORATORY"
-                  width={120}
+                  width={220}
                   height={30}
-                  className="object-contain"
+                  className="object-contain "
                 />
               </Link>
 
@@ -83,7 +83,7 @@ const Header: React.FC = () => {
                 <Image
                   src="/images/Logo_Mobile.png"
                   alt="GREG LABORATORY"
-                  width={100}
+                  width={40}
                   height={25}
                   className="object-contain"
                 />
@@ -160,7 +160,7 @@ const Header: React.FC = () => {
                     <Image
                       src="/images/Logo_Mobile.png"
                       alt="GREG LABORATORY"
-                      width={100}
+                      width={40}
                       height={25}
                       className="object-contain"
                     />

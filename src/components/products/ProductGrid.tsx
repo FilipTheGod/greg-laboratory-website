@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from "react"
 import ProductCard from "./ProductCard"
-import ProductFilter from "./ProductFilter"
+// import ProductFilter from "./ProductFilter"
 import { ShopifyProduct } from "@/lib/shopify"
 
 interface ProductGridProps {
@@ -21,8 +21,8 @@ type ProductCategory =
 // Custom event interface for type safety
 interface ProductFilterEvent extends CustomEvent {
   detail: {
-    category: ProductCategory
-  }
+    category: ProductCategory;
+  };
 }
 
 // Helper to map Shopify product types to our categories
@@ -47,8 +47,7 @@ const mapProductTypeToCategory = (productType: string): ProductCategory => {
 }
 
 const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
-  const [filteredCategory, setFilteredCategory] =
-    useState<ProductCategory>("ALL")
+  const [filteredCategory, setFilteredCategory] = useState<ProductCategory>("ALL")
   const [products, setProducts] = useState<ShopifyProduct[]>(initialProducts)
 
   // Listen for filter events from any ProductFilter component
@@ -61,10 +60,10 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
       }
     }
 
-    window.addEventListener("productFilterChange", handleFilterChange)
+    window.addEventListener('productFilterChange', handleFilterChange)
 
     return () => {
-      window.removeEventListener("productFilterChange", handleFilterChange)
+      window.removeEventListener('productFilterChange', handleFilterChange)
     }
   }, [])
 
@@ -107,16 +106,16 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
   }, [products, filteredCategory])
 
   // This function is called from the ProductFilter in mobile view
-  const handleFilterChange = (category: ProductCategory) => {
-    setFilteredCategory(category)
-  }
+  // const handleFilterChange = (category: ProductCategory) => {
+  //   setFilteredCategory(category)
+  // }
 
   return (
     <div className="container mx-auto px-4 md:pl-48 pt-8">
       {/* Mobile filter - visible only on mobile */}
-      <div className="md:hidden mb-8">
+      {/* <div className="md:hidden mb-8">
         <ProductFilter onFilterChange={handleFilterChange} />
-      </div>
+      </div> */}
 
       {/* Product Grid */}
       {filteredProducts.length > 0 ? (
