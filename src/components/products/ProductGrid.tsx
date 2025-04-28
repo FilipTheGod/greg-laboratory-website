@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from "react"
 import ProductCard from "./ProductCard"
 import { ShopifyProduct } from "@/lib/shopify"
+import { usePathname } from "next/navigation"
 
 interface ProductGridProps {
   initialProducts: ShopifyProduct[]
@@ -39,19 +40,37 @@ const mapProductTypeToCategory = (productType: string): ProductCategory => {
 }
 
 const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
-  const [filteredCategory, setFilteredCategory] =
-    useState<ProductCategory>("ALL")
   const [products, setProducts] = useState<ShopifyProduct[]>(initialProducts)
+  const pathname = usePathname()
 
-  // Categories - shown on mobile only (desktop is handled by the Header component)
-  const categories: ProductCategory[] = [
-    "ALL",
-    "STANDARD",
-    "TECHNICAL",
-    "LABORATORY EQUIPMENT",
-    "COLLABORATIVE PROTOCOL",
-    "FIELD STUDY",
-  ]
+  // Determine the current category from the URL path
+  const getCurrentCategory = React.useCallback((): ProductCategory => {
+    if (pathname === "/") return "ALL"
+    // Remove the leading slash and decode URL
+    const path = decodeURIComponent(pathname.substring(1))
+
+    // Check if the path matches one of our categories
+    if (
+      path === "STANDARD" ||
+      path === "TECHNICAL" ||
+      path === "LABORATORY EQUIPMENT" ||
+      path === "COLLABORATIVE PROTOCOL" ||
+      path === "FIELD STUDY"
+    ) {
+      return path as ProductCategory
+    }
+
+    return "ALL"
+  }, [pathname])
+
+  const [filteredCategory, setFilteredCategory] = useState<ProductCategory>(
+    getCurrentCategory()
+  )
+
+  // Update filtered category when pathname changes
+  useEffect(() => {
+    setFilteredCategory(getCurrentCategory())
+  }, [getCurrentCategory])
 
   // Effect to handle any potential issues with initialProducts
   useEffect(() => {
@@ -91,28 +110,8 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
     }
   }, [products, filteredCategory])
 
-  // Category handling function
-  const handleCategoryClick = (category: ProductCategory) => {
-    setFilteredCategory(category)
-  }
-
   return (
     <div className="container mx-auto px-4 md:pl-48 pt-8">
-      {/* Mobile Categories - only visible on mobile */}
-      <div className="md:hidden flex flex-col space-y-4 mb-8">
-        {categories.map((category) => (
-          <button
-            key={category}
-            onClick={() => handleCategoryClick(category)}
-            className={`text-left text-xs tracking-wide ${
-              filteredCategory === category ? "opacity-100" : "opacity-70"
-            }`}
-          >
-            {category}
-          </button>
-        ))}
-      </div>
-
       {/* Product Grid */}
       {filteredProducts.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">

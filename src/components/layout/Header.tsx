@@ -7,14 +7,22 @@ import Image from "next/image"
 import { useCart } from "@/contexts/CartContext"
 import Cart from "./Cart"
 import { motion, AnimatePresence } from "framer-motion"
+import { usePathname } from "next/navigation"
 
 const Header: React.FC = () => {
   const { toggleCart, cartCount } = useCart()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const pathname = usePathname()
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen)
-  }
+  // Check if we're on the home page
+  const isHomePage =
+    pathname === "/" ||
+    pathname === "/ALL" ||
+    pathname === "/STANDARD" ||
+    pathname === "/TECHNICAL" ||
+    pathname === "/LABORATORY%20EQUIPMENT" ||
+    pathname === "/COLLABORATIVE%20PROTOCOL" ||
+    pathname === "/FIELD%20STUDY"
 
   // Product categories
   const categories = [
@@ -26,10 +34,14 @@ const Header: React.FC = () => {
     "FIELD STUDY",
   ]
 
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen)
+  }
+
   return (
     <>
       {/* Desktop Header */}
-      <header className="sticky top-0 z-50 bg-white border-b border-black/10">
+      <header className="sticky top-0 z-50  border-black/10">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center py-4">
             {/* Logo */}
@@ -98,24 +110,26 @@ const Header: React.FC = () => {
         </div>
       </header>
 
-      {/* Desktop Categories - Sticky Sidebar */}
-      <div className="hidden md:block fixed left-0 top-24 h-screen w-48 pl-8 pt-4 z-40">
-        <div className="flex flex-col space-y-3">
-          {categories.map((category, index) => (
-            <Link
-              key={index}
-              href={
-                category === "ALL"
-                  ? "/"
-                  : `/${category.toLowerCase().replace(/\s+/g, "-")}`
-              }
-              className="text-xs tracking-wide hover:opacity-70 transition"
-            >
-              {category}
-            </Link>
-          ))}
+      {/* Desktop Categories - Sticky Sidebar - Only show on home page */}
+      {isHomePage && (
+        <div className="hidden md:block fixed left-0 top-24 h-screen w-48 pl-8 pt-4 z-40 bg-transparent">
+          <div className="flex flex-col space-y-3">
+            {categories.map((category, index) => (
+              <Link
+                key={index}
+                href={
+                  category === "ALL"
+                    ? "/"
+                    : `/${category.replace(/\s+/g, "%20")}`
+                }
+                className="text-xs tracking-wide hover:opacity-70 transition"
+              >
+                {category}
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Mobile Menu Panel */}
       <AnimatePresence>
@@ -132,7 +146,7 @@ const Header: React.FC = () => {
 
             {/* Sliding Panel */}
             <motion.div
-              className="fixed left-0 top-0 h-full w-3/4 max-w-sm bg-white z-50 md:hidden"
+              className="fixed left-0 top-0 h-full w-3/4 max-w-sm z-50 md:hidden"
               initial={{ x: "-100%" }}
               animate={{ x: "0%" }}
               exit={{ x: "-100%" }}
@@ -175,24 +189,27 @@ const Header: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-4">
-                <div className="flex flex-col space-y-6">
-                  {categories.map((category, index) => (
-                    <Link
-                      key={index}
-                      href={
-                        category === "ALL"
-                          ? "/"
-                          : `/${category.toLowerCase().replace(/\s+/g, "-")}`
-                      }
-                      className="text-xs tracking-wide hover:opacity-70 transition"
-                      onClick={toggleMenu}
-                    >
-                      {category}
-                    </Link>
-                  ))}
+              {/* Only show categories on relevant pages */}
+              {isHomePage && (
+                <div className="p-4">
+                  <div className="flex flex-col space-y-6">
+                    {categories.map((category, index) => (
+                      <Link
+                        key={index}
+                        href={
+                          category === "ALL"
+                            ? "/"
+                            : `/${category.replace(/\s+/g, "%20")}`
+                        }
+                        className="text-xs tracking-wide hover:opacity-70 transition"
+                        onClick={toggleMenu}
+                      >
+                        {category}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </motion.div>
           </>
         )}

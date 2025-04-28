@@ -42,10 +42,12 @@
 button {
   @apply focus:outline-none;
 }
+
 /* Add to globals.css */
 .consultancy-text {
   letter-spacing: 0.15em; /* Reduced tracking for consultancy text */
 }
+
 /* Rich text content from Shopify */
 .product-description ul {
   list-style-type: disc;
@@ -147,74 +149,143 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Add these styles to your globals.css file */
+/* Header and Navigation Styles */
 
 /* Header styling */
-.mobile-menu-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  width: 80%;
-  max-width: 300px;
-  z-index: 100;
-  background-color: var(--laboratory-white);
-  overflow-y: auto;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease-in-out;
+.site-header {
+  background-color: transparent;
+  backdrop-filter: blur(5px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-/* Category links in sidebar */
-.category-link {
-  font-size: 14px;
-  letter-spacing: 0.2em;
-  font-weight: 500;
-  padding: 8px 0;
+/* Category links - only visible on homepage */
+.home-page .category-link {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 16px;
   transition: opacity 0.2s ease;
 }
 
-.category-link:hover {
+.home-page .category-link:hover {
   opacity: 0.7;
 }
 
-.category-link.active {
-  font-weight: 700;
+.home-page .category-link.active {
+  opacity: 1;
 }
 
-/* Header border and shadow */
-.site-header {
-  border-bottom: 1px solid rgba(10, 9, 8, 0.1);
-  background-color: var(--laboratory-white);
+/* Transparent backgrounds */
+.bg-transparent {
+  background-color: transparent !important;
 }
 
-/* Cart indicator */
-.cart-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Mobile menu overlay */
-.mobile-menu-overlay {
+/* Mobile menu drawer */
+.mobile-drawer {
+  background-color: white;
+  width: 85%;
+  max-width: 320px;
+  height: 100vh;
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(10, 9, 8, 0.5);
-  z-index: 90;
-  backdrop-filter: blur(2px);
+  z-index: 100;
+  overflow-y: auto;
 }
 
-/* Logo sizing */
+.mobile-drawer-header {
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.mobile-drawer-content {
+  padding: 16px;
+}
+
+/* Sticky sidebar for desktop - only on homepage */
+.home-page .sticky-sidebar {
+  position: fixed;
+  top: 80px; /* Adjust based on your header height */
+  left: 0;
+  width: 200px;
+  padding-left: 32px;
+  height: calc(100vh - 80px);
+  overflow-y: auto;
+  z-index: 10;
+  background: transparent;
+}
+
+/* Hide category filters on non-home pages */
+.not-home-page .category-filters {
+  display: none;
+}
+
+/* Product grid layout */
+.home-page .product-grid-container {
+  margin-left: 200px; /* Same as sidebar width */
+}
+
+/* Cart panel */
+.cart-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 100%;
+  max-width: 384px;
+  background: white;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+}
+
+.cart-header {
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.cart-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.cart-footer {
+  padding: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.cart-item {
+  display: flex;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Media queries */
 @media (max-width: 768px) {
-  .header-logo {
-    width: 100px;
-    height: auto;
+  .product-grid-container {
+    margin-left: 0;
+  }
+
+  .sticky-sidebar {
+    display: none;
   }
 }
 
-/* Desktop category navigation */
+/* Header and Category Navigation */
+.logo-container {
+  display: flex;
+  align-items: center;
+}
+
 .desktop-categories {
   display: none;
 }
