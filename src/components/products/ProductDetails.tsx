@@ -9,8 +9,8 @@ import { ShopifyProduct } from "@/lib/shopify"
 import { formatPrice } from "@/utils/price"
 import ProductColorVariants from "./ProductColorVariants"
 import { useRelatedProducts } from "@/hooks/useRelatedProducts"
-import ProductFeaturesSection from "./ProductFeaturesSection"
 import MobileProductCarousel from "./MobileProductCarousel"
+import ProductDetailsAccordion from "./ProductDetailsAccordion"
 
 interface ProductDetailsProps {
   product: ShopifyProduct
@@ -18,7 +18,6 @@ interface ProductDetailsProps {
 
 const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [selectedSize, setSelectedSize] = useState("")
-  const [showDescription, setShowDescription] = useState(false)
 
   const { addToCart, isLoading, cartItems } = useCart()
 
@@ -256,27 +255,8 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             </motion.button>
           </div>
 
-          {/* Product Details Section */}
-          <div className="pt-4 border-t border-laboratory-black/10">
-            <button
-              className="flex items-center justify-between w-full text-xs tracking-wide py-2 group hover:underline"
-              onClick={() => setShowDescription(!showDescription)}
-            >
-              <span>PRODUCT DETAILS</span>
-              <span>{showDescription ? "−" : "+"}</span>
-            </button>
-            {showDescription && (
-              <div className="py-2 product-description">
-                <div
-                  className="product-details-body-text text-xs"
-                  dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Product Features Section */}
-          <ProductFeaturesSection product={product} />
+          {/* Product Accordion Sections */}
+          <ProductDetailsAccordion product={product} />
         </div>
       </div>
     </div>

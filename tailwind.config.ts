@@ -56,7 +56,7 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ['"Devanagari Sangam MN"', "system-ui", "sans-serif"],
+        sans: ['"Devanagari Sangam MN"', "sans-serif"],
       },
       letterSpacing: {
         wide: "0.25em",
