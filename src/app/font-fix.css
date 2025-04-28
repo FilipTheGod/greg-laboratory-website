@@ -1,0 +1,5 @@
+/* Font fix to override Tailwind's preflight */
+html,
+:host {
+  font-family: "Devanagari Sangam MN", sans-serif;
+}

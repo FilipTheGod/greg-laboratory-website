@@ -1,5 +1,6 @@
-// src/app/layout.tsx - Keep this unchanged
+// src/app/layout.tsx
 import type { Metadata } from "next"
+import "./font-fix.css" // Import the font fix before globals.css
 import "./globals.css"
 import { CartProvider } from "@/contexts/CartContext"
 import Header from "@/components/layout/Header"

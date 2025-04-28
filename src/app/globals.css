@@ -8,7 +8,8 @@
   html,
   body {
     @apply bg-laboratory-white text-laboratory-black;
-    font-family: "Devanagari Sangam MN", sans-serif;
+    /* Fix this line */
+    font-family: "Devanagari Sangam MN", sans-serif; /* 4 */
     letter-spacing: 0.2em;
   }
 
