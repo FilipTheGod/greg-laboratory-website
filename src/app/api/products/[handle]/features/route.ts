@@ -3,14 +3,11 @@ import { NextRequest, NextResponse } from "next/server"
 import { getProductByHandle } from "@/lib/shopify"
 
 export async function GET(
-  _: NextRequest, // Using underscore to indicate we're not using this parameter
-  { params }: { params: Promise<{ handle: string }> }
+  _request: NextRequest,
+  { params }: { params: { handle: string } }
 ) {
   try {
-    const resolvedParams = await params
-    const handle = resolvedParams.handle
-
-    console.log("Fetching media for product:", handle)
+    const handle = params.handle
 
     if (!handle) {
       return NextResponse.json(
@@ -21,7 +18,6 @@ export async function GET(
 
     // Fetch the product to get its media
     const product = await getProductByHandle(handle)
-    // console.log("Product media found:", product?.media)
 
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 })
@@ -31,8 +27,6 @@ export async function GET(
     const videoMedia = product.media?.find(
       (media) => media.mediaContentType === "VIDEO"
     )
-
-    console.log("Video media found:", videoMedia)
 
     // If there's no video media, return an empty response
     if (!videoMedia) {
