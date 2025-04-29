@@ -1,136 +1,62 @@
-// src/app/api/products/[handle]/features/route.ts
+// src/app/api/products/media/[handle]/route.ts
 import { NextRequest, NextResponse } from "next/server"
 import { getProductByHandle } from "@/lib/shopify"
-import { FeatureType } from "@/components/products/ProductFeatureIcon"
 
-// GET request handler to fetch product features
 export async function GET(
-  request: NextRequest,
-  context: { params: { handle: string } }
+  _: NextRequest, // Using underscore to indicate we're not using this parameter
+  { params }: { params: Promise<{ handle: string }> }
 ) {
-  const { handle } = context.params
-
-  if (!handle) {
-    return NextResponse.json(
-      { error: "Product handle is required" },
-      { status: 400 }
-    )
-  }
-
   try {
-    // Fetch the product
-    const product = await getProductByHandle(handle)
+    const resolvedParams = await params
+    const handle = resolvedParams.handle
 
-    // If product doesn't exist
-    if (!product) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 })
-    }
+    // console.log("Fetching media for product:", handle)
 
-    // Extract features from metafields
-    let features: FeatureType[] = []
-
-    if (
-      product.metafields &&
-      product.metafields.features &&
-      product.metafields.features.value
-    ) {
-      // Parse the features value if it's a string
-      if (typeof product.metafields.features.value === "string") {
-        try {
-          features = JSON.parse(
-            product.metafields.features.value
-          ) as FeatureType[]
-        } catch (error) {
-          console.error(`Error parsing features for ${handle}:`, error)
-        }
-      } else if (Array.isArray(product.metafields.features.value)) {
-        features = product.metafields.features.value as FeatureType[]
-      }
-    }
-
-    // Return the product features along with basic product info
-    return NextResponse.json({
-      handle: product.handle,
-      title: product.title,
-      productType: product.productType,
-      features,
-    })
-  } catch (error) {
-    console.error(`Error fetching features for product ${handle}:`, error)
-    return NextResponse.json(
-      { error: "Failed to fetch product features" },
-      { status: 500 }
-    )
-  }
-}
-
-// POST request handler to update product features
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { handle: string } }
-) {
-  const handle = params.handle
-
-  if (!handle) {
-    return NextResponse.json(
-      { error: "Product handle is required" },
-      { status: 400 }
-    )
-  }
-
-  try {
-    // Parse the request body
-    const body = await request.json()
-
-    // Validate the features array
-    if (!body.features || !Array.isArray(body.features)) {
+    if (!handle) {
       return NextResponse.json(
-        { error: "Features array is required" },
+        { error: "Product handle is required" },
         { status: 400 }
       )
     }
 
-    // Fetch the product to verify it exists
+    // Fetch the product to get its media
     const product = await getProductByHandle(handle)
+    // console.log("Product media found:", product?.media)
 
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 })
     }
 
-    // Update the product metafields in Shopify using the Admin API
-    try {
-      // Import the admin API functions
-      const { getProductIdFromHandle, updateProductFeatures } = await import(
-        "@/lib/shopify-admin"
-      )
+    // Extract video media if available
+    const videoMedia = product.media?.find(
+      (media) => media.mediaContentType === "VIDEO"
+    )
 
-      // Get the product ID from its handle
-      const productId = await getProductIdFromHandle(handle)
+    // console.log("Video media found:", videoMedia)
 
-      // Update the features metafield
-      await updateProductFeatures(productId, body.features)
-    } catch (adminError) {
-      console.error(
-        `Error updating Shopify metafields for ${handle}:`,
-        adminError
-      )
-      return NextResponse.json(
-        { error: "Failed to update product features in Shopify" },
-        { status: 500 }
-      )
+    // If there's no video media, return an empty response
+    if (!videoMedia) {
+      return NextResponse.json({
+        data: {
+          hasVideo: false,
+          sources: [],
+          previewImage: null,
+        },
+      })
     }
 
+    // Return the video media data
     return NextResponse.json({
-      success: true,
-      message: "Features updated successfully",
-      handle: product.handle,
-      title: product.title,
-      features: body.features,
+      data: {
+        hasVideo: true,
+        sources: videoMedia.sources || [],
+        previewImage: videoMedia.previewImage || null,
+      },
     })
   } catch (error) {
-    console.error(`Error updating features for product ${handle}:`, error)
+    console.error("Error fetching product media:", error)
     return NextResponse.json(
-      { error: "Failed to update product features" },
+      { error: "Failed to fetch product media" },
       { status: 500 }
     )
   }
