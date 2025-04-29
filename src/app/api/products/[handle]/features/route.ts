@@ -10,7 +10,7 @@ export async function GET(
     const resolvedParams = await params
     const handle = resolvedParams.handle
 
-    // console.log("Fetching media for product:", handle)
+    console.log("Fetching media for product:", handle)
 
     if (!handle) {
       return NextResponse.json(
@@ -32,7 +32,7 @@ export async function GET(
       (media) => media.mediaContentType === "VIDEO"
     )
 
-    // console.log("Video media found:", videoMedia)
+    console.log("Video media found:", videoMedia)
 
     // If there's no video media, return an empty response
     if (!videoMedia) {
