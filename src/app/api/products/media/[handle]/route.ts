@@ -4,9 +4,11 @@ import { NextRequest, NextResponse } from "next/server"
 import { getProductByHandle } from "@/lib/shopify"
 
 export async function GET(
-  _: NextRequest, // Using underscore to indicate we're not using this parameter
-  { params }: { params: { handle: string } }
+  // Using underscore to indicate we're not using this parameter
+  _: NextRequest,
+  props: { params: Promise<{ handle: string }> }
 ) {
+  const params = await props.params;
   try {
     const handle = params.handle
     // console.log("Fetching media for product:", handle)

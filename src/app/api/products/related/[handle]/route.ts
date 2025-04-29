@@ -74,8 +74,9 @@ function extractColor(handle: string): string | null {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { handle: string } | Promise<{ handle: string }> }
+  props: { params: Promise<{ handle: string } | Promise<{ handle: string }>> }
 ) {
+  const params = await props.params;
   try {
     // Ensure params is awaited before using its properties
     const resolvedParams = params instanceof Promise ? await params : params

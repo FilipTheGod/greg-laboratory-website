@@ -4,14 +4,14 @@ import ProductDetails from "@/components/products/ProductDetails"
 import { notFound } from "next/navigation"
 
 interface ProductPageProps {
-  params: Promise<{ id: string }> | { id: string }
+  params: Promise<Promise<{ id: string }> | { id: string }>
 }
 
 export default async function ProductPage(props: ProductPageProps) {
   try {
     // Ensure params is awaited before using its properties
     const resolvedParams =
-      props.params instanceof Promise ? await props.params : props.params
+      (await props.params) instanceof Promise ? await props.params : (await props.params)
     const id = resolvedParams.id
     // console.log("Product id:", id)
 
