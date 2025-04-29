@@ -2,7 +2,8 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { useHeader } from "@/contexts/HeaderContext"
 
 type ProductCategory =
   | "STANDARD SERIES"
@@ -29,6 +30,8 @@ interface ProductFilterProps {
 
 const ProductFilter: React.FC<ProductFilterProps> = ({ onFilterChange }) => {
   const pathname = usePathname()
+  const router = useRouter()
+  const { filterResetKey } = useHeader()
 
   // Determine active category from pathname or default to ALL
   const getInitialCategory = React.useCallback((): ProductCategory => {
@@ -50,6 +53,24 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ onFilterChange }) => {
   useEffect(() => {
     setActiveCategory(getInitialCategory())
   }, [pathname, getInitialCategory])
+
+  // Reset to ALL when triggered by headerContext (logo click)
+  useEffect(() => {
+    if (filterResetKey > 0) {
+      setActiveCategory("ALL")
+
+      // Create a global event to make filter changes affect ProductGrid
+      const filterEvent = new CustomEvent("productFilterChange", {
+        detail: { category: "ALL" },
+      })
+      window.dispatchEvent(filterEvent)
+
+      // Update URL if needed
+      if (pathname !== "/") {
+        router.push("/")
+      }
+    }
+  }, [filterResetKey, router, pathname])
 
   const categories: ProductCategory[] = [
     "ALL",

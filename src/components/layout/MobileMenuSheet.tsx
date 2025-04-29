@@ -1,18 +1,19 @@
 // src/components/layout/MobileMenuSheet.tsx
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
 import Link from "next/link"
-// import Image from "next/image"
+
 import ProductFilter from "../products/ProductFilter"
 import { usePathname } from "next/navigation"
+// import { useHeader } from "@/contexts/HeaderContext"
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-  SheetClose,
+
 } from "@/components/ui/sheet"
 
 interface MobileMenuSheetProps {
@@ -23,6 +24,8 @@ const MobileMenuSheet: React.FC<MobileMenuSheetProps> = ({
   onFilterChange,
 }) => {
   const pathname = usePathname()
+  const [isOpen, setIsOpen] = useState(false)
+  // const { resetFilters } = useHeader()
 
   // Check if we're on the home page
   const isHomePage =
@@ -37,10 +40,35 @@ const MobileMenuSheet: React.FC<MobileMenuSheetProps> = ({
     if (onFilterChange) {
       onFilterChange(category)
     }
+    // Close the sheet after filter selection
+    setIsOpen(false)
+  }
+
+  const handleLinkClick = () => {
+    // Close the sheet when a link is clicked
+    setIsOpen(false)
+  }
+
+  // // Separate handler for logo click to reset filters
+  // const handleLogoClick = (e: React.MouseEvent) => {
+  //   // First close the sheet
+  //   handleLinkClick()
+
+  //   // Only reset filters if we're already on the home page
+  //   if (pathname === "/") {
+  //     e.preventDefault()
+  //     resetFilters()
+  //   }
+  // }
+
+  // Prevent direct state manipulation from affecting filters
+  const handleSheetOpenChange = (open: boolean) => {
+    setIsOpen(open)
+    // Explicitly don't reset filters here
   }
 
   return (
-    <Sheet>
+    <Sheet open={isOpen} onOpenChange={handleSheetOpenChange}>
       <SheetTrigger asChild>
         <button className="p-2 text-black rounded" aria-label="Menu">
           <svg
@@ -68,39 +96,28 @@ const MobileMenuSheet: React.FC<MobileMenuSheetProps> = ({
         </SheetHeader>
         <div className="flex flex-col h-full">
           {/* Header with logo and close button */}
-          <div className="flex justify-between items-center p-4 ">
-            {/* <Link href="/">
-              <Image
-                src="/images/GregLab_LOGO.png"
-                alt="GREG LABORATORY"
-                width={100}
-                height={25}
-                className="object-contain"
-              />
-            </Link> */}
-
-
-            <SheetClose className="text-black text-xs tracking-wide ml-auto" />
-          </div>
 
           {/* Navigation Links */}
-          <div className="p-3 ">
+          <div className="p-4 pt-10 ">
             <div className="flex items-center font-semibold space-x-4">
-            <Link
+              <Link
                 href="/"
-                className="text-black hover:opacity-70 transition  text-sm tracking-wide"
+                className="text-black hover:opacity-70 transition text-sm tracking-wide"
+                onClick={handleLinkClick}
               >
                 HOME
               </Link>
               <Link
                 href="https://www.instagram.com/greglaboratory/?hl=en"
-                className="text-black hover:opacity-70 transition  text-sm tracking-wide"
+                className="text-black hover:opacity-70 transition text-sm tracking-wide"
+                onClick={handleLinkClick}
               >
                 INSTAGRAM
               </Link>
               <Link
                 href="/consultancy"
-                className="text-black hover:opacity-70 transition text-sm  tracking-wide"
+                className="text-black hover:opacity-70 transition text-sm tracking-wide"
+                onClick={handleLinkClick}
               >
                 CONSULTANCY
               </Link>
