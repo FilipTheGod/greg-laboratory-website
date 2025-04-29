@@ -6,9 +6,9 @@ import { FeatureType } from "@/components/products/ProductFeatureIcon"
 // GET request handler to fetch product features
 export async function GET(
   request: NextRequest,
-  { params }: { params: { handle: string } }
+  context: { params: { handle: string } }
 ) {
-  const handle = params.handle
+  const { handle } = context.params
 
   if (!handle) {
     return NextResponse.json(
