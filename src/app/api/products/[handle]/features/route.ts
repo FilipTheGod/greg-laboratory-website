@@ -5,10 +5,11 @@ import { getProductFeatures } from "@/lib/shopify-metafields"
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { handle: string } }
+  { params }: { params: Promise<{ handle: string }> }
 ) {
   try {
-    const handle = params.handle
+    // Await the params promise to get the handle
+    const handle = (await params).handle
 
     if (!handle) {
       return NextResponse.json(
