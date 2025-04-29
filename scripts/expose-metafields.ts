@@ -83,7 +83,11 @@ async function exposeMetafieldToStorefront(key: string) {
     ) {
       const errors = result.data.metafieldStorefrontVisibilityCreate.userErrors
       // If the error is just that it's already exposed, consider it a success
-      if (errors.some((err) => err.message.includes("already exists"))) {
+      if (
+        errors.some((err: { message: string }) =>
+          err.message.includes("already exists")
+        )
+      ) {
         console.log(`Metafield ${key} is already exposed to Storefront API`)
         return true
       }
