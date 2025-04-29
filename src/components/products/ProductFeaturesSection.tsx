@@ -24,9 +24,9 @@ const ProductFeaturesSection: React.FC<ProductFeaturesSectionProps> = ({
     const metafieldFeatures = getProductFeatures(product)
 
     // Log for debugging
-    console.log("ProductFeaturesSection - Product:", product)
-    console.log("ProductFeaturesSection - Metafields:", product.metafields)
-    console.log("ProductFeaturesSection - Found features:", metafieldFeatures)
+    // console.log("ProductFeaturesSection - Product:", product)
+    // console.log("ProductFeaturesSection - Metafields:", product.metafields)
+    // console.log("ProductFeaturesSection - Found features:", metafieldFeatures)
 
     if (metafieldFeatures.length > 0) {
       setFeatures(metafieldFeatures)

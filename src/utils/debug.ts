@@ -13,15 +13,15 @@ export function debugProduct(
   console.group(`${label}: ${product.title} (${product.handle})`)
 
   // Basic product info
-  console.log("Basic Info:", {
-    id: product.id,
-    handle: product.handle,
-    title: product.title,
-    type: product.productType,
-    variantsCount: product.variants?.length || 0,
-    imagesCount: product.images?.length || 0,
-    mediaCount: product.media?.length || 0,
-  })
+  // console.log("Basic Info:", {
+  //   id: product.id,
+  //   handle: product.handle,
+  //   title: product.title,
+  //   type: product.productType,
+  //   variantsCount: product.variants?.length || 0,
+  //   imagesCount: product.images?.length || 0,
+  //   mediaCount: product.media?.length || 0,
+  // })
 
   // Price debugging
   if (product.variants && product.variants.length > 0) {

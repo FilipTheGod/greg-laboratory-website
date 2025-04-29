@@ -31,9 +31,9 @@ const ProductDetailsAccordion: React.FC<ProductDetailsAccordionProps> = ({
     const metafieldFeatures = getProductFeatures(product)
 
     // Log for debugging
-    console.log("ProductDetailsAccordion - Product:", product)
-    console.log("ProductDetailsAccordion - Metafields:", product.metafields)
-    console.log("ProductDetailsAccordion - Found features:", metafieldFeatures)
+    // console.log("ProductDetailsAccordion - Product:", product)
+    // console.log("ProductDetailsAccordion - Metafields:", product.metafields)
+    // console.log("ProductDetailsAccordion - Found features:", metafieldFeatures)
 
     if (metafieldFeatures.length > 0) {
       setFeatures(metafieldFeatures)

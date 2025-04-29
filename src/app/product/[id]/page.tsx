@@ -13,19 +13,19 @@ export default async function ProductPage(props: ProductPageProps) {
     const resolvedParams =
       props.params instanceof Promise ? await props.params : props.params
     const id = resolvedParams.id
-    console.log("Product id:", id)
+    // console.log("Product id:", id)
 
     if (!id) {
-      console.log("No ID provided")
+      // console.log("No ID provided")
       notFound()
     }
 
     const product = await getProductByHandle(id)
 
-    console.log(
-      "Retrieved product:",
-      product ? `${product.title} (found)` : "null (not found)"
-    )
+    // console.log(
+    //   "Retrieved product:",
+    //   product ? `${product.title} (found)` : "null (not found)"
+    // )
 
     if (!product) {
       notFound()

@@ -67,7 +67,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       // Check if video is paused after it should have started
       const checkPlay = setTimeout(() => {
         if (videoElement.paused) {
-          console.log("Video didn't autoplay, trying to reload and play")
+          // console.log("Video didn't autoplay, trying to reload and play")
           videoElement.load()
           videoElement.play().catch((err) => {
             console.log("Error playing video:", err)
