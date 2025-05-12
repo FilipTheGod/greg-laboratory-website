@@ -116,9 +116,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
         </div>
       ) : (
         <div className="text-center py-12">
-          <p className="text-xs tracking-wide opacity-70">
-            No products found in this category.
-          </p>
+          <p className="text-xs tracking-wide opacity-70">Coming Soon</p>
         </div>
       )}
     </div>

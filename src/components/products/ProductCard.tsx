@@ -1,12 +1,13 @@
-// src/components/products/ProductCard.tsx
+// Final integrated ProductCard.tsx using EnhancedVideoPlayer
 "use client"
 
-import React, { useState, useRef, useEffect } from "react"
+import React, { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { ShopifyProduct } from "@/lib/shopify"
 import { formatPrice } from "@/utils/price"
 import { useCart } from "@/contexts/CartContext"
+import EnhancedVideoPlayer from "../video/EnhancedVideoPlayer"
 
 interface ProductCardProps {
   product: ShopifyProduct
@@ -15,7 +16,6 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [, setIsHovered] = useState(false)
   const { addToCart, cartItems } = useCart()
-  const videoRef = useRef<HTMLVideoElement>(null)
 
   // Extract available sizes from variants
   const availableSizes = Array.from(
@@ -27,58 +27,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     )
   ).sort()
 
-  // Check if media includes a video and extract the source URLs
+  // Get video sources from media if available
   const videoMedia = product.media?.find((m) => m.mediaContentType === "VIDEO")
 
-  // Always prefer mp4 sources over m3u8 for better compatibility
-  const getMp4Source = () => {
-    if (!videoMedia?.sources || videoMedia.sources.length === 0) return null
-
-    // Find the first mp4 source (preferring SD or smaller sizes for performance)
-    const mp4Source = videoMedia.sources.find(
-      (s) =>
-        s.mimeType === "video/mp4" &&
-        (s.url.includes("SD-") || s.url.includes("480p"))
-    )
-
-    // If no SD source found, try any mp4
-    if (!mp4Source) {
-      return (
-        videoMedia.sources.find((s) => s.mimeType === "video/mp4")?.url || null
-      )
-    }
-
-    return mp4Source.url
-  }
-
-  const videoUrl = getMp4Source()
-
-  // Get the video preview image or fallback to the first product image
-  const videoPreviewImage =
+  // Get preview image
+  const previewImage =
     videoMedia?.previewImage?.src ||
     (product.images && product.images.length > 0 ? product.images[0].src : null)
 
-  // Ensure video plays when it should
-  useEffect(() => {
-    if (videoRef.current) {
-      // Attempt to reload and play the video if it didn't autoplay
-      const videoElement = videoRef.current
-
-      // Check if video is paused after it should have started
-      const checkPlay = setTimeout(() => {
-        if (videoElement.paused) {
-          videoElement.load()
-          videoElement.play().catch((err) => {
-            console.log("Error playing video:", err)
-          })
-        }
-      }, 1000)
-
-      return () => clearTimeout(checkPlay)
-    }
-  }, [videoUrl])
-
-  // Check if a size is in stock (regardless of color)
+  // Check if a size is available (regardless of color)
   const isSizeAvailable = (size: string) => {
     return product.variants.some(
       (variant) =>
@@ -156,30 +113,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     >
       <Link href={`/product/${product.handle}`} className="block">
         <div className="flex flex-col">
-          {/* Product media (video or image) */}
-          <div className="relative aspect-square overflow-hidden ">
-            {videoUrl ? (
-              <video
-                ref={videoRef}
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="h-full w-full object-cover"
-                poster={videoPreviewImage || undefined}
-                preload="auto"
-              >
-                <source src={videoUrl} type="video/mp4" />
-                {/* Fallback to image if video fails */}
-                {product.images && product.images.length > 0 && (
-                  <Image
-                    src={product.images[0].src}
-                    alt={product.title}
-                    fill
-                    className="object-cover"
-                  />
-                )}
-              </video>
+          {/* Product media (video or image) using EnhancedVideoPlayer */}
+          <div className="relative aspect-square overflow-hidden">
+            {videoMedia?.sources ? (
+              <EnhancedVideoPlayer
+                sources={videoMedia.sources}
+                poster={previewImage || undefined}
+                className="h-full w-full"
+                alt={product.title}
+                fallbackImageUrl={
+                  product.images && product.images.length > 0
+                    ? product.images[0].src
+                    : undefined
+                }
+                showPlayButton={true}
+              />
             ) : product.images && product.images.length > 0 ? (
               <Image
                 src={product.images[0].src}
