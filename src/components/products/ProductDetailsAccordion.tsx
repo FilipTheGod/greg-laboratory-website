@@ -30,11 +30,6 @@ const ProductDetailsAccordion: React.FC<ProductDetailsAccordionProps> = ({
     // Try to get features from metafields
     const metafieldFeatures = getProductFeatures(product)
 
-    // Log for debugging
-    // console.log("ProductDetailsAccordion - Product:", product)
-    // console.log("ProductDetailsAccordion - Metafields:", product.metafields)
-    // console.log("ProductDetailsAccordion - Found features:", metafieldFeatures)
-
     if (metafieldFeatures.length > 0) {
       setFeatures(metafieldFeatures)
     } else {
@@ -63,7 +58,7 @@ const ProductDetailsAccordion: React.FC<ProductDetailsAccordionProps> = ({
         <AccordionTrigger className="text-xs tracking-wide py-4">
           PRODUCT DETAILS
         </AccordionTrigger>
-        <AccordionContent className="text-xs">
+        <AccordionContent className="text-xs tracking-normal">
           <div
             className="product-description"
             dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
@@ -92,7 +87,7 @@ const ProductDetailsAccordion: React.FC<ProductDetailsAccordionProps> = ({
                     <h3 className="text-xs tracking-wide font-medium">
                       {featureDisplayNames[featureType]}
                     </h3>
-                    <p className="text-xs tracking-wide text-laboratory-black/70">
+                    <p className="text-xs tracking-normal text-laboratory-black/70">
                       {featureDescriptions[featureType]}
                     </p>
                   </div>

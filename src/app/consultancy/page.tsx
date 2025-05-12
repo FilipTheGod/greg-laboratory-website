@@ -46,32 +46,31 @@ export default function Consultancy() {
     <div className="min-h-[100vh] relative overflow-hidden flex flex-col items-center justify-center">
       {/* Main content - centered and smaller text */}
       <div className="text-center max-w-3xl mx-auto px-6 mb-12">
+        <h1 className="text-xs md:text-sm lg:text-base leading-relaxed mb-12 tracking-normal">
+          GREG LABORATORY SPECIALIZES IN TECHNICAL DESIGN CONSULTATION, PATTERN
+          DEVELOPMENT, AND CONSTRUCTION METHODOLOGY. WE OFFER BOTH{" "}
+          <a
+            href="mailto:info@greglaboratory.com"
+            className="underline transition-colors duration-300 hover:text-laboratory-black/60"
+          >
+            COLLABORATIONS
+          </a>{" "}
+          AND{" "}
+          <button
+            onClick={() => setShowContactForm(true)}
+            className="underline"
+          >
+            CONSULTANCY
+          </button>{" "}
+          SERVICES FOR SELECTED PARTNERS AND CLIENTS SEEKING ELEVATED TECHNICAL
+          SOLUTIONS.
+        </h1>
 
-<h1 className="text-xs md:text-sm lg:text-base consultancy-text leading-relaxed mb-12">
-  GREG LABORATORY SPECIALIZES IN TECHNICAL DESIGN CONSULTATION,
-  PATTERN DEVELOPMENT, AND CONSTRUCTION METHODOLOGY. WE OFFER BOTH{" "}
-  <a
-    href="mailto:info@greglaboratory.com"
-    className="underline transition-colors duration-300 hover:text-laboratory-black/60"
-  >
-    COLLABORATIONS
-  </a>{" "}
-  AND{" "}
-  <button
-    onClick={() => setShowContactForm(true)}
-    className="underline transition-colors duration-300 hover:text-laboratory-black/60"
-  >
-    CONSULTANCY
-  </button>{" "}
-  SERVICES FOR SELECTED PARTNERS AND CLIENTS SEEKING ELEVATED
-  TECHNICAL SOLUTIONS.
-</h1>
-
-        {/* Client list - centered */}
+        {/* Client list - centered with tracking */}
         <div className="text-xs md:text-sm font-normal tracking-wide mt-8">
-          <div className="font-bold mb-2">CLIENTS</div>
+          <div className="font-bold mb-2 tracking-wide">CLIENTS</div>
           {clients.slice(1).map((client, index) => (
-            <div key={index} className="mb-1">
+            <div key={index} className="mb-1 tracking-wide">
               {client}
             </div>
           ))}
@@ -107,7 +106,7 @@ export default function Consultancy() {
                   <h2 className="text-medium tracking-wide mb-6 text-center">
                     CONSULTANCY REQUEST
                   </h2>
-                  <p className="text-regular tracking-wide mb-6 text-center">
+                  <p className="text-regular tracking-normal mb-6 text-center">
                     SUBMIT YOUR MESSAGE BELOW AND WE&apos;LL GET BACK TO YOU AS
                     QUICKLY AS POSSIBLE.
                   </p>
@@ -125,7 +124,7 @@ export default function Consultancy() {
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full p-2 border border-laboratory-black/20 bg-transparent text-regular tracking-wide"
+                        className="w-full p-2 border border-laboratory-black/20 bg-transparent text-regular tracking-normal"
                         required
                       />
                     </div>
@@ -141,7 +140,7 @@ export default function Consultancy() {
                         id="message"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
-                        className="w-full p-2 border border-laboratory-black/20 bg-transparent text-regular tracking-wide h-32"
+                        className="w-full p-2 border border-laboratory-black/20 bg-transparent text-regular tracking-normal h-32"
                         required
                       />
                     </div>

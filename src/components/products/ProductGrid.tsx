@@ -3,7 +3,6 @@
 
 import React, { useState, useEffect } from "react"
 import ProductCard from "./ProductCard"
-// import ProductFilter from "./ProductFilter"
 import { ShopifyProduct } from "@/lib/shopify"
 
 interface ProductGridProps {
@@ -106,18 +105,8 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
     }
   }, [products, filteredCategory])
 
-  // This function is called from the ProductFilter in mobile view
-  // const handleFilterChange = (category: ProductCategory) => {
-  //   setFilteredCategory(category)
-  // }
-
   return (
     <div className="container mx-auto px-4 md:pl-80">
-      {/* Mobile filter - visible only on mobile */}
-      {/* <div className="md:hidden mb-8">
-        <ProductFilter onFilterChange={handleFilterChange} />
-      </div> */}
-
       {/* Product Grid - Now with 3 columns layout */}
       {filteredProducts.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">

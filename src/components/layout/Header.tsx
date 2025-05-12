@@ -46,7 +46,7 @@ const Header: React.FC = () => {
   return (
     <>
       {/* Desktop Header */}
-      <header className="sticky top-0 z-50 ">
+      <header className="sticky top-0 z-50 bg-laboratory-white">
         <div className="pr-16 px-4">
           <div className="flex justify-between items-center py-4">
             {/* Mobile Menu Button - Left Side */}
@@ -102,8 +102,8 @@ const Header: React.FC = () => {
               </button>
             </div>
 
-            {/* Mobile Cart Button */}
-            <div className="md:hidden">
+            {/* Mobile Cart Button - moved more to the right */}
+            <div className="md:hidden pr-2">
               <button
                 onClick={toggleCart}
                 className="text-black text-xs tracking-wide p-2 rounded"

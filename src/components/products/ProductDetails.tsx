@@ -178,7 +178,8 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       <div className="md:sticky md:top-24 self-start max-h-[calc(100vh-8rem)] pr-0 md:pr-4 overflow-y-auto">
         <div className="space-y-4 pl-1">
           <div>
-            <p className="text-xs tracking-wide text-laboratory-black/70 uppercase mb-2">
+            {/* Reduced space between series and name */}
+            <p className="text-xs tracking-wide text-laboratory-black/70 uppercase mb-1">
               {product.productType}
             </p>
             <h1 className="product-title uppercase mb-1">{product.title}</h1>
@@ -203,24 +204,24 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                 return (
                   <div key={size} className="flex flex-col items-start">
                     <button
-                      className={`px-1 py-1 transition-all text-xs relative
-              ${
-                selectedSize === size
-                  ? "text-laboratory-black underline"
-                  : "text-laboratory-black/70 hover:underline"
-              }
-              ${!available ? "opacity-50 cursor-not-allowed" : ""}
-              tracking-wide`}
+                      className={`px-1 py-1 transition-all text-xs relative tracking-wide
+                        ${
+                          selectedSize === size
+                            ? "text-laboratory-black underline"
+                            : available
+                            ? "text-laboratory-black/70 hover:underline"
+                            : "text-laboratory-black/40 cursor-not-allowed"
+                        }`}
                       onClick={() => available && setSelectedSize(size)}
                       disabled={!available}
                     >
                       {size}
                       {!available && (
-                        <span className="absolute left-0 right-0 top-1/2 h-px bg-laboratory-black/50 transform rotate-45 -translate-y-1/2"></span>
+                        <span className="absolute left-0 right-0 top-1/2 h-px bg-laboratory-black/40 transform rotate-45 -translate-y-1/2"></span>
                       )}
                     </button>
                     {isLowStock && (
-                      <p className="text-xs text-red-500 mt-1">
+                      <p className="text-xs text-red-500 mt-1 tracking-normal">
                         Only {inventoryQuantity} left
                       </p>
                     )}
@@ -237,16 +238,16 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             />
           )}
 
-          {/* Add to Cart Button */}
+          {/* Add to Cart Button - Now always visible but greyed out when no size selected */}
           <div className="pt-6 pb-4">
             <motion.button
-              className={`w-full py-3 text-sm tracking-wide transition-colors
-      ${
-        selectedSize
-          ? "bg-laboratory-black text-laboratory-white"
-          : "bg-laboratory-black/30 text-laboratory-white"
-      }
-      disabled:opacity-50`}
+              className={`w-full py-3 text-sm tracking-wide transition-colors text-laboratory-white
+                ${
+                  selectedSize
+                    ? "bg-laboratory-black"
+                    : "bg-laboratory-black/40"
+                }
+                disabled:opacity-50`}
               onClick={handleAddToCart}
               whileTap={{ scale: 0.98 }}
               disabled={!selectedSize || isLoading}

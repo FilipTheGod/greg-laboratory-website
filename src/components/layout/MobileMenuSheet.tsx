@@ -3,17 +3,15 @@
 
 import React, { useState } from "react"
 import Link from "next/link"
-
 import ProductFilter from "../products/ProductFilter"
 import { usePathname } from "next/navigation"
-// import { useHeader } from "@/contexts/HeaderContext"
+import { useHeader } from "@/contexts/HeaderContext"
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-
 } from "@/components/ui/sheet"
 
 interface MobileMenuSheetProps {
@@ -25,16 +23,7 @@ const MobileMenuSheet: React.FC<MobileMenuSheetProps> = ({
 }) => {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
-  // const { resetFilters } = useHeader()
-
-  // Check if we're on the home page
-  const isHomePage =
-    pathname === "/" ||
-    pathname.startsWith("/STANDARD") ||
-    pathname.startsWith("/TECHNICAL") ||
-    pathname.startsWith("/LABORATORY") ||
-    pathname.startsWith("/COLLABORATIVE") ||
-    pathname.startsWith("/FIELD")
+  const { resetFilters } = useHeader()
 
   const handleFilterSelection = (category: string | number) => {
     if (onFilterChange) {
@@ -49,22 +38,21 @@ const MobileMenuSheet: React.FC<MobileMenuSheetProps> = ({
     setIsOpen(false)
   }
 
-  // // Separate handler for logo click to reset filters
-  // const handleLogoClick = (e: React.MouseEvent) => {
-  //   // First close the sheet
-  //   handleLinkClick()
+  // Separate handler for logo click to reset filters
+  const handleLogoClick = (e: React.MouseEvent) => {
+    // First close the sheet
+    handleLinkClick()
 
-  //   // Only reset filters if we're already on the home page
-  //   if (pathname === "/") {
-  //     e.preventDefault()
-  //     resetFilters()
-  //   }
-  // }
+    // Only reset filters if we're already on the home page
+    if (pathname === "/") {
+      e.preventDefault()
+      resetFilters()
+    }
+  }
 
   // Prevent direct state manipulation from affecting filters
   const handleSheetOpenChange = (open: boolean) => {
     setIsOpen(open)
-    // Explicitly don't reset filters here
   }
 
   return (
@@ -103,7 +91,7 @@ const MobileMenuSheet: React.FC<MobileMenuSheetProps> = ({
               <Link
                 href="/"
                 className="text-black hover:opacity-70 transition text-sm tracking-wide"
-                onClick={handleLinkClick}
+                onClick={handleLogoClick}
               >
                 HOME
               </Link>
@@ -124,12 +112,10 @@ const MobileMenuSheet: React.FC<MobileMenuSheetProps> = ({
             </div>
           </div>
 
-          {/* Product categories - only show on home page */}
-          {isHomePage && (
-            <div className="pt-2 px-4 flex-1 overflow-y-auto">
-              <ProductFilter onFilterChange={handleFilterSelection} />
-            </div>
-          )}
+          {/* Product categories - show on all pages, not just homepage */}
+          <div className="pt-2 px-4 flex-1 overflow-y-auto">
+            <ProductFilter onFilterChange={handleFilterSelection} />
+          </div>
         </div>
       </SheetContent>
     </Sheet>
