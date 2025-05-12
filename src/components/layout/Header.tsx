@@ -68,7 +68,7 @@ const Header: React.FC = () => {
             </div>
 
             {/* Mobile Logo - Better centered */}
-            <div className="flex justify-center md:hidden mx-auto">
+            <div className="flex justify-center md:hidden pl-2 mx-auto">
               <Link href="/" onClick={handleLogoClick}>
                 <Image
                   src="/images/Logo_Mobile.png"

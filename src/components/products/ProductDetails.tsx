@@ -127,7 +127,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 px-4 md:px-16 product-details-container bg-[#fcfffc]">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 px-4 md:pr-16 md:pl-0 product-details-container bg-[#fcfffc]">
       {/* Mobile Carousel - Only visible on mobile */}
       <div className="md:hidden w-full mb-6">
         <MobileProductCarousel
@@ -137,9 +137,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       </div>
 
       {/* Desktop Layout - Product Media - Left Side (2/3 of screen) */}
-      <div className="hidden md:block md:col-span-2 space-y-6 md:pl-12">
+      <div className="hidden md:block md:col-span-2 md:pl-0">
         {/* First Image */}
-        <div className="relative aspect-square overflow-hidden bg-[#fcfffc]">
+        <div className="relative aspect-square overflow-hidden bg-[#fcfffc] w-full">
           {product.images && product.images.length > 0 ? (
             <Image
               src={product.images[0].src}
@@ -161,7 +161,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
         {mediaItems.slice(1).map((image, index) => (
           <div
             key={index}
-            className="relative aspect-square overflow-hidden bg-laboratory-white"
+            className="relative aspect-square overflow-hidden bg-laboratory-white w-full"
           >
             <Image
               src={image.src}
