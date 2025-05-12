@@ -32,7 +32,7 @@ export default async function ProductPage(props: ProductPageProps) {
     }
 
     return (
-      <div className="bg-[#f6f6f6] min-h-screen">
+      <div className="bg-[#fcfffc] min-h-screen">
         <ProductDetails product={product} />
       </div>
     )
