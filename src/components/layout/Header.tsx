@@ -45,9 +45,9 @@ const Header: React.FC = () => {
 
   return (
     <>
-      {/* Desktop Header */}
-      <header className="sticky top-0 z-50 bg-laboratory-white">
-        <div className="pr-16 px-4">
+      {/* Desktop Header - Removed background completely */}
+      <header className="sticky top-0 z-50">
+        <div className="pr-6 px-4">
           <div className="flex justify-between items-center py-4">
             {/* Mobile Menu Button - Left Side */}
             <div className="flex md:hidden items-center">
@@ -55,7 +55,7 @@ const Header: React.FC = () => {
             </div>
 
             {/* Logo - Desktop aligned to left */}
-            <div className="hidden md:flex w-48 pl-3 ">
+            <div className="hidden md:flex w-48 pl-3">
               <Link href="/" className="block" onClick={handleLogoClick}>
                 <Image
                   src="/images/GregLab_LOGO.png"
@@ -67,8 +67,8 @@ const Header: React.FC = () => {
               </Link>
             </div>
 
-            {/* Mobile Logo - Centered */}
-            <div className="flex justify-center md:hidden pl-8 flex-1">
+            {/* Mobile Logo - Better centered */}
+            <div className="flex justify-center md:hidden mx-auto">
               <Link href="/" onClick={handleLogoClick}>
                 <Image
                   src="/images/Logo_Mobile.png"
@@ -81,7 +81,7 @@ const Header: React.FC = () => {
             </div>
 
             {/* Desktop Navigation - Pushed to right */}
-            <div className="hidden md:flex items-center justify-end space-x-8 ">
+            <div className="hidden md:flex items-center justify-end space-x-8">
               <Link
                 href="https://www.instagram.com/greglaboratory/?hl=en"
                 className="text-black hover:opacity-70 transition text-xs tracking-wide"
@@ -102,8 +102,8 @@ const Header: React.FC = () => {
               </button>
             </div>
 
-            {/* Mobile Cart Button - moved more to the right */}
-            <div className="md:hidden pr-2">
+            {/* Mobile Cart Button - pushed to the right edge */}
+            <div className="md:hidden">
               <button
                 onClick={toggleCart}
                 className="text-black text-xs tracking-wide p-2 rounded"

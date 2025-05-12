@@ -83,8 +83,6 @@ const MobileMenuSheet: React.FC<MobileMenuSheetProps> = ({
           <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
         </SheetHeader>
         <div className="flex flex-col h-full">
-          {/* Header with logo and close button */}
-
           {/* Navigation Links */}
           <div className="p-4 pt-10 ">
             <div className="flex items-center font-semibold space-x-4">

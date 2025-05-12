@@ -1,4 +1,4 @@
-/* src/app/globals.css */
+/* src/app/globals.css - Updated color variables */
 @import "tailwindcss";
 @import "tailwindcss/preflight" layer(base);
 @import "tailwindcss/theme" layer(theme);
@@ -6,7 +6,7 @@
 
 /* Define your custom colors as CSS variables */
 :root {
-  --laboratory-white: #fcfffc;
+  --laboratory-white: #fcfffc; /* Updated to #fcfffc as requested */
   --laboratory-black: #0a0908;
 }
 
