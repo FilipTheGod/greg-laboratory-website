@@ -16,10 +16,12 @@ interface EnhancedVideoPlayerProps {
   loop?: boolean
   showPlayButton?: boolean
   onError?: () => void
+  preventClickPropagation?: boolean // Add this prop
 }
 
 /**
  * Enhanced video component with proper mobile support and autoplay handling
+ * Modified to allow clicks to propagate to parent elements (for navigation)
  */
 const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
   sources,
@@ -31,6 +33,7 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
   loop = true,
   showPlayButton = true,
   onError,
+  preventClickPropagation = false, // Default to false to allow click propagation
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [videoError, setVideoError] = useState(false)
@@ -153,7 +156,12 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
   }, [actualVideoUrl, isMobile, loop, onError])
 
   // Handle user touch/click to play video (helps on mobile)
-  const handleInteraction = () => {
+  const handleInteraction = (e: React.MouseEvent | React.TouchEvent) => {
+    // Only stop propagation if explicitly requested
+    if (preventClickPropagation) {
+      e.stopPropagation()
+    }
+
     if (!videoRef.current) return
 
     const videoElement = videoRef.current
@@ -177,8 +185,9 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
           setShowControls(true)
         })
     } else {
-      videoElement.pause()
-      setIsPlaying(false)
+      // Don't pause on click - this lets clicks go through to parent links
+      // videoElement.pause()
+      // setIsPlaying(false)
     }
   }
 
@@ -212,16 +221,17 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
         controls={showControls}
         onClick={handleInteraction}
         onTouchStart={isMobile ? handleInteraction : undefined}
+        // Add pointer-events-none to allow clicks to pass through to parent elements
+        style={{ pointerEvents: 'none' }}
       >
         <source src={actualVideoUrl} type="video/mp4" />
         Your browser does not support the video tag.
       </video>
 
-      {/* Play button overlay for mobile - shown when video is paused and showPlayButton is true */}
+      {/* Play button overlay - now with pointer-events-none to allow clicks to pass through */}
       {isMobile && !isPlaying && showPlayButton && (
         <div
-          className="absolute inset-0 flex items-center justify-center bg-black/20 cursor-pointer"
-          onClick={handleInteraction}
+          className="absolute inset-0 flex items-center justify-center bg-black/20 cursor-pointer pointer-events-none"
         >
           <div className="rounded-full bg-white/80 p-4 flex items-center justify-center">
             <svg

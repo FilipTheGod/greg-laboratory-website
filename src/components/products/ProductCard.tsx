@@ -114,7 +114,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       <Link href={`/product/${product.handle}`} className="block">
         <div className="flex flex-col">
           {/* Product media (video or image) using EnhancedVideoPlayer */}
-          <div className="relative aspect-square overflow-hidden">
+          <div className="relative aspect-square overflow-hidden cursor-pointer">
             {videoMedia?.sources ? (
               <EnhancedVideoPlayer
                 sources={videoMedia.sources}
@@ -126,7 +126,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     ? product.images[0].src
                     : undefined
                 }
-                showPlayButton={true}
+                showPlayButton={false}
+                // Set this to false to allow clicks to pass through to the parent Link
+                preventClickPropagation={false}
               />
             ) : product.images && product.images.length > 0 ? (
               <Image
