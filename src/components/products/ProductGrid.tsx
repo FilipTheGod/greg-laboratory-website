@@ -9,6 +9,75 @@ interface ProductGridProps {
   initialProducts: ShopifyProduct[]
 }
 
+const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
+  const [products, setProducts] = useState<ShopifyProduct[]>(initialProducts)
+
+  // Effect to handle any potential issues with initialProducts
+  useEffect(() => {
+    if (!Array.isArray(initialProducts)) {
+      console.error("initialProducts is not an array:", initialProducts)
+      setProducts([])
+      return
+    }
+
+    // Validate product data
+    const validProducts = initialProducts.filter((product) => {
+      if (!product || typeof product !== "object") {
+        console.error("Invalid product object:", product)
+        return false
+      }
+
+      if (!product.id || !product.title || !product.variants) {
+        console.error("Product missing required fields:", product)
+        return false
+      }
+
+      return true
+    })
+
+    setProducts(validProducts)
+  }, [initialProducts])
+
+  return (
+    <div className="container mx-auto px-4 md:px-8">
+      {/* Product Grid - With full width layout (no filters) */}
+      {products.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12 h-[50vh] flex items-center justify-center">
+          <p className="text-sm md:text-base tracking-wide opacity-70">COMING SOON</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default ProductGrid
+
+/**
+ * FILTER CODE - TEMPORARILY DISABLED
+ *
+ * When you're ready to re-enable filters, replace the above component
+ * with the code below and change SHOW_FILTERS to true in src/constants/config.ts
+ */
+
+/*
+// src/components/products/ProductGrid.tsx
+"use client"
+
+import React, { useState, useEffect } from "react"
+import ProductCard from "./ProductCard"
+import { ShopifyProduct } from "@/lib/shopify"
+import { SHOW_FILTERS } from "@/constants/config"
+
+interface ProductGridProps {
+  initialProducts: ShopifyProduct[]
+}
+
 type ProductCategory =
   | "STANDARD SERIES"
   | "TECHNICAL SERIES"
@@ -52,18 +121,21 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
 
   // Listen for filter events from any ProductFilter component
   useEffect(() => {
-    const handleFilterChange = (event: Event) => {
-      // Type cast to our custom event type
-      const filterEvent = event as ProductFilterEvent
-      if (filterEvent.detail && filterEvent.detail.category) {
-        setFilteredCategory(filterEvent.detail.category)
+    // Only set up the listener if filters are enabled
+    if (SHOW_FILTERS) {
+      const handleFilterChange = (event: Event) => {
+        // Type cast to our custom event type
+        const filterEvent = event as ProductFilterEvent
+        if (filterEvent.detail && filterEvent.detail.category) {
+          setFilteredCategory(filterEvent.detail.category)
+        }
       }
-    }
 
-    window.addEventListener("productFilterChange", handleFilterChange)
+      window.addEventListener("productFilterChange", handleFilterChange)
 
-    return () => {
-      window.removeEventListener("productFilterChange", handleFilterChange)
+      return () => {
+        window.removeEventListener("productFilterChange", handleFilterChange)
+      }
     }
   }, [])
 
@@ -95,7 +167,8 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
 
   // Filter products based on category
   const filteredProducts = React.useMemo(() => {
-    if (filteredCategory === "ALL") {
+    // Skip filtering if filters are disabled
+    if (!SHOW_FILTERS || filteredCategory === "ALL") {
       return products
     } else {
       return products.filter((product) => {
@@ -106,9 +179,9 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
   }, [products, filteredCategory])
 
   return (
-    <div className="container mx-auto px-4 md:pl-80">
-      {/* Product Grid - Now with 3 columns layout */}
-      {filteredProducts.length > 0 ? (
+    <div className={`container mx-auto px-4 ${SHOW_FILTERS ? 'md:pl-80' : ''}`}>
+      {/* Product Grid - Now with 3 columns layout */
+      /*filteredProducts.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
@@ -124,3 +197,4 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
 }
 
 export default ProductGrid
+*/

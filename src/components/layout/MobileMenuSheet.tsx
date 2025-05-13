@@ -3,7 +3,8 @@
 
 import React, { useState } from "react"
 import Link from "next/link"
-import ProductFilter from "../products/ProductFilter"
+// Import ProductFilter but don't use it yet
+// import ProductFilter from "../products/ProductFilter"
 import { usePathname } from "next/navigation"
 import { useHeader } from "@/contexts/HeaderContext"
 import {
@@ -14,17 +15,24 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 
+// We're commenting out this constant since we're not using it yet
+// Will be re-enabled when filters are restored
+// const SHOW_FILTERS = false;
+
 interface MobileMenuSheetProps {
   onFilterChange?: (category: string | number) => void
 }
 
 const MobileMenuSheet: React.FC<MobileMenuSheetProps> = ({
-  onFilterChange,
+  // onFilterChange,
 }) => {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const { resetFilters } = useHeader()
 
+  // We're keeping this function commented out since we'll need it later
+  // Only uncomment this when re-enabling filters
+  /*
   const handleFilterSelection = (category: string | number) => {
     if (onFilterChange) {
       onFilterChange(category)
@@ -32,6 +40,7 @@ const MobileMenuSheet: React.FC<MobileMenuSheetProps> = ({
     // Close the sheet after filter selection
     setIsOpen(false)
   }
+  */
 
   const handleLinkClick = () => {
     // Close the sheet when a link is clicked
@@ -100,14 +109,17 @@ const MobileMenuSheet: React.FC<MobileMenuSheetProps> = ({
               >
                 INSTAGRAM
               </Link>
-              {/* Consultancy link removed */}
             </div>
           </div>
 
-          {/* Product categories - show on all pages, not just homepage */}
-          <div className="pt-2 px-4 flex-1 overflow-y-auto">
-            <ProductFilter onFilterChange={handleFilterSelection} />
-          </div>
+          {/* Product categories - show on all pages, not just homepage - COMMENTED OUT TEMPORARILY */}
+          {/*
+          {SHOW_FILTERS && (
+            <div className="pt-2 px-4 flex-1 overflow-y-auto">
+              <ProductFilter onFilterChange={handleFilterSelection} />
+            </div>
+          )}
+          */}
         </div>
       </SheetContent>
     </Sheet>

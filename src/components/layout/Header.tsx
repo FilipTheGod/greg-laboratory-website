@@ -8,15 +8,22 @@ import { useCart } from "@/contexts/CartContext"
 import { useHeader } from "@/contexts/HeaderContext"
 import Cart from "./Cart"
 import { usePathname } from "next/navigation"
-import ProductFilter from "../products/ProductFilter"
+// Import ProductFilter is commented out while filters are disabled
+// import ProductFilter from "../products/ProductFilter"
 import MobileMenuSheet from "./MobileMenuSheet"
+
+// We're commenting out this constant since we're not using it yet
+// Will be re-enabled when filters are restored
+// const SHOW_FILTERS = false;
 
 const Header: React.FC = () => {
   const { toggleCart, cartCount } = useCart()
   const { resetFilters } = useHeader()
   const pathname = usePathname()
 
-  // Check if we're on the home page
+  // We're keeping this commented out since we'll need it later
+  // Only uncomment this when re-enabling filters
+  /*
   const isHomePage =
     pathname === "/" ||
     pathname.startsWith("/STANDARD") ||
@@ -24,9 +31,10 @@ const Header: React.FC = () => {
     pathname.startsWith("/LABORATORY") ||
     pathname.startsWith("/COLLABORATIVE") ||
     pathname.startsWith("/FIELD")
+  */
 
   const handleFilterChange = (category: string | number) => {
-    // This function will be used for all filter instances
+    // This function will be used for all filter instances when re-enabled
     console.log("Filter changed:", category)
   }
 
@@ -88,7 +96,6 @@ const Header: React.FC = () => {
               >
                 INSTAGRAM
               </Link>
-              {/* Consultancy link removed */}
               <button
                 onClick={toggleCart}
                 className="text-black text-xs tracking-wide hover:opacity-70 transition"
@@ -110,12 +117,14 @@ const Header: React.FC = () => {
         </div>
       </header>
 
-      {/* Desktop Categories - Sticky Sidebar - Only show on home page */}
-      {isHomePage && (
+      {/* Desktop Categories - Sticky Sidebar - Only show on home page - COMMENTED OUT TEMPORARILY */}
+      {/*
+      {isHomePage && SHOW_FILTERS && (
         <div className="hidden md:block fixed left-0 top-24 h-screen w-48 pl-8 pt-4 z-40">
           <ProductFilter onFilterChange={handleFilterChange} />
         </div>
       )}
+      */}
 
       {/* Cart Component */}
       <Cart />

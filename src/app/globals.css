@@ -244,3 +244,37 @@ html {
     width: 100%;
   }
 }
+
+
+
+/* Temporary styles for the no-filter layout */
+/* You can remove these when you re-enable filters */
+
+/* When filters are disabled, ensure full-width grid looks good */
+.container.no-filters {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .container.no-filters {
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+}
+
+/* Improve spacing for product grid */
+.product-grid-spacing {
+  padding-top: 1.5rem;
+  padding-bottom: 3rem;
+}
+
+/* Helper class to easily toggle layouts */
+.filters-disabled-layout {
+  width: 100% !important;
+  padding-left: 1.5rem !important;
+  margin-left: auto !important;
+}
