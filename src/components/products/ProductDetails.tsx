@@ -127,7 +127,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 px-4 md:pr-16 md:pl-0 product-details-container bg-[#fcfffc] pb-16 md:pb-8">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 px-4 md:pr-16 md:pl-0 product-details-container bg-[#fcfffc]">
       {/* Mobile Carousel - Only visible on mobile */}
       <div className="md:hidden w-full mb-6">
         <MobileProductCarousel
@@ -238,18 +238,19 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             />
           )}
 
-          {/* Add to Cart Button - Now always visible but greyed out when no size selected */}
+          {/* Add to Cart Button - Now always visible with correct styling based on selection */}
           <div className="pt-6 pb-4">
             <motion.button
-              className={`w-full py-3 text-sm tracking-wide transition-colors text-laboratory-white
+              className={`w-full py-3 text-sm tracking-wide transition-colors
                 ${
                   selectedSize
-                    ? "bg-laboratory-black"
-                    : "bg-laboratory-black/40"
+                    ? "bg-laboratory-black text-laboratory-white"
+                    : "bg-laboratory-black/40 text-laboratory-white"
                 }
-                disabled:opacity-50`}
+                disabled:opacity-50
+              `}
               onClick={handleAddToCart}
-              whileTap={{ scale: 0.98 }}
+              whileTap={selectedSize ? { scale: 0.98 } : {}}
               disabled={!selectedSize || isLoading}
             >
               {isLoading ? "ADDING..." : "ADD TO CART"}

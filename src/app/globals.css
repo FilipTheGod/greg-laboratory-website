@@ -183,16 +183,8 @@ html {
 /* Add this to src/app/globals.css */
 
 /* Extra bottom padding for mobile product features */
+/* Mobile-specific styles */
 @media (max-width: 768px) {
-  .product-details-container {
-    padding-bottom: 6rem; /* Generous bottom padding on mobile */
-  }
-
-  /* Make bottom margin larger for accordion on mobile */
-  .product-details-accordion {
-    margin-bottom: 3rem;
-  }
-
   /* Increase product card size text on mobile */
   .product-card-price {
     font-size: 14px;
@@ -203,4 +195,18 @@ html {
     margin-top: 0.75rem;
     margin-bottom: 1.5rem;
   }
+
+  .product-details-accordion {
+    margin-bottom: 3rem;
+  }
+  /* Keep some consistent spacing */
+  .product-details-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Ensure smooth scrolling */
+html {
+  scroll-behavior: smooth;
 }

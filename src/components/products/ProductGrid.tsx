@@ -115,8 +115,8 @@ const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-12">
-          <p className="text-xs tracking-wide opacity-70">Coming Soon</p>
+        <div className="text-center py-12 h-[50vh] flex items-center justify-center">
+          <p className="text-sm md:text-base tracking-wide opacity-70">COMING SOON</p>
         </div>
       )}
     </div>
