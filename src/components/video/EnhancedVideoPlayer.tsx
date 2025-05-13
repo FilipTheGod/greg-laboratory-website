@@ -169,7 +169,7 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
     if (videoElement.paused) {
       // Try to play and hide controls if successful
       videoElement
-        .play()
+        .play() 
         .then(() => {
           setIsPlaying(true)
           // Hide controls after successful play
