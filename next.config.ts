@@ -1,5 +1,6 @@
 // next.config.js
 /** @type {import('next').NextConfig} */
+// next.config.ts
 const nextConfig = {
   images: {
     remotePatterns: [
@@ -11,6 +12,11 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "greglaboratory.com",
+        pathname: "**",
+      },
+      {
+        protocol: "https",
+        hostname: "www.greglaboratory.com",
         pathname: "**",
       },
     ],
