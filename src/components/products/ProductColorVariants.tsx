@@ -24,31 +24,100 @@ const ProductColorVariants: React.FC<ProductColorVariantsProps> = ({
 }) => {
   const router = useRouter()
 
-  // If there are no color variants, don't render anything
-  if (!colorVariants || colorVariants.length === 0) {
-    return null
+  // IMPORTANT: Debug logging
+  console.log("ProductColorVariants rendering with:", {
+    currentColor,
+    colorVariantsCount: colorVariants?.length || 0,
+    colorVariants
+  })
+
+  // Force color display for specific product types
+  const productHandle = typeof window !== 'undefined' ? window.location.pathname.split('/').pop() : '';
+  let forcedColors: {color: string, handle: string | null, isCurrent: boolean}[] = [];
+
+  // Explicitly handle jackets (PC-SS-J25)
+  if (productHandle && productHandle.toUpperCase().includes('PC-SS-J25')) {
+    console.log("Forcing colors for jacket:", productHandle);
+    const isBlack = productHandle.toLowerCase().includes('black');
+
+    forcedColors = [
+      { color: isBlack ? 'Black' : 'Silver', isCurrent: true, handle: null },
+      {
+        color: isBlack ? 'Silver' : 'Black',
+        isCurrent: false,
+        // Find the correct handle or use a fallback
+        handle: colorVariants.find(v =>
+          v.handle.toLowerCase().includes(isBlack ? 'silver' : 'black')
+        )?.handle || (isBlack ?
+          productHandle.replace('black', 'silver') :
+          productHandle.replace('silver', 'black'))
+      }
+    ];
   }
 
-  // Log for debugging
-  console.log("Color variants:", colorVariants)
-  console.log("Current color:", currentColor)
+  // Explicitly handle pants (PC-SS-P23)
+  else if (productHandle && productHandle.toUpperCase().includes('PC-SS-P23')) {
+    console.log("Forcing colors for pants:", productHandle);
+    const isBlack = productHandle.toLowerCase().includes('black');
 
-  // Create a list of all colors including the current one
-  const allColors = [
+    forcedColors = [
+      { color: isBlack ? 'Black' : 'Beige', isCurrent: true, handle: null },
+      {
+        color: isBlack ? 'Beige' : 'Black',
+        isCurrent: false,
+        // Find the correct handle or use a fallback
+        handle: colorVariants.find(v =>
+          v.handle.toLowerCase().includes(isBlack ? 'beige' : 'black')
+        )?.handle || (isBlack ?
+          productHandle.replace('black', 'beige') :
+          productHandle.replace('beige', 'black'))
+      }
+    ];
+  }
+
+  // Use forced colors if available, otherwise use the normal logic
+  const allColors = forcedColors.length > 0 ? forcedColors : [
+    // Include the current color if available
     ...(currentColor ? [{ color: currentColor, isCurrent: true, handle: null }] : []),
+    // Include other color variants
     ...colorVariants
-      .filter(variant => variant.color !== currentColor) // Avoid duplicates
+      .filter(variant =>
+        variant.color !== currentColor &&
+        variant.color !== "Unknown" &&
+        variant.color
+      )
       .map((variant) => ({
         color: variant.color,
         handle: variant.handle,
         isCurrent: false,
       })),
-  ]
+  ];
+
+  // Debug the final colors we'll display
+  console.log("Final colors to display:", allColors);
+
+  // Force display for specific products, or check the normal conditions
+  const shouldDisplay = forcedColors.length > 0 || (allColors.length > 1);
+
+  if (!shouldDisplay) {
+    console.log("Not displaying color variants - insufficient colors");
+    return null;
+  }
 
   // Handle click on a color swatch
   const handleColorClick = (handle: string) => {
-    // Navigate to the product page for the selected color
-    router.push(`/product/${handle}`)
+    if (!handle) {
+      console.error("Attempted to navigate to empty handle");
+      return;
+    }
+
+    // Add product/ prefix if it's missing
+    const fullPath = handle.startsWith('/product/') ?
+      handle :
+      `/product/${handle}`;
+
+    console.log("Navigating to:", fullPath);
+    router.push(fullPath);
   }
 
   return (

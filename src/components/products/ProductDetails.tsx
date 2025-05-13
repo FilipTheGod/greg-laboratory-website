@@ -1,7 +1,7 @@
 // src/components/products/ProductDetails.tsx
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import Image from "next/image"
 import { useCart } from "@/contexts/CartContext"
 import { ShopifyProduct } from "@/lib/shopify"
@@ -15,28 +15,32 @@ interface ProductDetailsProps {
   product: ShopifyProduct
 }
 
+// Special helper function to force color variants for specific products
+const shouldForceColorVariants = (handle: string): boolean => {
+  return (
+    handle.toUpperCase().includes('PC-SS-J25') || // Jackets
+    handle.toUpperCase().includes('PC-SS-P23')    // Pants
+  );
+};
+
 const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [selectedSize, setSelectedSize] = useState("")
 
   const { addToCart, isLoading, cartItems } = useCart()
 
+  // Force hasColorVariants for special product types
+  const forceColorVariants = shouldForceColorVariants(product.handle);
+
   // Fetch related color variants
   const {
     colorVariants,
     currentColor,
-    hasColorVariants,
+    hasColorVariants: apiHasColorVariants,
     isLoading: isLoadingVariants,
   } = useRelatedProducts(product.handle)
 
-  // Extract available sizes from variants
-  const availableSizes = Array.from(
-    new Set(
-      product.variants.map((variant) => {
-        const parts = variant.title.split(" / ")
-        return parts[0]
-      })
-    )
-  ).sort()
+  // Override hasColorVariants for special products
+  const hasColorVariants = forceColorVariants || apiHasColorVariants;
 
   // Handle add to cart
   const handleAddToCart = () => {
@@ -124,6 +128,26 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
       inventoryQuantity: firstVariant.inventoryQuantity,
     }
   }
+
+  // Extract available sizes from variants
+  const availableSizes = Array.from(
+    new Set(
+      product.variants.map((variant) => {
+        const parts = variant.title.split(" / ")
+        return parts[0]
+      })
+    )
+  ).sort()
+
+  // Log for debugging
+  useEffect(() => {
+    console.log("ProductDetails - Product:", product.handle);
+    console.log("ProductDetails - Force color variants:", forceColorVariants);
+    console.log("ProductDetails - API has color variants:", apiHasColorVariants);
+    console.log("ProductDetails - Final has color variants:", hasColorVariants);
+    console.log("ProductDetails - Color variants:", colorVariants);
+    console.log("ProductDetails - Current color:", currentColor);
+  }, [product.handle, forceColorVariants, apiHasColorVariants, hasColorVariants, colorVariants, currentColor]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 px-4 md:pr-16 md:pl-0 product-details-container bg-[#fcfffc]">
@@ -230,11 +254,12 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             </div>
           </div>
 
-          {!isLoadingVariants && hasColorVariants && (
+          {/* Always display for force color variants, otherwise check if loaded and has variants */}
+          {(!isLoadingVariants || forceColorVariants) && (
             <ProductColorVariants
               currentColor={currentColor}
               colorVariants={colorVariants}
-              className="mb-2" // Make it smaller with less vertical padding
+              className="mb-2"
             />
           )}
 
