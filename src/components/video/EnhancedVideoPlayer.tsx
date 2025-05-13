@@ -39,7 +39,9 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
   const isMobile = useMobileDetect()
 
   // Determine the best video source URL
-  const actualVideoUrl = sources ? getBestVideoSource(sources, isMobile) : videoUrl || null
+  const actualVideoUrl = sources
+    ? getBestVideoSource(sources, isMobile)
+    : videoUrl || null
 
   useEffect(() => {
     if (!videoRef.current || !actualVideoUrl) return
@@ -51,39 +53,54 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
     videoElement.muted = true
     videoElement.playsInline = true
     videoElement.loop = loop
+    videoElement.autoplay = true // Force autoplay
 
     // Add playsinline attribute for iOS Safari
     videoElement.setAttribute("playsinline", "true")
     videoElement.setAttribute("webkit-playsinline", "true")
+    videoElement.setAttribute("autoplay", "true") // Additional attribute for older browsers
 
-    // If autoplay fails, this will show controls on mobile
-    const handleAutoplayFail = (error: Error) => {
-      console.log("Autoplay failed:", error)
-      if (isMobile) {
-        setShowControls(true)
-      }
-      // Don't set videoError for autoplay restrictions
-      if (error.name !== "NotAllowedError") {
-        setVideoError(true)
-        if (onError) onError()
-      }
-    }
+    // Create a more aggressive approach to ensure autoplay
+    const attemptAutoplay = () => {
+      const playPromise = videoElement.play()
 
-    // Attempt to play when video is ready
-    const attemptPlay = () => {
-      videoElement
-        .play()
-        .then(() => {
-          setIsPlaying(true)
-        })
-        .catch(handleAutoplayFail)
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsPlaying(true)
+            console.log("Autoplay successful")
+          })
+          .catch((error) => {
+            console.log("Initial autoplay failed:", error)
+
+            // Try again with a slight delay
+            setTimeout(() => {
+              console.log("Retrying autoplay...")
+              videoElement
+                .play()
+                .then(() => {
+                  setIsPlaying(true)
+                  console.log("Delayed autoplay successful")
+                })
+                .catch((retryError) => {
+                  console.log("Retry autoplay failed:", retryError)
+                  if (isMobile) {
+                    setShowControls(true)
+                  }
+
+                  // Only set real errors, not autoplay restrictions
+                  if (retryError.name !== "NotAllowedError") {
+                    setVideoError(true)
+                    if (onError) onError()
+                  }
+                })
+            }, 500)
+          })
+      }
     }
 
     // Event listeners
-    const handleCanPlay = () => {
-      attemptPlay()
-    }
-
+    const handleCanPlay = () => attemptAutoplay()
     const handleLoadError = () => {
       console.error("Video loading error")
       setVideoError(true)
@@ -92,23 +109,28 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
 
     // Add event listeners
     videoElement.addEventListener("canplay", handleCanPlay)
+    videoElement.addEventListener("loadedmetadata", handleCanPlay)
     videoElement.addEventListener("error", handleLoadError)
 
     // Try playing if video is already loaded
-    if (videoElement.readyState >= 3) {
-      attemptPlay()
+    if (videoElement.readyState >= 2) {
+      attemptAutoplay()
     }
 
-    // Create visibility observer to pause when off-screen
+    // Create visibility observer to pause when off-screen and resume when back
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (!videoElement || videoElement.paused) return
+          if (!videoElement) return
 
-          if (!entry.isIntersecting) {
+          if (entry.isIntersecting) {
+            if (videoElement.paused) {
+              videoElement
+                .play()
+                .catch((err) => console.log("Resume play failed:", err))
+            }
+          } else if (!videoElement.paused) {
             videoElement.pause()
-          } else if (isPlaying) {
-            videoElement.play().catch(err => console.log("Resume play failed:", err))
           }
         })
       },
@@ -120,6 +142,7 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
     // Cleanup
     return () => {
       videoElement.removeEventListener("canplay", handleCanPlay)
+      videoElement.removeEventListener("loadedmetadata", handleCanPlay)
       videoElement.removeEventListener("error", handleLoadError)
       observer.disconnect()
 
@@ -127,7 +150,7 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
         videoElement.pause()
       }
     }
-  }, [actualVideoUrl, isMobile, isPlaying, loop, onError])
+  }, [actualVideoUrl, isMobile, loop, onError])
 
   // Handle user touch/click to play video (helps on mobile)
   const handleInteraction = () => {
@@ -180,11 +203,12 @@ const EnhancedVideoPlayer: React.FC<EnhancedVideoPlayerProps> = ({
     <div className={`relative ${className}`}>
       <video
         ref={videoRef}
-        className="h-full w-full object-cover"
+        className="h-full w-full object-contain" // Changed to object-contain to maintain aspect ratio
         poster={poster || undefined}
         muted
         loop={loop}
         playsInline
+        autoPlay
         controls={showControls}
         onClick={handleInteraction}
         onTouchStart={isMobile ? handleInteraction : undefined}

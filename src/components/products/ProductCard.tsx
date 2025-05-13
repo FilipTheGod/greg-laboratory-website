@@ -1,4 +1,4 @@
-// Final integrated ProductCard.tsx using EnhancedVideoPlayer
+// src/components/products/ProductCard.tsx
 "use client"
 
 import React, { useState } from "react"

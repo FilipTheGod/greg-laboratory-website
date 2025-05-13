@@ -108,7 +108,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ onFilterChange }) => {
             <button
               key={category}
               onClick={() => handleCategoryClick(category)}
-              className={`text-left text-[16px] hover:opacity-70 transition mb-4 whitespace-nowrap ${
+              className={`text-left text-[14px] hover:opacity-70 transition mb-2 whitespace-nowrap ${
                 activeCategory === category ? "font-medium" : "opacity-70"
               }`}
             >

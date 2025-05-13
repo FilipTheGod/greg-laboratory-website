@@ -100,13 +100,7 @@ const MobileMenuSheet: React.FC<MobileMenuSheetProps> = ({
               >
                 INSTAGRAM
               </Link>
-              <Link
-                href="/consultancy"
-                className="text-black hover:opacity-70 transition text-sm tracking-wide"
-                onClick={handleLinkClick}
-              >
-                CONSULTANCY
-              </Link>
+              {/* Consultancy link removed */}
             </div>
           </div>
 

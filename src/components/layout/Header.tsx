@@ -88,12 +88,7 @@ const Header: React.FC = () => {
               >
                 INSTAGRAM
               </Link>
-              <Link
-                href="/consultancy"
-                className="text-black text-xs tracking-wide hover:opacity-70 transition"
-              >
-                CONSULTANCY
-              </Link>
+              {/* Consultancy link removed */}
               <button
                 onClick={toggleCart}
                 className="text-black text-xs tracking-wide hover:opacity-70 transition"
