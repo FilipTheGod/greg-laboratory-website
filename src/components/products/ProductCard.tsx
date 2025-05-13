@@ -147,7 +147,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           {/* Price - Always visible on mobile, only on hover for desktop */}
           <div className="mt-3">
             <div
-              className={`text-laboratory-black text-xs tracking-wide text-center transition-opacity md:opacity-0 md:group-hover:opacity-100`}
+              className={`text-laboratory-black md:text-xs text-sm tracking-wide text-center transition-opacity md:opacity-0 md:group-hover:opacity-100`}
             >
               ${formatPrice(product.variants[0]?.price)}
             </div>
@@ -157,7 +157,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
       {/* Sizes - Always visible on mobile, only on hover for desktop */}
       <div
-        className={`flex justify-center space-x-3 transition-opacity mt-2 md:opacity-0 md:group-hover:opacity-100`}
+        className={`flex justify-center space-x-4 md:space-x-3 transition-opacity mt-3 mb-4 md:mb-0 md:mt-2 md:opacity-0 md:group-hover:opacity-100`}
       >
         {availableSizes.map((size) => {
           const isAvailable = isSizeAvailable(size)
@@ -167,7 +167,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               key={size}
               onClick={(e) => handleSizeClick(e, size)}
               className={`
-                text-xs transition-all relative
+                md:text-xs text-sm transition-all relative
                 ${
                   isAvailable
                     ? "text-laboratory-black hover:underline cursor-pointer"

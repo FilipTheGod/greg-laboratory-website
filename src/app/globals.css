@@ -178,3 +178,29 @@ html {
   font-size: 14px;
   letter-spacing: 0.25em;
 }
+
+/* Additional CSS for improving mobile spacing */
+/* Add this to src/app/globals.css */
+
+/* Extra bottom padding for mobile product features */
+@media (max-width: 768px) {
+  .product-details-container {
+    padding-bottom: 6rem; /* Generous bottom padding on mobile */
+  }
+
+  /* Make bottom margin larger for accordion on mobile */
+  .product-details-accordion {
+    margin-bottom: 3rem;
+  }
+
+  /* Increase product card size text on mobile */
+  .product-card-price {
+    font-size: 14px;
+  }
+
+  .product-card-sizes {
+    font-size: 14px;
+    margin-top: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+}

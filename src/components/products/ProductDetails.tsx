@@ -127,7 +127,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 px-4 md:pr-16 md:pl-0 product-details-container bg-[#fcfffc]">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 px-4 md:pr-16 md:pl-0 product-details-container bg-[#fcfffc] pb-16 md:pb-8">
       {/* Mobile Carousel - Only visible on mobile */}
       <div className="md:hidden w-full mb-6">
         <MobileProductCarousel

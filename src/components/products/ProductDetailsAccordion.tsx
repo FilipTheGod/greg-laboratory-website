@@ -50,7 +50,11 @@ const ProductDetailsAccordion: React.FC<ProductDetailsAccordionProps> = ({
   }, [product])
 
   return (
-    <Accordion type="single" collapsible className="w-full">
+    <Accordion
+      type="multiple"
+      defaultValue={["product-details", "product-features"]}
+      className="w-full mb-12 md:mb-4"
+    >
       <AccordionItem
         value="product-details"
         className="border-t border-laboratory-black/10 border-b-0"
