@@ -1,4 +1,4 @@
-// src/components/products/ProductCard.tsx
+// src/components/products/ProductCard.tsx - Updated low stock indicator
 "use client"
 
 import React, { useState } from "react"
@@ -42,6 +42,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         (variant.title === size || variant.title.startsWith(`${size} /`)) &&
         (variant.available === undefined || variant.available === true)
     )
+  }
+
+  // Get inventory quantity for a size
+  const getSizeInventory = (size: string): number | undefined => {
+    const variant = product.variants.find(
+      (v) =>
+        (v.title === size || v.title.startsWith(`${size} /`)) &&
+        (v.available === undefined || v.available === true)
+    )
+    return variant?.inventoryQuantity
   }
 
   // Handle size click - add to cart directly regardless of color
@@ -163,26 +173,36 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       >
         {availableSizes.map((size) => {
           const isAvailable = isSizeAvailable(size)
+          const inventory = getSizeInventory(size)
+          const isLowStock = isAvailable && inventory !== undefined && inventory <= 3
 
           return (
-            <button
-              key={size}
-              onClick={(e) => handleSizeClick(e, size)}
-              className={`
-                md:text-xs text-sm transition-all relative
-                ${
-                  isAvailable
-                    ? "text-laboratory-black hover:underline cursor-pointer"
-                    : "text-laboratory-black/40 cursor-not-allowed"
-                }
-              `}
-              disabled={!isAvailable}
-            >
-              {size}
-              {!isAvailable && (
-                <span className="absolute left-0 right-0 top-1/2 h-px bg-laboratory-black/40 transform rotate-45 -translate-y-1/2"></span>
+            <div key={size} className="flex flex-col items-center">
+              <button
+                onClick={(e) => handleSizeClick(e, size)}
+                className={`
+                  md:text-xs text-sm transition-all relative
+                  ${
+                    isAvailable
+                      ? "text-laboratory-black hover:underline cursor-pointer"
+                      : "text-laboratory-black/40 cursor-not-allowed"
+                  }
+                `}
+                disabled={!isAvailable}
+              >
+                {size}
+                {!isAvailable && (
+                  <span className="absolute left-0 right-0 top-1/2 h-px bg-laboratory-black/40 transform rotate-45 -translate-y-1/2"></span>
+                )}
+              </button>
+
+              {/* Low stock indicator - just the number in red */}
+              {isLowStock && (
+                <p className="text-[10px] text-red-500 mt-1">
+                  {inventory}
+                </p>
               )}
-            </button>
+            </div>
           )
         })}
       </div>

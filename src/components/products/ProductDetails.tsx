@@ -1,7 +1,7 @@
-// src/components/products/ProductDetails.tsx
+// src/components/products/ProductDetails.tsx - Fixed ESLint errors
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import Image from "next/image"
 import { useCart } from "@/contexts/CartContext"
 import { ShopifyProduct } from "@/lib/shopify"
@@ -10,6 +10,7 @@ import ProductColorVariants from "./ProductColorVariants"
 import { useRelatedProducts } from "@/hooks/useRelatedProducts"
 import MobileProductCarousel from "./MobileProductCarousel"
 import ProductDetailsAccordion from "./ProductDetailsAccordion"
+import ProductSizeGuide from "./ProductSizeGuide" // We'll create this component next
 
 interface ProductDetailsProps {
   product: ShopifyProduct
@@ -25,6 +26,7 @@ const shouldForceColorVariants = (handle: string): boolean => {
 
 const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const [selectedSize, setSelectedSize] = useState("")
+  const [showSizeGuide, setShowSizeGuide] = useState(false)
 
   const { addToCart, isLoading, cartItems } = useCart()
 
@@ -35,12 +37,8 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const {
     colorVariants,
     currentColor,
-    hasColorVariants: apiHasColorVariants,
     isLoading: isLoadingVariants,
   } = useRelatedProducts(product.handle)
-
-  // Override hasColorVariants for special products
-  const hasColorVariants = forceColorVariants || apiHasColorVariants;
 
   // Handle add to cart
   const handleAddToCart = () => {
@@ -139,15 +137,10 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
     )
   ).sort()
 
-  // Log for debugging
-  useEffect(() => {
-    console.log("ProductDetails - Product:", product.handle);
-    console.log("ProductDetails - Force color variants:", forceColorVariants);
-    console.log("ProductDetails - API has color variants:", apiHasColorVariants);
-    console.log("ProductDetails - Final has color variants:", hasColorVariants);
-    console.log("ProductDetails - Color variants:", colorVariants);
-    console.log("ProductDetails - Current color:", currentColor);
-  }, [product.handle, forceColorVariants, apiHasColorVariants, hasColorVariants, colorVariants, currentColor]);
+  // Toggle size guide visibility
+  const toggleSizeGuide = () => {
+    setShowSizeGuide(!showSizeGuide)
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 px-4 md:pr-16 md:pl-0 product-details-container bg-[#fcfffc]">
@@ -213,7 +206,23 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
 
           {/* Size Selection */}
           <div className="mb-4">
-            <h2 className="text-xs tracking-wide mb-2">SELECT SIZE</h2>
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="text-xs tracking-wide">SELECT SIZE</h2>
+              <button
+                onClick={toggleSizeGuide}
+                className="text-xs tracking-wide underline"
+              >
+                Size Guide
+              </button>
+            </div>
+
+            {/* Size Guide Modal */}
+            {showSizeGuide && (
+              <ProductSizeGuide
+                productHandle={product.handle}
+                onClose={toggleSizeGuide}
+              />
+            )}
 
             <div className="flex flex-wrap gap-3">
               {availableSizes.map((size) => {
@@ -225,9 +234,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                   inventoryQuantity <= 3
 
                 return (
-                  <div key={size} className="flex flex-col items-start">
+                  <div key={size} className="flex flex-col items-center">
                     <button
-                      className={`px-1 py-1 transition-all text-xs relative tracking-wide
+                      className={`px-3 py-1 transition-all text-xs relative tracking-wide
                         ${
                           selectedSize === size
                             ? "text-laboratory-black underline"
@@ -244,8 +253,8 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
                       )}
                     </button>
                     {isLowStock && (
-                      <p className="text-xs text-red-500 mt-1 tracking-normal">
-                        Only {inventoryQuantity} left
+                      <p className="text-[10px] text-red-500 mt-1">
+                        {inventoryQuantity}
                       </p>
                     )}
                   </div>
