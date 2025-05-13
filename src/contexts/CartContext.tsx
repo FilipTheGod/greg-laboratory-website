@@ -1,11 +1,11 @@
-// src/contexts/CartContext.tsx - Fixed TypeScript error
+// src/contexts/CartContext.tsx - Update checkout URL check
 "use client"
 
 import React, { createContext, useContext, useState, useEffect } from "react"
 import { getPriceValue } from "@/utils/price"
 import {
   createCheckout,
-  fetchCheckout,
+  // Remove the unused fetchCheckout import
   addItemToCheckout,
   updateCheckoutItem,
   removeCheckoutItem,
@@ -61,6 +61,7 @@ interface CartContextType {
   updateQuantity: (id: string, quantity: number) => Promise<void>
   removeFromCart: (id: string) => Promise<void>
   removeNotification: (id: string) => void
+  clearCart: () => void // Add this method to clear the cart
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -104,128 +105,79 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     setNotifications((prev) => prev.filter((n) => n.id !== id))
   }
 
-  // Initialize checkout
+  // Method to clear the cart completely
+  const clearCart = () => {
+    setCartItems([])
+    localStorage.removeItem("cartItems")
+    // Don't remove checkoutId, as we want to maintain the empty checkout
+  }
+
+  // Initialize checkout - Use layout effect to prevent hydration issues
   useEffect(() => {
+    // This function now runs only on the client
     const initializeCheckout = async () => {
       setIsLoading(true)
-      // Check if we already have a checkout ID in localStorage
-      const existingCheckoutId = localStorage.getItem("checkoutId")
-      const existingCartItems = localStorage.getItem("cartItems")
 
       try {
-        let activeCheckout: CheckoutType | null = null
-        let activeCheckoutId = existingCheckoutId || ""
+        // Create a new checkout
+        const newCheckoutResponse = await createCheckout()
+        const newCheckout = newCheckoutResponse as CheckoutType
+        const activeCheckoutId = newCheckout.id
 
-        if (existingCheckoutId) {
-          // Fetch the existing checkout to make sure it's still valid
-          try {
-            const fetchedCheckout = await fetchCheckout(existingCheckoutId)
-            activeCheckout = fetchedCheckout as CheckoutType
+        // Save the new checkout ID
+        localStorage.setItem("checkoutId", activeCheckoutId)
+        setCheckoutId(activeCheckoutId)
+        setCheckoutUrl(newCheckout.webUrl)
 
-            // If checkout is completed, create a new one
-            if (activeCheckout.completedAt) {
-              const newCheckoutResponse = await createCheckout()
-              const newCheckout = newCheckoutResponse as CheckoutType
-              activeCheckoutId = newCheckout.id
-              activeCheckout = newCheckout
+        // Get cart items from localStorage
+        const existingCartItems = localStorage.getItem("cartItems")
 
-              if (activeCheckoutId) {
-                localStorage.setItem("checkoutId", activeCheckoutId)
-              }
+        // If there are cart items, restore them
+        if (existingCartItems) {
+          const parsedItems = JSON.parse(existingCartItems) as CartItem[]
 
-              // Clear cart if checkout was completed
-              setCartItems([])
-              localStorage.removeItem("cartItems")
-            }
-          } catch (checkoutError) {
-            console.log(
-              "Error with existing checkout, creating new one:",
-              checkoutError
+          // If items exist in cart, add them to the new checkout
+          if (parsedItems.length > 0) {
+            const lineItems = parsedItems.map((item) => ({
+              variantId: item.variant.id,
+              quantity: item.quantity,
+            }))
+
+            // Add items to the new checkout
+            const updatedCheckoutResponse = await addItemToCheckout(
+              activeCheckoutId,
+              lineItems
             )
-            // If there's an error (e.g., checkout expired), create a new one
-            const newCheckoutResponse = await createCheckout()
-            const newCheckout = newCheckoutResponse as CheckoutType
-            activeCheckoutId = newCheckout.id
-            activeCheckout = newCheckout
 
-            if (activeCheckoutId) {
-              localStorage.setItem("checkoutId", activeCheckoutId)
+            const updatedCheckout = updatedCheckoutResponse as CheckoutType
+
+            // Update checkout URL with items added
+            setCheckoutUrl(updatedCheckout.webUrl)
+
+            // Update cart items with new line item IDs
+            if (updatedCheckout.lineItems && updatedCheckout.lineItems.length > 0) {
+              const updatedCartItems = parsedItems.map((item, index) => ({
+                ...item,
+                lineItemId:
+                  updatedCheckout.lineItems &&
+                  index < updatedCheckout.lineItems.length
+                    ? updatedCheckout.lineItems[index].id
+                    : undefined,
+              }))
+
+              setCartItems(updatedCartItems)
+              localStorage.setItem("cartItems", JSON.stringify(updatedCartItems))
+            } else {
+              setCartItems(parsedItems)
             }
           }
         } else {
-          // No existing checkout, create a new one
-          const newCheckoutResponse = await createCheckout()
-          const newCheckout = newCheckoutResponse as CheckoutType
-          activeCheckoutId = newCheckout.id
-          activeCheckout = newCheckout
-
-          if (activeCheckoutId) {
-            localStorage.setItem("checkoutId", activeCheckoutId)
-          }
-        }
-
-        setCheckoutId(activeCheckoutId)
-
-        if (activeCheckout) {
-          setCheckoutUrl(activeCheckout.webUrl)
-        }
-
-        // Restore cart items if they exist
-        if (existingCartItems) {
-          let parsedItems = JSON.parse(existingCartItems) as CartItem[]
-
-          // If we have a new checkout, we need to re-add all items to get new lineItemIds
-          if (!existingCheckoutId || activeCheckoutId !== existingCheckoutId) {
-            if (parsedItems.length > 0) {
-              const lineItems = parsedItems.map((item) => ({
-                variantId: item.variant.id,
-                quantity: item.quantity,
-              }))
-
-              if (activeCheckoutId) {
-                const updatedCheckoutResponse = await addItemToCheckout(
-                  activeCheckoutId,
-                  lineItems
-                )
-
-                const updatedCheckout = updatedCheckoutResponse as CheckoutType
-
-                // Update cart items with new lineItemIds
-                if (
-                  updatedCheckout.lineItems &&
-                  updatedCheckout.lineItems.length > 0
-                ) {
-                  parsedItems = parsedItems.map((item, index) => ({
-                    ...item,
-                    lineItemId:
-                      updatedCheckout.lineItems &&
-                      index < updatedCheckout.lineItems.length
-                        ? updatedCheckout.lineItems[index].id
-                        : undefined,
-                  }))
-                }
-
-                setCheckoutUrl(updatedCheckout.webUrl)
-              }
-            }
-          } else if (activeCheckout && activeCheckout.lineItems) {
-            // Match existing lineItemIds with our cart items if using existing checkout
-            parsedItems = parsedItems.map((item) => {
-              const lineItem = activeCheckout.lineItems?.find(
-                (li: CheckoutItem) => li.variant.id === item.variant.id
-              )
-              return {
-                ...item,
-                lineItemId: lineItem ? lineItem.id : undefined,
-              }
-            })
-          }
-
-          setCartItems(parsedItems)
-          localStorage.setItem("cartItems", JSON.stringify(parsedItems))
+          // No cart items in localStorage, start with empty cart
+          setCartItems([])
         }
       } catch (error) {
         console.error("Error initializing checkout:", error)
+
         // Fallback to create a new checkout
         try {
           const checkoutResponse = await createCheckout()
@@ -241,8 +193,30 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     }
 
+    // Only run on the client side
     initializeCheckout()
   }, [])
+
+  // Check URL for completed checkout - client side only
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Define this function inside useEffect to avoid SSR issues
+      const checkForCompletedCheckout = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const checkoutCompleted = urlParams.get('checkout_completed');
+
+        if (checkoutCompleted === 'true' ||
+            window.location.href.includes('checkout.shopify') ||
+            window.location.href.includes('thank_you')) {
+          // Clear the cart if checkout was completed
+          clearCart();
+        }
+      };
+
+      // Run the check
+      checkForCompletedCheckout();
+    }
+  }, []);
 
   // Update localStorage when cart items change
   useEffect(() => {
@@ -456,6 +430,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         updateQuantity,
         removeFromCart,
         removeNotification,
+        clearCart,
       }}
     >
       {children}

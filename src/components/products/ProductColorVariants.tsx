@@ -24,99 +24,41 @@ const ProductColorVariants: React.FC<ProductColorVariantsProps> = ({
 }) => {
   const router = useRouter()
 
-  // IMPORTANT: Debug logging
-  console.log("ProductColorVariants rendering with:", {
-    currentColor,
-    colorVariantsCount: colorVariants?.length || 0,
-    colorVariants
-  })
+  // Create static arrays and avoid conditional rendering structure differences
+  const allColors = React.useMemo(() => {
+    // Start with an empty array
+    const colors: Array<{color: string, handle: string | null, isCurrent: boolean}> = [];
 
-  // Force color display for specific product types
-  const productHandle = typeof window !== 'undefined' ? window.location.pathname.split('/').pop() : '';
-  let forcedColors: {color: string, handle: string | null, isCurrent: boolean}[] = [];
+    // Add current color if it exists
+    if (currentColor) {
+      colors.push({ color: currentColor, isCurrent: true, handle: null });
+    }
 
-  // Explicitly handle jackets (PC-SS-J25)
-  if (productHandle && productHandle.toUpperCase().includes('PC-SS-J25')) {
-    console.log("Forcing colors for jacket:", productHandle);
-    const isBlack = productHandle.toLowerCase().includes('black');
-
-    forcedColors = [
-      { color: isBlack ? 'Black' : 'Silver', isCurrent: true, handle: null },
-      {
-        color: isBlack ? 'Silver' : 'Black',
-        isCurrent: false,
-        // Find the correct handle or use a fallback
-        handle: colorVariants.find(v =>
-          v.handle.toLowerCase().includes(isBlack ? 'silver' : 'black')
-        )?.handle || (isBlack ?
-          productHandle.replace('black', 'silver') :
-          productHandle.replace('silver', 'black'))
+    // Add other variants
+    colorVariants.forEach(variant => {
+      if (variant.color !== currentColor && variant.color !== "Unknown" && variant.color) {
+        colors.push({
+          color: variant.color,
+          handle: variant.handle,
+          isCurrent: false,
+        });
       }
-    ];
-  }
+    });
 
-  // Explicitly handle pants (PC-SS-P23)
-  else if (productHandle && productHandle.toUpperCase().includes('PC-SS-P23')) {
-    console.log("Forcing colors for pants:", productHandle);
-    const isBlack = productHandle.toLowerCase().includes('black');
+    return colors;
+  }, [currentColor, colorVariants]);
 
-    forcedColors = [
-      { color: isBlack ? 'Black' : 'Beige', isCurrent: true, handle: null },
-      {
-        color: isBlack ? 'Beige' : 'Black',
-        isCurrent: false,
-        // Find the correct handle or use a fallback
-        handle: colorVariants.find(v =>
-          v.handle.toLowerCase().includes(isBlack ? 'beige' : 'black')
-        )?.handle || (isBlack ?
-          productHandle.replace('black', 'beige') :
-          productHandle.replace('beige', 'black'))
-      }
-    ];
-  }
-
-  // Use forced colors if available, otherwise use the normal logic
-  const allColors = forcedColors.length > 0 ? forcedColors : [
-    // Include the current color if available
-    ...(currentColor ? [{ color: currentColor, isCurrent: true, handle: null }] : []),
-    // Include other color variants
-    ...colorVariants
-      .filter(variant =>
-        variant.color !== currentColor &&
-        variant.color !== "Unknown" &&
-        variant.color
-      )
-      .map((variant) => ({
-        color: variant.color,
-        handle: variant.handle,
-        isCurrent: false,
-      })),
-  ];
-
-  // Debug the final colors we'll display
-  console.log("Final colors to display:", allColors);
-
-  // Force display for specific products, or check the normal conditions
-  const shouldDisplay = forcedColors.length > 0 || (allColors.length > 1);
-
-  if (!shouldDisplay) {
-    console.log("Not displaying color variants - insufficient colors");
+  // Only render the component if we have colors to show
+  if (allColors.length <= 1) {
     return null;
   }
 
   // Handle click on a color swatch
   const handleColorClick = (handle: string) => {
-    if (!handle) {
-      console.error("Attempted to navigate to empty handle");
-      return;
-    }
+    if (!handle) return;
 
     // Add product/ prefix if it's missing
-    const fullPath = handle.startsWith('/product/') ?
-      handle :
-      `/product/${handle}`;
-
-    console.log("Navigating to:", fullPath);
+    const fullPath = handle.startsWith('/product/') ? handle : `/product/${handle}`;
     router.push(fullPath);
   }
 

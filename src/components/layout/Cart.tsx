@@ -1,4 +1,4 @@
-// src/components/layout/Cart.tsx
+// src/components/layout/Cart.tsx - Add clear cart button
 "use client"
 
 import React from "react"
@@ -22,6 +22,7 @@ const Cart: React.FC = () => {
     removeFromCart,
     checkoutUrl,
     isLoading,
+    clearCart,
   } = useCart()
 
   const handleCheckout = () => {
@@ -52,8 +53,19 @@ const Cart: React.FC = () => {
       >
         <div className="h-full flex flex-col">
           {/* Header */}
-          <SheetHeader className="px-4 py-4 border-b border-black/10 text-left">
-            <SheetTitle className="text-xs tracking-wide">CART</SheetTitle>
+          <SheetHeader className="px-10 py-4 border-b border-black/10 text-left">
+            <div className="flex justify-between items-center">
+              <SheetTitle className="text-xs tracking-wide">CART</SheetTitle>
+              {cartItems.length > 0 && (
+                <button
+                  onClick={clearCart}
+                  className="text-xs text-red-600 underline"
+                  disabled={isLoading}
+                >
+                  Clear cart
+                </button>
+              )}
+            </div>
           </SheetHeader>
 
           {/* Loading indicator */}
