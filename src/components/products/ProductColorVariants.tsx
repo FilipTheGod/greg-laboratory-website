@@ -53,7 +53,7 @@ const ProductColorVariants: React.FC<ProductColorVariantsProps> = ({
             className={`w-8 h-8 rounded-full relative transition-all ${
               colorInfo.isCurrent
                 ? "ring-1 ring-laboratory-black ring-offset-1"
-                : "hover:opacity-80"
+                : "ring-1 ring-laboratory-black/20 ring-offset-1 hover:opacity-80"
             }`}
             style={getColorStyle(colorInfo.color)}
             onClick={() =>
@@ -65,7 +65,6 @@ const ProductColorVariants: React.FC<ProductColorVariantsProps> = ({
           />
         ))}
       </div>
-      {/* Removed the color text that was here */}
     </div>
   )
 }

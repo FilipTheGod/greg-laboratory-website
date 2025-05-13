@@ -16,6 +16,7 @@ function extractBaseSku(handle: string): string {
     "navy",
     "olive",
     "grey",
+    "gray",
     "khaki",
     "tan",
     "brown",
@@ -25,7 +26,9 @@ function extractBaseSku(handle: string): string {
     "red",
     "pink",
     "stone",
+    "beige",
     "sand",
+    "silver",
   ]
 
   // Check if the last part is a color
@@ -52,6 +55,7 @@ function extractColor(handle: string): string | null {
     "navy",
     "olive",
     "grey",
+    "gray",
     "khaki",
     "tan",
     "brown",
@@ -61,12 +65,48 @@ function extractColor(handle: string): string | null {
     "red",
     "pink",
     "stone",
+    "beige",
     "sand",
+    "silver",
   ]
 
   if (commonColors.includes(lastPart)) {
     // Capitalize the first letter of the color
     return lastPart.charAt(0).toUpperCase() + lastPart.slice(1)
+  }
+
+  return null
+}
+
+// Helper function to extract color from title
+function extractColorFromTitle(title: string): string | null {
+  const lowerTitle = title.toLowerCase()
+  const commonColors = [
+    "black",
+    "cream",
+    "white",
+    "navy",
+    "olive",
+    "grey",
+    "gray",
+    "khaki",
+    "tan",
+    "brown",
+    "natural",
+    "green",
+    "blue",
+    "red",
+    "pink",
+    "stone",
+    "beige",
+    "sand",
+    "silver",
+  ]
+
+  for (const color of commonColors) {
+    if (lowerTitle.includes(color)) {
+      return color.charAt(0).toUpperCase() + color.slice(1)
+    }
   }
 
   return null
@@ -103,11 +143,15 @@ export async function GET(
 
     // Map to a simpler structure with just what we need
     const colorVariants = relatedProducts.map((product) => {
+      // Try to extract color in multiple ways for better reliability
+      const colorFromHandle = extractColor(product.handle)
+      const colorFromTitle = extractColorFromTitle(product.title)
+
       return {
         id: product.id,
         handle: product.handle,
         title: product.title,
-        color: extractColor(product.handle) || "Unknown",
+        color: colorFromHandle || colorFromTitle || "Unknown",
         image:
           product.images && product.images.length > 0
             ? product.images[0].src
@@ -117,7 +161,7 @@ export async function GET(
 
     return NextResponse.json({
       baseSku,
-      currentColor: extractColor(handle),
+      currentColor: extractColor(handle) || extractColorFromTitle(products.find(p => p.handle === handle)?.title || "") || null,
       colorVariants,
     })
   } catch (error) {

@@ -210,3 +210,33 @@ html {
 html {
   scroll-behavior: smooth;
 }
+
+/* Additional CSS to ensure Add to Cart button visibility */
+/* Add this to src/app/globals.css */
+
+/* Make sure the button is always visible */
+.add-to-cart-button {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  /* Higher z-index to ensure it stays on top */
+  z-index: 10;
+}
+
+/* Add specific styling for different variants of the button */
+.add-to-cart-button--disabled {
+  background-color: rgba(10, 9, 8, 0.4) !important; /* 40% opacity black */
+  cursor: not-allowed;
+}
+
+.add-to-cart-button--enabled {
+  background-color: rgb(10, 9, 8) !important; /* Full black */
+}
+
+/* Ensure button stays visible in all contexts */
+@media (max-width: 768px) {
+  .add-to-cart-button {
+    position: relative;
+    width: 100%;
+  }
+}

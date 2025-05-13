@@ -3,7 +3,6 @@
 
 import React, { useState } from "react"
 import Image from "next/image"
-import { motion } from "framer-motion"
 import { useCart } from "@/contexts/CartContext"
 import { ShopifyProduct } from "@/lib/shopify"
 import { formatPrice } from "@/utils/price"
@@ -230,6 +229,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
               })}
             </div>
           </div>
+
           {!isLoadingVariants && hasColorVariants && (
             <ProductColorVariants
               currentColor={currentColor}
@@ -238,23 +238,21 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
             />
           )}
 
-          {/* Add to Cart Button - Now always visible with correct styling based on selection */}
+          {/* Add to Cart Button */}
           <div className="pt-6 pb-4">
-            <motion.button
-              className={`w-full py-3 text-sm tracking-wide transition-colors
+            <button
+              className={`w-full py-3 text-sm tracking-wide transition-colors add-to-cart-button
                 ${
                   selectedSize
-                    ? "bg-laboratory-black text-laboratory-white"
-                    : "bg-laboratory-black/40 text-laboratory-white"
+                    ? "add-to-cart-button--enabled bg-laboratory-black text-laboratory-white"
+                    : "add-to-cart-button--disabled bg-laboratory-black/40 text-laboratory-white"
                 }
-                disabled:opacity-50
-              `}
+                disabled:opacity-50`}
               onClick={handleAddToCart}
-              whileTap={selectedSize ? { scale: 0.98 } : {}}
               disabled={!selectedSize || isLoading}
             >
               {isLoading ? "ADDING..." : "ADD TO CART"}
-            </motion.button>
+            </button>
           </div>
 
           {/* Product Accordion Sections */}

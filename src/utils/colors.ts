@@ -24,7 +24,7 @@ const COLOR_MAP: Record<string, string> = {
   Stone: "#DAD6C5",
   Beige: "#F5F5DC",
   Charcoal: "#36454F",
-  Sage: "#9CAF88",
+  Silver: "#D3D3D3",
   Sand: "#C2B280",
   Terracotta: "#E2725B",
   Rust: "#B7410E",
