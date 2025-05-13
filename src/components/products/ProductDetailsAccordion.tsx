@@ -52,7 +52,7 @@ const ProductDetailsAccordion: React.FC<ProductDetailsAccordionProps> = ({
   return (
     <Accordion
       type="multiple"
-      defaultValue={["product-details", "product-features"]}
+      defaultValue={["product-details", "product-features", "returns"]}
       className="w-full mb-12 md:mb-4"
     >
       <AccordionItem
@@ -103,6 +103,22 @@ const ProductDetailsAccordion: React.FC<ProductDetailsAccordionProps> = ({
               This product&apos;s features are being updated.
             </p>
           )}
+        </AccordionContent>
+      </AccordionItem>
+
+      {/* New Returns Accordion Item */}
+      <AccordionItem
+        value="returns"
+        className="border-t border-laboratory-black/10 border-b-0"
+      >
+        <AccordionTrigger className="text-xs tracking-wide py-4">
+          RETURNS
+        </AccordionTrigger>
+        <AccordionContent className="text-xs tracking-normal">
+          <p>
+            Greg Laboratory is a small business making limited quantities of each garment.
+            We do not accept returns or refunds.
+          </p>
         </AccordionContent>
       </AccordionItem>
     </Accordion>
