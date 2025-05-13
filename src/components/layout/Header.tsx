@@ -33,11 +33,6 @@ const Header: React.FC = () => {
     pathname.startsWith("/FIELD")
   */
 
-  const handleFilterChange = (category: string | number) => {
-    // This function will be used for all filter instances when re-enabled
-    console.log("Filter changed:", category)
-  }
-
   // Handle logo click to reset filters and navigate home
   const handleLogoClick = (e: React.MouseEvent) => {
     if (pathname !== "/") {
@@ -59,7 +54,7 @@ const Header: React.FC = () => {
           <div className="flex justify-between items-center py-4">
             {/* Mobile Menu Button - Left Side */}
             <div className="flex md:hidden items-center">
-              <MobileMenuSheet onFilterChange={handleFilterChange} />
+              <MobileMenuSheet />
             </div>
 
             {/* Logo - Desktop aligned to left */}
@@ -90,6 +85,12 @@ const Header: React.FC = () => {
 
             {/* Desktop Navigation - Pushed to right */}
             <div className="hidden md:flex items-center justify-end space-x-8">
+              <a
+                href="mailto:info@greglaboratory.com"
+                className="text-black hover:opacity-70 transition text-xs tracking-wide"
+              >
+                CONTACT
+              </a>
               <Link
                 href="https://www.instagram.com/greglaboratory/?hl=en"
                 className="text-black hover:opacity-70 transition text-xs tracking-wide"
