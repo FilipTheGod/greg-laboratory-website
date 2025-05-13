@@ -37,12 +37,49 @@ const COLOR_MAP: Record<string, string> = {
   Mustard: "#E1AD01",
 }
 
+// Case-insensitive color name lookup
+function findColorName(input: string): string | null {
+  // Normalize the input
+  const normalizedInput = input.trim().toLowerCase()
+
+  // Direct match in color map
+  for (const [colorName] of Object.entries(COLOR_MAP)) {
+    if (colorName.toLowerCase() === normalizedInput) {
+      return colorName
+    }
+  }
+
+  // Check for partial matches
+  for (const colorName of Object.keys(COLOR_MAP)) {
+    const normalizedColor = colorName.toLowerCase()
+    // Check if the color name is contained in the input
+    if (normalizedInput.includes(normalizedColor)) {
+      return colorName
+    }
+    // Or if the input is contained in the color name
+    if (normalizedColor.includes(normalizedInput)) {
+      return colorName
+    }
+  }
+
+  return null
+}
+
 /**
  * Get the hex color value from a color name
  * Falls back to a default gray if the color is not recognized
  */
 export function getColorHex(colorName: string): string {
-  // Normalize the color name
+  if (!colorName) return "#CCCCCC" // Default gray
+
+  // Normalize and find the color
+  const matchedColor = findColorName(colorName)
+
+  if (matchedColor && COLOR_MAP[matchedColor]) {
+    return COLOR_MAP[matchedColor]
+  }
+
+  // Alternative matching method (deprecated but kept for compatibility)
   const normalizedName = colorName
     .trim()
     .replace(/\s+/g, " ")
@@ -101,25 +138,50 @@ export function getContrastTextColor(colorName: string): string {
  * Check if a color name is known in our system
  */
 export function isKnownColor(colorName: string): boolean {
-  // Normalize the color name
-  const normalizedName = colorName
-    .trim()
-    .replace(/\s+/g, " ")
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ")
-
-  return normalizedName in COLOR_MAP
+  return findColorName(colorName) !== null
 }
 
 /**
  * Extract a color name from a product handle or title
  */
 export function extractColorFromText(text: string): string | null {
+  if (!text) return null
+
   // Convert to lowercase for easier matching
   const lowerText = text.toLowerCase()
 
-  // Check for each color name in the text
+  // Try to match whole words
+  const commonColors = [
+    "black",
+    "beige",
+    "cream",
+    "white",
+    "navy",
+    "olive",
+    "grey",
+    "gray",
+    "khaki",
+    "tan",
+    "brown",
+    "natural",
+    "green",
+    "blue",
+    "red",
+    "pink",
+    "stone",
+    "sand",
+    "silver",
+  ]
+
+  for (const color of commonColors) {
+    // Check for word boundaries to avoid partial matches
+    const regex = new RegExp(`\\b${color}\\b`, "i")
+    if (regex.test(lowerText)) {
+      return color.charAt(0).toUpperCase() + color.slice(1)
+    }
+  }
+
+  // If no whole word match, try for a color name in the known colors
   for (const colorName of Object.keys(COLOR_MAP)) {
     if (lowerText.includes(colorName.toLowerCase())) {
       return colorName

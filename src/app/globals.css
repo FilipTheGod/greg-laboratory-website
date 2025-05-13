@@ -214,6 +214,9 @@ html {
 /* Additional CSS to ensure Add to Cart button visibility */
 /* Add this to src/app/globals.css */
 
+/* Additional CSS to ensure Add to Cart button visibility */
+/* Add this to src/app/globals.css */
+
 /* Make sure the button is always visible */
 .add-to-cart-button {
   display: block !important;
@@ -221,6 +224,7 @@ html {
   visibility: visible !important;
   /* Higher z-index to ensure it stays on top */
   z-index: 10;
+  position: relative !important;
 }
 
 /* Add specific styling for different variants of the button */
@@ -236,7 +240,7 @@ html {
 /* Ensure button stays visible in all contexts */
 @media (max-width: 768px) {
   .add-to-cart-button {
-    position: relative;
+    position: relative !important;
     width: 100%;
   }
 }

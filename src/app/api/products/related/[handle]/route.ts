@@ -3,76 +3,120 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAllProducts } from "@/lib/shopify"
 
 // Helper function to extract the base SKU from a product handle
-// e.g., "pc-fs-t24-cream" -> "pc-fs-t24"
+// e.g., "pc-ss-p23-cream" -> "pc-ss-p23"
 function extractBaseSku(handle: string): string {
-  // Pattern: Look for the last dash followed by a color name
-  const parts = handle.split("-")
-
-  // Common color names that might appear at the end of a handle
-  const commonColors = [
-    "black",
-    "cream",
-    "white",
-    "navy",
-    "olive",
-    "grey",
-    "gray",
-    "khaki",
-    "tan",
-    "brown",
-    "natural",
-    "green",
-    "blue",
-    "red",
-    "pink",
-    "stone",
-    "beige",
-    "sand",
-    "silver",
+  // Look for color patterns at the end of the handle
+  const colorPatterns = [
+    /-black$/,
+    /-beige$/,
+    /-cream$/,
+    /-white$/,
+    /-navy$/,
+    /-olive$/,
+    /-grey$/,
+    /-gray$/,
+    /-khaki$/,
+    /-tan$/,
+    /-brown$/,
+    /-natural$/,
+    /-green$/,
+    /-blue$/,
+    /-red$/,
+    /-pink$/,
+    /-stone$/,
+    /-sand$/,
+    /-silver$/
   ]
 
-  // Check if the last part is a color
-  const lastPart = parts[parts.length - 1].toLowerCase()
-  if (commonColors.includes(lastPart)) {
-    // Remove the color suffix to get the base SKU
-    return parts.slice(0, parts.length - 1).join("-")
+  // Check if the handle ends with any color pattern
+  for (const pattern of colorPatterns) {
+    if (pattern.test(handle)) {
+      // Remove the color suffix to get the base SKU
+      return handle.replace(pattern, '')
+    }
   }
 
-  // If no color is found, return the original handle
+  // Advanced pattern matching - look for alphanumeric-color pattern
+  const generalPattern = /^(.+)-([a-z]+)$/
+  const match = handle.match(generalPattern)
+
+  if (match) {
+    const potentialBaseSku = match[1]
+    const potentialColor = match[2]
+
+    // Common color names to check against
+    const commonColors = [
+      "black", "beige", "cream", "white", "navy", "olive", "grey", "gray",
+      "khaki", "tan", "brown", "natural", "green", "blue", "red", "pink",
+      "stone", "sand", "silver"
+    ]
+
+    if (commonColors.includes(potentialColor)) {
+      return potentialBaseSku
+    }
+  }
+
+  // If no color is found, try to extract based on product naming convention
+  // Pattern: "pc-xx-xxx" where xx is a category code and xxx is a product number
+  const skuPattern = /(pc-[a-z]{2}-[a-z0-9]{2,4})/i
+  const skuMatch = handle.match(skuPattern)
+
+  if (skuMatch) {
+    return skuMatch[1]
+  }
+
+  // If no pattern matches, return the original handle
   return handle
 }
 
 // Helper function to extract color from handle
 function extractColor(handle: string): string | null {
-  const parts = handle.split("-")
-  const lastPart = parts[parts.length - 1].toLowerCase()
+  const colorPatterns: Record<string, string> = {
+    "-black$": "Black",
+    "-beige$": "Beige",
+    "-cream$": "Cream",
+    "-white$": "White",
+    "-navy$": "Navy",
+    "-olive$": "Olive",
+    "-grey$": "Grey",
+    "-gray$": "Gray",
+    "-khaki$": "Khaki",
+    "-tan$": "Tan",
+    "-brown$": "Brown",
+    "-natural$": "Natural",
+    "-green$": "Green",
+    "-blue$": "Blue",
+    "-red$": "Red",
+    "-pink$": "Pink",
+    "-stone$": "Stone",
+    "-sand$": "Sand",
+    "-silver$": "Silver"
+  };
 
-  // Common color names that might appear at the end of a handle
-  const commonColors = [
-    "black",
-    "cream",
-    "white",
-    "navy",
-    "olive",
-    "grey",
-    "gray",
-    "khaki",
-    "tan",
-    "brown",
-    "natural",
-    "green",
-    "blue",
-    "red",
-    "pink",
-    "stone",
-    "beige",
-    "sand",
-    "silver",
-  ]
+  for (const [pattern, colorName] of Object.entries(colorPatterns)) {
+    const regex = new RegExp(pattern);
+    if (regex.test(handle)) {
+      return colorName;
+    }
+  }
 
-  if (commonColors.includes(lastPart)) {
-    // Capitalize the first letter of the color
-    return lastPart.charAt(0).toUpperCase() + lastPart.slice(1)
+  // Advanced pattern matching - look for alphanumeric-color pattern
+  const generalPattern = /^(.+)-([a-z]+)$/
+  const match = handle.match(generalPattern)
+
+  if (match) {
+    const potentialColor = match[2]
+
+    // Common color names to check against
+    const commonColors = [
+      "black", "beige", "cream", "white", "navy", "olive", "grey", "gray",
+      "khaki", "tan", "brown", "natural", "green", "blue", "red", "pink",
+      "stone", "sand", "silver"
+    ]
+
+    if (commonColors.includes(potentialColor)) {
+      return potentialColor.charAt(0).toUpperCase() + potentialColor.slice(1)
+    }
   }
 
   return null
@@ -81,35 +125,36 @@ function extractColor(handle: string): string | null {
 // Helper function to extract color from title
 function extractColorFromTitle(title: string): string | null {
   const lowerTitle = title.toLowerCase()
-  const commonColors = [
-    "black",
-    "cream",
-    "white",
-    "navy",
-    "olive",
-    "grey",
-    "gray",
-    "khaki",
-    "tan",
-    "brown",
-    "natural",
-    "green",
-    "blue",
-    "red",
-    "pink",
-    "stone",
-    "beige",
-    "sand",
-    "silver",
-  ]
+  const colorPatterns = [
+    { pattern: "\\bblack\\b", name: "Black" },
+    { pattern: "\\bbeige\\b", name: "Beige" },
+    { pattern: "\\bcream\\b", name: "Cream" },
+    { pattern: "\\bwhite\\b", name: "White" },
+    { pattern: "\\bnavy\\b", name: "Navy" },
+    { pattern: "\\bolive\\b", name: "Olive" },
+    { pattern: "\\bgrey\\b", name: "Grey" },
+    { pattern: "\\bgray\\b", name: "Gray" },
+    { pattern: "\\bkhaki\\b", name: "Khaki" },
+    { pattern: "\\btan\\b", name: "Tan" },
+    { pattern: "\\bbrown\\b", name: "Brown" },
+    { pattern: "\\bnatural\\b", name: "Natural" },
+    { pattern: "\\bgreen\\b", name: "Green" },
+    { pattern: "\\bblue\\b", name: "Blue" },
+    { pattern: "\\bred\\b", name: "Red" },
+    { pattern: "\\bpink\\b", name: "Pink" },
+    { pattern: "\\bstone\\b", name: "Stone" },
+    { pattern: "\\bsand\\b", name: "Sand" },
+    { pattern: "\\bsilver\\b", name: "Silver" }
+  ];
 
-  for (const color of commonColors) {
-    if (lowerTitle.includes(color)) {
-      return color.charAt(0).toUpperCase() + color.slice(1)
+  for (const { pattern, name } of colorPatterns) {
+    const regex = new RegExp(pattern, 'i');
+    if (regex.test(lowerTitle)) {
+      return name;
     }
   }
 
-  return null
+  return null;
 }
 
 export async function GET(
@@ -129,16 +174,33 @@ export async function GET(
       )
     }
 
+    // Get all products first
+    const products = await getAllProducts()
+
     // Extract the base SKU from the handle
     const baseSku = extractBaseSku(handle)
 
-    // Fetch all products
-    const products = await getAllProducts()
+    // Log debug information to help diagnose issues
+    console.log(`Processing related products for handle: ${handle}`)
+    console.log(`Extracted base SKU: ${baseSku}`)
 
-    // Find related products with the same base SKU
+    // Find related products with the same base SKU pattern
     const relatedProducts = products.filter((product) => {
+      // First try to extract base SKU using our method
       const productBaseSku = extractBaseSku(product.handle)
-      return productBaseSku === baseSku && product.handle !== handle
+
+      // Also check for simple pattern match in the product handle
+      const simpleMatchBaseSku = product.handle.includes(baseSku) && product.handle !== handle
+
+      // Return true if either method finds a match
+      return (productBaseSku === baseSku && product.handle !== handle) || simpleMatchBaseSku
+    })
+
+    console.log(`Found ${relatedProducts.length} related products`)
+
+    // Log each related product for debugging
+    relatedProducts.forEach(product => {
+      console.log(`Related product: ${product.handle} (Base SKU: ${extractBaseSku(product.handle)})`)
     })
 
     // Map to a simpler structure with just what we need
@@ -147,11 +209,14 @@ export async function GET(
       const colorFromHandle = extractColor(product.handle)
       const colorFromTitle = extractColorFromTitle(product.title)
 
+      const color = colorFromHandle || colorFromTitle || "Unknown"
+      console.log(`Extracted color for ${product.handle}: ${color}`)
+
       return {
         id: product.id,
         handle: product.handle,
         title: product.title,
-        color: colorFromHandle || colorFromTitle || "Unknown",
+        color: color,
         image:
           product.images && product.images.length > 0
             ? product.images[0].src

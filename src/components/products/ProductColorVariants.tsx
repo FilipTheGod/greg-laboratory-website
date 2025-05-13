@@ -25,31 +25,39 @@ const ProductColorVariants: React.FC<ProductColorVariantsProps> = ({
   const router = useRouter()
 
   // If there are no color variants, don't render anything
-  if (colorVariants.length === 0) {
+  if (!colorVariants || colorVariants.length === 0) {
     return null
   }
 
+  // Log for debugging
+  console.log("Color variants:", colorVariants)
+  console.log("Current color:", currentColor)
+
   // Create a list of all colors including the current one
   const allColors = [
-    ...(currentColor ? [{ color: currentColor, isCurrent: true }] : []),
-    ...colorVariants.map((variant) => ({
-      color: variant.color,
-      handle: variant.handle,
-      isCurrent: false,
-    })),
+    ...(currentColor ? [{ color: currentColor, isCurrent: true, handle: null }] : []),
+    ...colorVariants
+      .filter(variant => variant.color !== currentColor) // Avoid duplicates
+      .map((variant) => ({
+        color: variant.color,
+        handle: variant.handle,
+        isCurrent: false,
+      })),
   ]
 
   // Handle click on a color swatch
   const handleColorClick = (handle: string) => {
+    // Navigate to the product page for the selected color
     router.push(`/product/${handle}`)
   }
 
   return (
     <div className={`mb-4 ${className}`}>
+      <h2 className="text-xs tracking-wide mb-2">COLORS</h2>
       <div className="flex flex-wrap gap-2">
-        {allColors.map((colorInfo) => (
+        {allColors.map((colorInfo, index) => (
           <button
-            key={colorInfo.color}
+            key={`${colorInfo.color}-${index}`}
             className={`w-8 h-8 rounded-full relative transition-all ${
               colorInfo.isCurrent
                 ? "ring-1 ring-laboratory-black ring-offset-1"
@@ -57,8 +65,7 @@ const ProductColorVariants: React.FC<ProductColorVariantsProps> = ({
             }`}
             style={getColorStyle(colorInfo.color)}
             onClick={() =>
-              !colorInfo.isCurrent &&
-              "handle" in colorInfo &&
+              !colorInfo.isCurrent && colorInfo.handle &&
               handleColorClick(colorInfo.handle)
             }
             aria-label={`Color: ${colorInfo.color}`}
