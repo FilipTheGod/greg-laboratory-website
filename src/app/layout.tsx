@@ -6,6 +6,7 @@ import { CartProvider } from "@/contexts/CartContext"
 import { HeaderProvider } from "@/contexts/HeaderContext"
 import Header from "@/components/layout/Header"
 import CartNotifications from "@/components/cart/CartNotifications"
+import { Analytics } from "@vercel/analytics/next"
 
 export const metadata: Metadata = {
   title: "GREG LABORATORY",
@@ -26,6 +27,7 @@ export default function RootLayout({
             <main className="flex-grow">{children}</main>
             <CartNotifications />
           </CartProvider>
+          <Analytics /> 
         </HeaderProvider>
       </body>
     </html>
